@@ -1,4 +1,4 @@
-![Example](https://i.imgur.com/zdy9ISH.png)
+![Example](https://i.imgur.com/7FimQeK.png)
 
 For fun project made in the span of 2 nights back in February 2021
 

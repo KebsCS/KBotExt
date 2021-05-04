@@ -412,7 +412,7 @@ void Direct3D9Render::GameTab()
 		{
 			if (MessageBoxA(0, XorStr("Are you sure? It will consume RP if you have enough for a boost"), 0, MB_OKCANCEL) == IDOK)
 			{
-				boostMessage = http.Request(XorStr("POST"), XorStr("https://127.0.0.1/lol-champ-select/v1/team-boost/purchase/"), "", LolHeader, "", "", clientPort);
+				boostMessage = http.Request(XorStr("POST"), XorStr(R"(https://127.0.0.1/lol-login/v1/session/invoke?destination=lcdsServiceProxy&method=call&args=["","teambuilder-draft","activateBattleBoostV1",""])"), "", LolHeader, "", "", clientPort);
 			}
 		}
 		ImGui::SameLine();
@@ -970,7 +970,7 @@ int Direct3D9Render::Render()
 	auto timeBefore = std::chrono::high_resolution_clock::now();
 
 	char buf[128];
-	sprintf_s(buf, (XorStr("KBot by kebs#9546 - %s \t %s ###AnimatedTitle")), gamePatch.c_str(), champSkins.empty() ? XorStr("Downloading skin data...") : "");
+	sprintf_s(buf, (XorStr("KBotExt by kebs#9546 - %s \t %s ###AnimatedTitle")), gamePatch.c_str(), champSkins.empty() ? XorStr("Downloading skin data...") : "");
 
 	ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiCond_FirstUseEver);
 	ImGui::SetNextWindowSize(ImVec2(685, 462), ImGuiCond_FirstUseEver);
