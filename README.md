@@ -16,6 +16,7 @@ For fun project made in the span of 2 nights back in February 2021
 * Info of any player using his nickname
 * List of champions/skins with purchase date 
 * Send any custom request
+* 1 click login 
 
 ## TODO
 * Cleanup code

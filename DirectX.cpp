@@ -341,16 +341,16 @@ void Direct3D9Render::GameTab()
 			if (req.find(XorStr("errorCode")) != std::string::npos)
 				MessageBoxA(0, req.c_str(), 0, 0);
 
-		/*	{
-				for (int i = 0; i < 10001; i++)
-				{
-					std::string res = R"({"customGameLobby":{"configuration":{"gameMode":"CLASSIC","gameMutator":"","gameServerRegion":"","mapId":11,"mutators":{"id":)" + std::to_string(i) + R"(},"spectatorPolicy":"AllAllowed","teamSize":5},"lobbyName":"KBot","lobbyPassword":null},"isCustom":true})";
-					std::string xdd= http.Request("POST", "https://127.0.0.1/lol-lobby/v2/lobby", (res), LolHeader, "", "", clientPort);
-					if (xdd.find("errorCode") == std::string::npos)
-						std::cout << i << std::endl;
-					std::this_thread::sleep_for(std::chrono::milliseconds(10));
-				}
-			}*/
+			/*	{
+					for (int i = 0; i < 10001; i++)
+					{
+						std::string res = R"({"customGameLobby":{"configuration":{"gameMode":"CLASSIC","gameMutator":"","gameServerRegion":"","mapId":11,"mutators":{"id":)" + std::to_string(i) + R"(},"spectatorPolicy":"AllAllowed","teamSize":5},"lobbyName":"KBot","lobbyPassword":null},"isCustom":true})";
+						std::string xdd= http.Request("POST", "https://127.0.0.1/lol-lobby/v2/lobby", (res), LolHeader, "", "", clientPort);
+						if (xdd.find("errorCode") == std::string::npos)
+							std::cout << i << std::endl;
+						std::this_thread::sleep_for(std::chrono::milliseconds(10));
+					}
+				}*/
 
 			gameID = 0;
 		}
@@ -379,10 +379,12 @@ void Direct3D9Render::GameTab()
 			req = http.Request(XorStr("POST"), XorStr("https://127.0.0.1/lol-lobby/v2/lobby/matchmaking/search"), "", LolHeader, "", "", clientPort);
 		}
 		ImGui::NextColumn();
+		/*
+		not working
 		if (ImGui::Button(XorStr("Dodge")))
 		{
 			req = http.Request(XorStr("POST"), XorStr("https://127.0.0.1/lol-lobby/v1/lobby/custom/cancel-champ-select"), "", LolHeader, "", "", clientPort);
-		}
+		}*/
 		ImGui::Columns(1);
 
 		ImGui::Checkbox(XorStr("Auto accept"), &bAutoAccept);
@@ -810,8 +812,11 @@ void Direct3D9Render::LaunchOldClient()
 	}
 	std::this_thread::sleep_for(std::chrono::milliseconds(2000));
 	//this doesnt work but works if I paste it into cmd
-	std::string run = R"("C:\Riot Games\League of Legends\LeagueClient.exe" --system-yaml-override="C:\Riot Games\League of Legends\LoL Companion\system.yaml")";
-	system(run.c_str());
+	//std::string run = R"("C:\Riot Games\League of Legends\LeagueClient.exe" --system-yaml-override="C:\Riot Games\League of Legends\LoL Companion\system.yaml")";
+	std::cout << ShellExecute(NULL, NULL, LR"(C:\Riot Games\Riot Client\League of Legends\LeagueClient.exe)", NULL, NULL, SW_SHOWNORMAL);
+	//ShellExecute(NULL, NULL, L"C:\\Riot Games\\Riot Client\\RiotClientServices.exe", L"--launch-product=league_of_legends --launch-patchline=live", NULL, SW_SHOWNORMAL);
+
+	//system(run.c_str());
 }
 
 void Direct3D9Render::SkinsTab()
@@ -827,8 +832,12 @@ void Direct3D9Render::SkinsTab()
 		Aws::Utils::Json::JsonValue Info(aws_s);
 
 		auto skinsArr = Info.View().AsArray();
+
+		ImGui::Text(XorStr("Skins owned: %d"), skinsArr.GetLength());
+
 		for (size_t i = 0; i < skinsArr.GetLength(); ++i)
 		{
+			ImGui::Separator();
 			auto skinObj = skinsArr.GetItem(i).AsObject();
 			int itemId = skinObj.GetInteger(XorStr("itemId"));
 			for (auto champ : champSkins)
@@ -854,8 +863,6 @@ void Direct3D9Render::SkinsTab()
 			ImGui::Text(XorStr("purchaseDate: %s"), purchaseDateFormatted.c_str());
 			ImGui::Text(XorStr("quantity: %d"), skinObj.GetInteger(XorStr("quantity")));
 			ImGui::Text(XorStr("uuid: %s"), skinObj.GetString(XorStr("uuid")).c_str());
-
-			ImGui::Separator();
 		}
 
 		skinsOpen = false;
@@ -864,13 +871,15 @@ void Direct3D9Render::SkinsTab()
 	else skinsOpen = true;
 }
 
-
 void Direct3D9Render::LootTab()
 {
 	if (ImGui::BeginTabItem(XorStr("Loot")))
 	{
 		HTTP http;
-		static std::string req = http.Request(XorStr("GET"), XorStr("https://127.0.0.1/lol-loot/v1/player-loot-map"), "", LolHeader, "", "", clientPort);
+		static std::string req;// = http.Request(XorStr("GET"), XorStr("https://127.0.0.1/lol-loot/v1/player-loot-map"), "", LolHeader, "", "", clientPort);
+
+		//GET /lol-loot/v1/player-display-categories
+		//["CHEST","CHAMPION","SKIN","COMPANION","ETERNALS","EMOTE","WARDSKIN","SUMMONERICON"]
 
 		//craft keys
 		//lol-loot/v1/recipes/MATERIAL_key_fragment_forge/craft?repeat=1
@@ -888,6 +897,11 @@ void Direct3D9Render::LootTab()
 		//lol-loot/v1/recipes/WARDSKIN_RENTAL_disenchant/craft?repeat=1
 		//["WARD_SKIN_RENTAL_199"]
 
+		if (ImGui::Button(XorStr("Craft Key")))
+			req = http.Request(XorStr("POST"), XorStr("https://127.0.0.1/lol-loot/v1/recipes/MATERIAL_key_fragment_forge/craft?repeat=1"), XorStr("[\"MATERIAL_key_fragment\"]"), LolHeader, "", "", clientPort);
+
+		if (ImGui::Button(XorStr("Open Chest")))
+			req = http.Request(XorStr("POST"), XorStr("https://127.0.0.1/lol-loot/v1/recipes/CHEST_champion_mastery_OPEN/craft?repeat=1"), XorStr(R"(["CHEST_champion_mastery","MATERIAL_key"])"), LolHeader, "", "", clientPort);
 
 		ImGui::TextWrapped("%s", req.c_str());
 
@@ -901,10 +915,8 @@ void Direct3D9Render::MiscTab()
 	{
 		static std::string miscReq;
 		HTTP http;
-		if (ImGui::Button(XorStr("Craft Key")))
-			miscReq = http.Request(XorStr("POST"), XorStr("https://127.0.0.1/lol-loot/v1/recipes/MATERIAL_key_fragment_forge/craft?repeat=1"), XorStr("[\"MATERIAL_key_fragment\"]"), LolHeader, "", "", clientPort);
 
-		if (ImGui::Button(XorStr("Launch old client")))
+		if (ImGui::Button(XorStr("Launch legacy client")))
 		{
 			if (!std::filesystem::exists(XorStr("C:/Riot Games/League of Legends/")))
 			{
@@ -916,11 +928,15 @@ void Direct3D9Render::MiscTab()
 				LaunchOldClient();
 			}
 		}
+		if (ImGui::Button(XorStr("Restart UX")))
+			miscReq = http.Request(XorStr("POST"), XorStr("https://127.0.0.1/riotclient/kill-and-restart-ux"), "", LolHeader, "", "", clientPort);
+
+		if (ImGui::Button(XorStr("Close client")))
+			miscReq = http.Request(XorStr("POST"), XorStr("https://127.0.0.1/process-control/v1/process/quit"), "", LolHeader, "", "", clientPort);
 
 		ImGui::TextWrapped(miscReq.c_str());
 		ImGui::EndTabItem();
 	}
-
 }
 
 void Direct3D9Render::CustomTab()
@@ -999,12 +1015,22 @@ int Direct3D9Render::Render()
 			MiscTab();
 
 			CustomTab();
-			
 		}
 		else
 		{
-			ImGui::Text(XorStr("Client closed"));
-			if (ImGui::Button(XorStr("Launch old client")))
+			static std::string closedReq;
+			//ImGui::Text(XorStr("Client closed"));
+
+			ImGui::Columns(2, 0, false);
+
+			if (ImGui::Button(XorStr("Launch client")))
+			{
+				ShellExecute(NULL, NULL, L"C:\\Riot Games\\Riot Client\\RiotClientServices.exe", L"--launch-product=league_of_legends --launch-patchline=live", NULL, SW_SHOWNORMAL);
+			}
+
+			ImGui::NextColumn();
+
+			if (ImGui::Button(XorStr("Launch legacy client")))
 			{
 				if (!std::filesystem::exists(XorStr("C:/Riot Games/League of Legends/")))
 				{
@@ -1016,6 +1042,95 @@ int Direct3D9Render::Render()
 					LaunchOldClient();
 				}
 			}
+			ImGui::Columns(1);
+
+			ImGui::Separator();
+
+			static char username[50];
+			ImGui::Text(XorStr("Username:"));
+			ImGui::InputText(XorStr("##inputUsername"), username, IM_ARRAYSIZE(username));
+
+			static char password[50];
+			ImGui::Text(XorStr("Password:"));
+			ImGui::InputText(XorStr("##inputPassword"), password, IM_ARRAYSIZE(password), ImGuiInputTextFlags_Password);
+
+			if (ImGui::Button(XorStr("Login")))
+			{
+				HTTP http;
+				std::string LoginHeader = XorStr("Host: 127.0.0.1:") + std::to_string(loginPort) + "\n" +
+					XorStr("Connection: keep-alive") + "\n" +
+					XorStr("Authorization: Basic ") + loginToken + "\n" +
+					XorStr("Accept: application/json") + "\n" +
+					XorStr("Content-Type: application/json") + "\n" +
+					XorStr("Origin: https://127.0.0.1:") + std::to_string(loginPort) + "\n" +
+					XorStr("User-Agent: Mozilla/5.0 (Windows NT 6.2; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) LeagueOfLegendsClient/11.3.356.7268 (CEF 74) Safari/537.36") + "\n" +
+					XorStr("Referer: https://127.0.0.1:") + std::to_string(loginPort) + XorStr("/index.html") + "\n" +
+					XorStr("Accept-Encoding: gzip, deflate, br") + "\n" +
+					XorStr("Accept-Language: en-US,en;q=0.8");
+
+				std::string loginBody = R"({"username":")" + std::string(username) + R"(","password":")" + std::string(password) + R"(","persistLogin":false})";
+				closedReq = http.Request(XorStr("PUT"), XorStr("https://127.0.0.1/rso-auth/v1/session/credentials"), loginBody, LoginHeader, "", "", loginPort);
+			}
+			ImGui::SameLine();
+			if (ImGui::Button(XorStr("Save")))
+			{
+				std::ofstream accFile;
+				accFile.open("accounts.txt", std::ios_base::app);
+				accFile << username << ":" << password << std::endl;
+
+				accFile.close();
+			}
+
+			ImGui::Separator();
+
+			std::fstream accFile("accounts.txt");
+			std::vector<std::string> vAccounts;
+			std::string tempAcc;
+			while (accFile >> tempAcc)
+			{
+				vAccounts.emplace_back(tempAcc);
+			}
+			for (std::string& acc : vAccounts)
+			{
+				std::string username = acc.substr(0, acc.find(":"));
+				std::string password = acc.substr(acc.find(":") + 1);
+				if (ImGui::Button(username.c_str()))
+				{
+					HTTP http;
+					std::string LoginHeader = XorStr("Host: 127.0.0.1:") + std::to_string(loginPort) + "\n" +
+						XorStr("Connection: keep-alive") + "\n" +
+						XorStr("Authorization: Basic ") + loginToken + "\n" +
+						XorStr("Accept: application/json") + "\n" +
+						XorStr("Content-Type: application/json") + "\n" +
+						XorStr("Origin: https://127.0.0.1:") + std::to_string(loginPort) + "\n" +
+						XorStr("User-Agent: Mozilla/5.0 (Windows NT 6.2; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) LeagueOfLegendsClient/11.3.356.7268 (CEF 74) Safari/537.36") + "\n" +
+						XorStr("Referer: https://127.0.0.1:") + std::to_string(loginPort) + XorStr("/index.html") + "\n" +
+						XorStr("Accept-Encoding: gzip, deflate, br") + "\n" +
+						XorStr("Accept-Language: en-US,en;q=0.8");
+
+					std::string loginBody = R"({"username":")" + std::string(username) + R"(","password":")" + std::string(password) + R"(","persistLogin":false})";
+					closedReq = http.Request(XorStr("PUT"), XorStr("https://127.0.0.1/rso-auth/v1/session/credentials"), loginBody, LoginHeader, "", "", loginPort);
+				}
+				ImGui::SameLine();
+				std::string deleteButton = "Delete##" + acc;
+				if (ImGui::Button(deleteButton.c_str()))
+				{
+					acc = "";
+					std::ofstream accFile1;
+					accFile1.open("accounts.txt");
+					for (std::string acc1 : vAccounts)
+					{
+						std::string username1 = acc1.substr(0, acc1.find(":"));
+						std::string password1 = acc1.substr(acc1.find(":") + 1);
+						if (acc1 != "")
+							accFile1 << username1 << ":" << password1 << std::endl;
+					}
+					accFile1.close();
+				}
+			}
+			accFile.close();
+
+			ImGui::TextWrapped(closedReq.c_str());
 		}
 
 		/*

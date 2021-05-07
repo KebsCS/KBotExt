@@ -30,13 +30,45 @@ bool RenameExe()
 	else return false;
 }
 
+bool GetLoginPort()
+{
+	std::string auth = utils->WstringToString(GetAuth(XorStr("RiotClientUx.exe")));
+	if (auth.empty())
+	{
+		//MessageBoxA(0, XorStr("Client not found"), 0, 0);
+		return 0;
+	}
+
+	std::string appPort = XorStr(R"(--app-port=)");
+	size_t nPos = auth.find(appPort);
+	if (nPos != std::string::npos)
+		loginPort = std::stoi(auth.substr(nPos + appPort.size(), 5));
+
+	std::string remotingAuth = XorStr("--remoting-auth-token=");
+	nPos = auth.find(remotingAuth) + strlen(remotingAuth.c_str());
+	if (nPos != std::string::npos)
+	{
+		std::string token = XorStr("riot:") + auth.substr(nPos, 22);
+		unsigned char m_Test[50];
+		strncpy((char*)m_Test, token.c_str(), sizeof(m_Test));
+		loginToken = base64_encode(m_Test, token.size()).c_str();
+	}
+	else
+	{
+		MessageBoxA(0, XorStr("Couldn't connect to client"), 0, 0);
+
+		return 0;
+	}
+	return 1;
+}
+
 bool MakeAuth()
 {
 	// Get client port and auth code from it's command line
 	std::string auth = utils->WstringToString(GetAuth(XorStr("LeagueClientUx.exe")));
 	if (auth.empty())
 	{
-		MessageBoxA(0, XorStr("Client not found"), 0, 0);
+		//MessageBoxA(0, XorStr("Client not found"), 0, 0);
 		return 0;
 	}
 
@@ -49,7 +81,7 @@ bool MakeAuth()
 	nPos = auth.find(remotingAuth) + strlen(remotingAuth.c_str());
 	if (nPos != std::string::npos)
 	{
-		std::string token = XorStr("riot:") + auth.substr(nPos, auth.find(XorStr("\" \"--respawn-command"), nPos) - nPos);
+		std::string token = XorStr("riot:") + auth.substr(nPos, 22);
 		unsigned char m_Test[50];
 		strncpy((char*)m_Test, token.c_str(), sizeof(m_Test));
 		authToken = base64_encode(m_Test, token.size()).c_str();
@@ -88,7 +120,15 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		return 0;
 	}
 
-	MakeAuth();
+	if (MakeAuth())
+	{
+		//client is running
+	}
+	else
+	{
+		//client with login screen is up
+		GetLoginPort();
+	}
 
 	//Initialize Direct3D
 	if (!Direct3D9.DirectXInit(hwnd))
@@ -102,8 +142,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	::ShowWindow(hwnd, SW_SHOWDEFAULT);
 	::UpdateWindow(hwnd);
 
-	/*AllocConsole();
-	freopen("CONOUT$", "w", stdout);*/
+#ifndef NDEBUG
+	AllocConsole();
+	freopen("CONOUT$", "w", stdout);
+#endif
 
 	bool closedNow = false;
 	// Main loop
@@ -132,6 +174,13 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		{
 			Direct3D9.closedClient = true;
 			closedNow = true;
+			if (::FindWindowA(0, XorStr("Riot Client")))
+			{
+				if (loginPort == 0)
+					GetLoginPort();
+			}
+			else
+				loginPort = 0;
 		}
 		else if (closedNow)
 		{

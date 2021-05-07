@@ -26,7 +26,9 @@ static ID3D11RenderTargetView* g_pd3dRenderTargetView = NULL;
 static IDXGISwapChain* g_pSwapChain = NULL;
 
 inline int clientPort = 0;
+inline int loginPort = 0;
 inline std::string authToken;
+inline std::string loginToken;
 
 class Direct3D9Render
 {
@@ -80,9 +82,8 @@ public:
 	void MiscTab();
 	void CustomTab();
 
-
 	void AutoAccept();
-	
+
 	void LaunchOldClient();
 
 	void StartFrame();
