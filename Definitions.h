@@ -63,6 +63,7 @@ enum QueueID
 	TFTNormal = 1090,
 	TFTRanked = 1100,
 	TFTTutorial = 1110,
+	TFTHyperRoll = 1130,
 	Tutorial1 = 2000,
 	Tutorial2 = 2010,
 	Tutorial3 = 2020,

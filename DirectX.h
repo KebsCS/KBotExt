@@ -81,6 +81,7 @@ public:
 	void LootTab();
 	void MiscTab();
 	void CustomTab();
+	void InvokeTab();
 
 	void AutoAccept();
 

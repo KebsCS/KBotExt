@@ -15,6 +15,8 @@
 #undef GetObject
 #include <aws/core/utils/json/JsonSerializer.h>
 
+extern bool MakeAuth();
+
 static std::vector<Champ>champSkins;
 void GetAllChampions(std::string patch)
 {
@@ -258,6 +260,9 @@ void Direct3D9Render::GameTab()
 		if (ImGui::Button(XorStr("TFT Ranked")))
 			gameID = TFTRanked;
 
+		if (ImGui::Button(XorStr("TFT Hyper Roll")))
+			gameID = TFTHyperRoll;
+
 		if (ImGui::Button(XorStr("TFT Tutorial")))
 			gameID = TFTTutorial;
 
@@ -378,13 +383,7 @@ void Direct3D9Render::GameTab()
 		{
 			req = http.Request(XorStr("POST"), XorStr("https://127.0.0.1/lol-lobby/v2/lobby/matchmaking/search"), "", LolHeader, "", "", clientPort);
 		}
-		ImGui::NextColumn();
-		/*
-		not working
-		if (ImGui::Button(XorStr("Dodge")))
-		{
-			req = http.Request(XorStr("POST"), XorStr("https://127.0.0.1/lol-lobby/v1/lobby/custom/cancel-champ-select"), "", LolHeader, "", "", clientPort);
-		}*/
+
 		ImGui::Columns(1);
 
 		ImGui::Checkbox(XorStr("Auto accept"), &bAutoAccept);
@@ -451,6 +450,147 @@ void Direct3D9Render::ProfileTab()
 			std::string req = http.Request(XorStr("PUT"), XorStr("https://127.0.0.1/lol-chat/v1/me"), (result), LolHeader, "", "", clientPort);
 			if (req.find(XorStr("errorCode")) != std::string::npos)
 				MessageBoxA(0, req.c_str(), 0, 0);
+		}
+
+		ImGui::SameLine();
+		static int availability = 0;
+		static int lastavailability = 0;
+		ImGui::RadioButton("Online", &availability, 0); ImGui::SameLine();
+		ImGui::RadioButton("Mobile", &availability, 1); ImGui::SameLine();
+		ImGui::RadioButton("Offline", &availability, 2);
+		if (availability != lastavailability)
+		{
+			lastavailability = availability;
+			std::string body = R"({"availability":")";
+			switch (availability)
+			{
+			case 0:
+				body += "online";
+				break;
+			case 1:
+				body += "mobile";
+				break;
+			case 2:
+				body += "offline";
+				break;
+			}
+			body += "\"}";
+			http.Request(XorStr("PUT"), XorStr("https://127.0.0.1/lol-chat/v1/me"), body, LolHeader, "", "", clientPort);
+		}
+
+		ImGui::Separator();
+
+		ImGui::Text("Rank:");
+		static int rank = 0;
+		ImGui::RadioButton("Iron", &rank, 0); ImGui::SameLine();
+		ImGui::RadioButton("Bronze", &rank, 1); ImGui::SameLine();
+		ImGui::RadioButton("Silver", &rank, 2); ImGui::SameLine();
+		ImGui::RadioButton("Gold", &rank, 3); ImGui::SameLine();
+		ImGui::RadioButton("Platinum", &rank, 4); ImGui::SameLine();
+		ImGui::RadioButton("Diamond", &rank, 5); ImGui::SameLine();
+		ImGui::RadioButton("Master", &rank, 6); ImGui::SameLine();
+		ImGui::RadioButton("GrandMaster", &rank, 7); ImGui::SameLine();
+		ImGui::RadioButton("Challenger", &rank, 8);
+
+		static int tier = 0;
+		ImGui::RadioButton("I", &tier, 0); ImGui::SameLine();
+		ImGui::RadioButton("II", &tier, 1); ImGui::SameLine();
+		ImGui::RadioButton("III", &tier, 2); ImGui::SameLine();
+		ImGui::RadioButton("IV", &tier, 3); ImGui::SameLine();
+		ImGui::RadioButton("None", &tier, 4);
+
+		static int queue = 0;
+		ImGui::RadioButton("Solo/Duo", &queue, 0); ImGui::SameLine();
+		ImGui::RadioButton("Flex 5v5", &queue, 1); ImGui::SameLine();
+		ImGui::RadioButton("Flex 3v3", &queue, 2); ImGui::SameLine();
+		ImGui::RadioButton("TFT", &queue, 3); ImGui::SameLine();
+		ImGui::RadioButton("()", &queue, 4);
+
+		if (ImGui::Button(XorStr("Submit##rank")))
+		{
+			std::string body = R"({"lol":{"rankedLeagueQueue":")";
+			switch (queue)
+			{
+			case 0:
+				body += "RANKED_SOLO_5x5";
+				break;
+			case 1:
+				body += "RANKED_FLEX_SR";
+				break;
+			case 2:
+				body += "RANKED_FLEX_TT";
+				break;
+			case 3:
+				body += "RANKED_TFT";
+				break;
+			case 4:
+				body += "";
+				break;
+			}
+
+			body += R"(","rankedLeagueTier":")";
+
+			switch (rank)
+			{
+			case 0:
+				body += "IRON";
+				break;
+			case 1:
+				body += "BRONZE";
+				break;
+			case 2:
+				body += "SILVER";
+				break;
+			case 3:
+				body += "GOLD";
+				break;
+			case 4:
+				body += "PLATINUM";
+				break;
+			case 5:
+				body += "DIAMOND";
+				break;
+			case 6:
+				body += "MASTER";
+				break;
+			case 7:
+				body += "GRANDMASTER";
+				break;
+			case 8:
+				body += "CHALLENGER";
+				break;
+			}
+
+			body += R"(","rankedLeagueDivision":")";
+
+			switch (tier)
+			{
+			case 0:
+				body += "I";
+				break;
+			case 1:
+				body += "II";
+				break;
+			case 2:
+				body += "III";
+				break;
+			case 3:
+				body += "IV";
+				break;
+			case 4:
+				body += "";
+				break;
+			}
+
+			body += R"("}})";
+
+			http.Request(XorStr("PUT"), XorStr("https://127.0.0.1/lol-chat/v1/me"), body, LolHeader, "", "", clientPort);
+		}
+
+		ImGui::SameLine();
+		if (ImGui::Button(XorStr("Empty##rank")))
+		{
+			http.Request(XorStr("PUT"), XorStr("https://127.0.0.1/lol-chat/v1/me"), R"({"lol":{"rankedLeagueQueue":"","rankedLeagueTier":"","rankedLeagueDivision":""}})", LolHeader, "", "", clientPort);
 		}
 
 		ImGui::Separator();
@@ -527,7 +667,7 @@ void Direct3D9Render::SessionTab()
 	{
 		HTTP http;
 		if (sessionOpen)
-			session = http.Request(XorStr("GET"), XorStr("https://127.0.0.1/lol-login/v1/session "), "", LolHeader, "", "", clientPort);
+			session = http.Request(XorStr("GET"), XorStr("https://127.0.0.1/lol-login/v1/session"), "", LolHeader, "", "", clientPort);
 
 		Aws::String aws_s(session.c_str(), session.size());
 		Aws::Utils::Json::JsonValue Info(aws_s);
@@ -901,6 +1041,9 @@ void Direct3D9Render::LootTab()
 			req = http.Request(XorStr("POST"), XorStr("https://127.0.0.1/lol-loot/v1/recipes/MATERIAL_key_fragment_forge/craft?repeat=1"), XorStr("[\"MATERIAL_key_fragment\"]"), LolHeader, "", "", clientPort);
 
 		if (ImGui::Button(XorStr("Open Chest")))
+			req = http.Request(XorStr("POST"), XorStr("https://127.0.0.1/lol-loot/v1/recipes/CHEST_generic_OPEN/craft?repeat=1"), XorStr(R"(["CHEST_generic","MATERIAL_key"])"), LolHeader, "", "", clientPort);
+
+		if (ImGui::Button(XorStr("Open Mastery Chest")))
 			req = http.Request(XorStr("POST"), XorStr("https://127.0.0.1/lol-loot/v1/recipes/CHEST_champion_mastery_OPEN/craft?repeat=1"), XorStr(R"(["CHEST_champion_mastery","MATERIAL_key"])"), LolHeader, "", "", clientPort);
 
 		ImGui::TextWrapped("%s", req.c_str());
@@ -916,6 +1059,15 @@ void Direct3D9Render::MiscTab()
 		static std::string miscReq;
 		HTTP http;
 
+		ImGui::Columns(2, 0, false);
+
+		if (ImGui::Button(XorStr("Launch another client")))
+		{
+			ShellExecute(NULL, NULL, L"C:\\Riot Games\\Riot Client\\RiotClientServices.exe", L"--launch-product=league_of_legends --launch-patchline=live --allow-multiple-clients", NULL, SW_SHOWNORMAL);
+		}
+
+		ImGui::NextColumn();
+
 		if (ImGui::Button(XorStr("Launch legacy client")))
 		{
 			if (!std::filesystem::exists(XorStr("C:/Riot Games/League of Legends/")))
@@ -928,11 +1080,25 @@ void Direct3D9Render::MiscTab()
 				LaunchOldClient();
 			}
 		}
+
+		ImGui::Columns(1);
+
 		if (ImGui::Button(XorStr("Restart UX")))
+		{
 			miscReq = http.Request(XorStr("POST"), XorStr("https://127.0.0.1/riotclient/kill-and-restart-ux"), "", LolHeader, "", "", clientPort);
+			if (miscReq.find("failed") != std::string::npos)
+			{
+				MakeAuth();
+				Direct3D9.MakeHeader();
+				miscReq = XorStr("Rehooked to new league client");
+			}
+		}
 
 		if (ImGui::Button(XorStr("Close client")))
 			miscReq = http.Request(XorStr("POST"), XorStr("https://127.0.0.1/process-control/v1/process/quit"), "", LolHeader, "", "", clientPort);
+
+		if (ImGui::Button(XorStr("Free Tristana + Riot Girl skin")))
+			miscReq = http.Request(XorStr("POST"), XorStr("https://127.0.0.1/lol-login/v1/session/invoke?destination=inventoryService&method=giftFacebookFan&args=[]"), "", LolHeader, "", "", clientPort);
 
 		ImGui::TextWrapped(miscReq.c_str());
 		ImGui::EndTabItem();
@@ -957,17 +1123,47 @@ void Direct3D9Render::CustomTab()
 		ImGui::Text(XorStr("Request:"));
 		ImGui::InputTextMultiline(XorStr("##requestText"), (requestText), IM_ARRAYSIZE(requestText), ImVec2(600, 100), ImGuiInputTextFlags_AllowTabInput);
 
+		static std::string customHeader = LolHeader;
+		static int customPort = clientPort;
+
+		if (ImGui::CollapsingHeader(XorStr("Custom Port/Header")))
+		{
+			static char inputPort[64] = "";
+			ImGui::Text(XorStr("Port:"));
+			ImGui::InputText("##inputPort", inputPort, 64, ImGuiInputTextFlags_CharsDecimal);
+			std::string sPort = std::string(inputPort);
+			if (!sPort.empty())
+				customPort = std::stoi(sPort);
+			else
+				customPort = -1;
+
+			static char inputHeader[1024 * 16];
+			ImGui::Text(XorStr("Header:"));
+			ImGui::InputTextMultiline(XorStr("##inputHeader"), (inputHeader), IM_ARRAYSIZE(inputHeader), ImVec2(600, 100), ImGuiInputTextFlags_AllowTabInput);
+			std::string sHeader = std::string(inputHeader);
+			customHeader = sHeader;
+		}
+		else
+		{
+			customHeader = LolHeader;
+			customPort = clientPort;
+		}
+
 		static std::string req;
 		if (ImGui::Button(XorStr("Send custom request##customTab")))
 		{
 			std::string sURL = std::string(urlText);
+
 			if (sURL.find(XorStr("https://127.0.0.1")) == std::string::npos)
 			{
-				if (sURL[0] != '/')
-					sURL.insert(0, "/");
-				sURL.insert(0, XorStr("https://127.0.0.1"));
+				if (sURL.find(XorStr("https://")) == std::string::npos && sURL.find(XorStr("http://")) == std::string::npos)
+				{
+					if (sURL[0] != '/')
+						sURL.insert(0, "/");
+					sURL.insert(0, XorStr("https://127.0.0.1"));
+				}
 			}
-			req = http.Request(method, sURL, requestText, LolHeader, "", "", clientPort);
+			req = http.Request(method, sURL, requestText, customHeader, "", "", customPort);
 		}
 		ImGui::Text(XorStr("Result:"));
 		ImGui::SameLine();
@@ -976,6 +1172,44 @@ void Direct3D9Render::CustomTab()
 			utils->CopyToClipboard(req);
 		}
 		ImGui::TextWrapped(req.c_str());
+
+		ImGui::EndTabItem();
+	}
+}
+
+void Direct3D9Render::InvokeTab()
+{
+	if (ImGui::BeginTabItem(XorStr("Invoke")))
+	{
+		HTTP http;
+
+		static char destination[1024 * 16];
+		ImGui::Text(XorStr("Destination:"));
+		ImGui::InputTextMultiline(XorStr("##inputDestination"), destination, IM_ARRAYSIZE(destination), ImVec2(600, 20));
+
+		static char method[1024 * 16];
+		ImGui::Text(XorStr("Method:"));
+		ImGui::InputTextMultiline(XorStr("##inputMethod"), method, IM_ARRAYSIZE(method), ImVec2(600, 20));
+
+		static char args[1024 * 16];
+		ImGui::Text(XorStr("Args:"));
+		ImGui::InputTextMultiline(XorStr("##inputArgs"), args, IM_ARRAYSIZE(args), ImVec2(600, 20));
+
+		static std::string result;
+		if (ImGui::Button(XorStr("Submit")))
+		{
+			std::string req = XorStr("https://127.0.0.1/lol-login/v1/session/invoke?destination=") + std::string(destination) + XorStr("&method=") + std::string(method) + XorStr("&args=[") + std::string(args) + "]";
+			result = http.Request(XorStr("POST"), req, "", LolHeader, "", "", clientPort);
+		}
+
+		ImGui::Text(XorStr("Result:"));
+		ImGui::SameLine();
+
+		if (ImGui::Button(XorStr("Copy to clipboard##invokeTab")))
+		{
+			utils->CopyToClipboard(result);
+		}
+		ImGui::TextWrapped(result.c_str());
 
 		ImGui::EndTabItem();
 	}
@@ -1015,6 +1249,8 @@ int Direct3D9Render::Render()
 			MiscTab();
 
 			CustomTab();
+
+			InvokeTab();
 		}
 		else
 		{
