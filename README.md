@@ -1,4 +1,5 @@
-![Example](https://i.imgur.com/7FimQeK.png)
+![Example](https://i.imgur.com/rfUPFMg.png)
+
 [More screenshots](https://imgur.com/a/tdqsZpw)
 
 For fun project made in the span of 2 nights back in February 2021, which I'm now updating
