@@ -24,7 +24,7 @@ bool RenameExe()
 	std::string exe = path.substr(path.find_last_of("\\") + 1, path.size());
 	std::string newname;
 	newname = utils->RandomString(RandomInt(5, 10));
-	newname += XorStr(".exe");
+	newname += ".exe";
 	if (!rename(exe.c_str(), newname.c_str()))
 		return true;
 	else return false;
@@ -32,30 +32,30 @@ bool RenameExe()
 
 bool GetLoginPort()
 {
-	std::string auth = utils->WstringToString(GetAuth(XorStr("RiotClientUx.exe")));
+	std::string auth = utils->WstringToString(GetAuth("RiotClientUx.exe"));
 	if (auth.empty())
 	{
 		//MessageBoxA(0, XorStr("Client not found"), 0, 0);
 		return 0;
 	}
 
-	std::string appPort = XorStr(R"(--app-port=)");
+	std::string appPort = R"(--app-port=)";
 	size_t nPos = auth.find(appPort);
 	if (nPos != std::string::npos)
 		loginPort = std::stoi(auth.substr(nPos + appPort.size(), 5));
 
-	std::string remotingAuth = XorStr("--remoting-auth-token=");
+	std::string remotingAuth = "--remoting-auth-token=";
 	nPos = auth.find(remotingAuth) + strlen(remotingAuth.c_str());
 	if (nPos != std::string::npos)
 	{
-		std::string token = XorStr("riot:") + auth.substr(nPos, 22);
+		std::string token = "riot:" + auth.substr(nPos, 22);
 		unsigned char m_Test[50];
 		strncpy((char*)m_Test, token.c_str(), sizeof(m_Test));
 		loginToken = base64_encode(m_Test, token.size()).c_str();
 	}
 	else
 	{
-		MessageBoxA(0, XorStr("Couldn't connect to client"), 0, 0);
+		MessageBoxA(0, "Couldn't connect to client", 0, 0);
 
 		return 0;
 	}
@@ -65,30 +65,30 @@ bool GetLoginPort()
 bool MakeAuth()
 {
 	// Get client port and auth code from it's command line
-	std::string auth = utils->WstringToString(GetAuth(XorStr("LeagueClientUx.exe")));
+	std::string auth = utils->WstringToString(GetAuth("LeagueClientUx.exe"));
 	if (auth.empty())
 	{
 		//MessageBoxA(0, XorStr("Client not found"), 0, 0);
 		return 0;
 	}
 
-	std::string appPort = XorStr("\"--app-port=");
+	std::string appPort = "\"--app-port=";
 	size_t nPos = auth.find(appPort);
 	if (nPos != std::string::npos)
 		clientPort = std::stoi(auth.substr(nPos + appPort.size(), 5));
 
-	std::string remotingAuth = XorStr("--remoting-auth-token=");
+	std::string remotingAuth = "--remoting-auth-token=";
 	nPos = auth.find(remotingAuth) + strlen(remotingAuth.c_str());
 	if (nPos != std::string::npos)
 	{
-		std::string token = XorStr("riot:") + auth.substr(nPos, 22);
+		std::string token = "riot:" + auth.substr(nPos, 22);
 		unsigned char m_Test[50];
 		strncpy((char*)m_Test, token.c_str(), sizeof(m_Test));
 		authToken = base64_encode(m_Test, token.size()).c_str();
 	}
 	else
 	{
-		MessageBoxA(0, XorStr("Couldn't connect to client"), 0, 0);
+		MessageBoxA(0, "Couldn't connect to client", 0, 0);
 
 		return 0;
 	}
@@ -170,11 +170,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		Direct3D9.EndFrame();
 
 		// idle if client closed and reconnect to it
-		if (!::FindWindowA(0, XorStr("League of Legends")))
+		if (!::FindWindowA(0, "League of Legends"))
 		{
 			Direct3D9.closedClient = true;
 			closedNow = true;
-			if (::FindWindowA(0, XorStr("Riot Client")))
+			if (::FindWindowA(0, "Riot Client"))
 			{
 				if (loginPort == 0)
 					GetLoginPort();
@@ -190,11 +190,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			Direct3D9.closedClient = false;
 			closedNow = false;
 		}
-
-#ifdef NDEBUG
-		if (IsDebuggerPresent())
-			break;
-#endif
 
 		std::this_thread::sleep_for(std::chrono::milliseconds(1));
 	}

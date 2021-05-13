@@ -384,7 +384,7 @@ std::wstring GetAuth(std::string sProcessName)
 					PROCESS_BASIC_INFORMATION pbi;
 					PEB peb = { 0 };
 					tNtQueryInformationProcess NtQueryInformationProcess =
-						(tNtQueryInformationProcess)GetProcAddress(GetModuleHandleA(XorStr("ntdll.dll")), XorStr("NtQueryInformationProcess"));
+						(tNtQueryInformationProcess)GetProcAddress(GetModuleHandleA("ntdll.dll"), "NtQueryInformationProcess");
 					NTSTATUS status = NtQueryInformationProcess(Handle, ProcessBasicInformation, &pbi, sizeof(pbi), 0);
 
 					if (NT_SUCCESS(status))

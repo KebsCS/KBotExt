@@ -40,7 +40,7 @@ public:
 
 	void CopyToClipboard(std::string text);
 
-	bool DownloadFile(std::string fileName, std::string directory = XorStr("Data"), std::string url = "https://raw.githubusercontent.com/y3541599/test/main/");
+	bool DownloadFile(std::string fileName, std::string directory = "Data", std::string url = "https://raw.githubusercontent.com/y3541599/test/main/");
 
 	bool ContainsOnlyASCII(std::string buff);
 

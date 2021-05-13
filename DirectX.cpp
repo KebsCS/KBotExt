@@ -15,6 +15,8 @@
 #undef GetObject
 #include <aws/core/utils/json/JsonSerializer.h>
 
+#pragma warning (disable : 4996)
+
 extern bool MakeAuth();
 
 static std::vector<Champ>champSkins;
@@ -22,25 +24,25 @@ void GetAllChampions(std::string patch)
 {
 	std::vector < Champ > temp;
 	HTTP http;
-	std::string req = http.Request(XorStr("GET"), XorStr("http://ddragon.leagueoflegends.com/cdn/") + patch + XorStr("/data/en_US/champion.json"));
+	std::string req = http.Request("GET", "http://ddragon.leagueoflegends.com/cdn/" + patch + "/data/en_US/champion.json");
 	Aws::String aws_s(req.c_str(), req.size());
 	Aws::Utils::Json::JsonValue Info(aws_s);
 
-	auto allObj = Info.View().GetObject(XorStr("data")).GetAllObjects();
+	auto allObj = Info.View().GetObject("data").GetAllObjects();
 	for (auto n : allObj)
 	{
-		req = http.Request(XorStr("GET"), XorStr("http://ddragon.leagueoflegends.com/cdn/") + patch + XorStr("/data/en_US/champion/") + n.first.c_str() + XorStr(".json"));
+		req = http.Request("GET", "http://ddragon.leagueoflegends.com/cdn/" + patch + "/data/en_US/champion/" + n.first.c_str() + ".json");
 		Aws::String aws_champ(req.c_str(), req.size());
 		Aws::Utils::Json::JsonValue ChampInfo(aws_champ);
 		Champ champ;
 		champ.name = n.first.c_str();
-		auto skinArr = ChampInfo.View().GetObject(XorStr("data")).GetObject(n.first.c_str()).GetObject(XorStr("skins")).AsArray();
+		auto skinArr = ChampInfo.View().GetObject("data").GetObject(n.first.c_str()).GetObject("skins").AsArray();
 		for (size_t i = 0; i < skinArr.GetLength(); ++i)
 		{
 			auto skinObj = skinArr.GetItem(i).AsObject();
 			std::pair<std::string, std::string > skin;
-			skin.first = std::string(skinObj.GetString(XorStr("id")).c_str());
-			skin.second = std::string(skinObj.GetString(XorStr("name")).c_str());
+			skin.first = std::string(skinObj.GetString("id").c_str());
+			skin.second = std::string(skinObj.GetString("name").c_str());
 			champ.skins.emplace_back(skin);
 		}
 		temp.emplace_back(champ);
@@ -94,17 +96,17 @@ bool Direct3D9Render::DirectXInit(HWND hWnd)
 
 void Direct3D9Render::MakeHeader()
 {
-	LolHeader = XorStr("Host: 127.0.0.1:") + std::to_string(clientPort) + "\n" +
-		XorStr("Connection: keep-alive") + "\n" +
-		XorStr("Authorization: Basic ") + authToken + "\n" +
-		XorStr("Accept: application/json") + "\n" +
-		XorStr("Content-Type: application/json") + "\n" +
-		XorStr("Origin: https://127.0.0.1:") + std::to_string(clientPort) + "\n" +
-		XorStr("User-Agent: Mozilla/5.0 (Windows NT 6.2; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) LeagueOfLegendsClient/11.3.356.7268 (CEF 74) Safari/537.36") + "\n" +
-		XorStr("X-Riot-Source: rcp-fe-lol-social") + "\n" +
-		XorStr("Referer: https://127.0.0.1:") + std::to_string(clientPort) + XorStr("/index.html") + "\n" +
-		XorStr("Accept-Encoding: gzip, deflate, br") + "\n" +
-		XorStr("Accept-Language: en-US,en;q=0.9");
+	LolHeader = "Host: 127.0.0.1:" + std::to_string(clientPort) + "\n" +
+		"Connection: keep-alive" + "\n" +
+		"Authorization: Basic " + authToken + "\n" +
+		"Accept: application/json" + "\n" +
+		"Content-Type: application/json" + "\n" +
+		"Origin: https://127.0.0.1:" + std::to_string(clientPort) + "\n" +
+		"User-Agent: Mozilla/5.0 (Windows NT 6.2; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) LeagueOfLegendsClient/11.3.356.7268 (CEF 74) Safari/537.36" + "\n" +
+		"X-Riot-Source: rcp-fe-lol-social" + "\n" +
+		"Referer: https://127.0.0.1:" + std::to_string(clientPort) + "/index.html" + "\n" +
+		"Accept-Encoding: gzip, deflate, br" + "\n" +
+		"Accept-Language: en-US,en;q=0.9";
 }
 
 // Helper to display a little (?) mark which shows a tooltip when hovered.
@@ -156,7 +158,7 @@ float processTimeMs = 0;
 std::string Direct3D9Render::GetCurrentPatch()
 {
 	HTTP http;
-	std::string req = http.Request(XorStr("GET"), XorStr("https://ddragon.leagueoflegends.com/api/versions.json"));
+	std::string req = http.Request("GET", "https://ddragon.leagueoflegends.com/api/versions.json");
 	Aws::String aws_s(req.c_str(), req.size());
 	Aws::Utils::Json::JsonValue Info(aws_s);
 	auto reqObj = Info.View().AsArray();
@@ -169,10 +171,10 @@ void Direct3D9Render::AutoAccept()
 	bool found = false;
 	while (true)
 	{
-		if (bAutoAccept && !FindWindowA(0, XorStr("League of Legends (TM) Client")))
+		if (bAutoAccept && !FindWindowA(0, "League of Legends (TM) Client"))
 		{
 			HTTP http;
-			std::string req = http.Request(XorStr("POST"), XorStr("https://127.0.0.1/lol-matchmaking/v1/ready-check/accept"), "", LolHeader, "", "", clientPort);
+			std::string req = http.Request("POST", "https://127.0.0.1/lol-matchmaking/v1/ready-check/accept", "", LolHeader, "", "", clientPort);
 			//pressed accept
 			if (req.empty())
 			{
@@ -180,29 +182,29 @@ void Direct3D9Render::AutoAccept()
 			}
 			if (found && ((bInstalock && instalockID) || !std::string(instantMessage).empty()))
 			{
-				std::string lobby = http.Request(XorStr("GET"), XorStr("https://127.0.0.1/lol-champ-select/v1/session"), "", LolHeader, "", "", clientPort);
+				std::string lobby = http.Request("GET", "https://127.0.0.1/lol-champ-select/v1/session", "", LolHeader, "", "", clientPort);
 
-				if (lobby.find(XorStr("errorCode")) == std::string::npos)
+				if (lobby.find("errorCode") == std::string::npos)
 				{
 					if (instalockID && bInstalock)
 					{
 						for (int i = 0; i < 10; i++)
-							std::string lock = http.Request(XorStr("PATCH"), XorStr("https://127.0.0.1/lol-champ-select/v1/session/actions/") + std::to_string(i),
-								XorStr(R"({"completed":true,"championId":)") + std::to_string(instalockID) + "}", LolHeader, "", "", clientPort);
+							std::string lock = http.Request("PATCH", "https://127.0.0.1/lol-champ-select/v1/session/actions/" + std::to_string(i),
+								R"({"completed":true,"championId":)" + std::to_string(instalockID) + "}", LolHeader, "", "", clientPort);
 					}
 					if (!std::string(instantMessage).empty())
 					{
 						Aws::String aws_s(lobby.c_str(), lobby.size());
 						Aws::Utils::Json::JsonValue Info(aws_s);
 
-						std::string lobbyID = std::string(Info.View().GetObject(XorStr("chatDetails")).GetString(XorStr("chatRoomName")).c_str());
+						std::string lobbyID = std::string(Info.View().GetObject("chatDetails").GetString("chatRoomName").c_str());
 						lobbyID = lobbyID.substr(0, lobbyID.find("@"));
-						std::string param = XorStr("https://127.0.0.1/lol-chat/v1/conversations/") + lobbyID + XorStr(R"(%40champ-select.eu1.pvp.net/messages)");
-						std::string error = XorStr("errorCode");
-						while (error.find(XorStr("errorCode")) != std::string::npos)
+						std::string param = "https://127.0.0.1/lol-chat/v1/conversations/" + lobbyID + R"(%40champ-select.eu1.pvp.net/messages)";
+						std::string error = "errorCode";
+						while (error.find("errorCode") != std::string::npos)
 						{
 							std::this_thread::sleep_for(std::chrono::milliseconds(50));
-							error = http.Request(XorStr("POST"), param, XorStr(R"({"body":")") + std::string(instantMessage) + R"("})", LolHeader, "", "", clientPort);
+							error = http.Request("POST", param, R"({"body":")" + std::string(instantMessage) + R"("})", LolHeader, "", "", clientPort);
 						}
 					}
 
@@ -221,32 +223,32 @@ void Direct3D9Render::AutoAccept()
 
 void Direct3D9Render::GameTab()
 {
-	if (ImGui::BeginTabItem(XorStr("Game")))
+	if (ImGui::BeginTabItem("Game"))
 	{
 		HTTP http;
 		static std::string req;
 		std::string custom;
 		static int gameID = 0;
-		ImGui::Text(XorStr("Games:"));
+		ImGui::Text("Games:");
 		ImGui::Columns(4, 0, false);
-		if (ImGui::Button(XorStr("Blind pick")))
+		if (ImGui::Button("Blind pick"))
 			gameID = BlindPick;
 
-		if (ImGui::Button(XorStr("Draft pick")))
+		if (ImGui::Button("Draft pick"))
 			gameID = DraftPick;
 
-		if (ImGui::Button(XorStr("Solo/Duo")))
+		if (ImGui::Button("Solo/Duo"))
 			gameID = SoloDuo;
 
-		if (ImGui::Button(XorStr("Flex")))
+		if (ImGui::Button("Flex"))
 			gameID = Flex;
 
 		ImGui::NextColumn();
 
-		if (ImGui::Button(XorStr("ARAM")))
+		if (ImGui::Button("ARAM"))
 			gameID = ARAM;
 
-		if (ImGui::Button(XorStr("ARURF")))
+		if (ImGui::Button("ARURF"))
 			gameID = ARURF;
 
 		/*if (ImGui::Button("URF"))
@@ -254,33 +256,33 @@ void Direct3D9Render::GameTab()
 
 		ImGui::NextColumn();
 
-		if (ImGui::Button(XorStr("TFT Normal")))
+		if (ImGui::Button("TFT Normal"))
 			gameID = TFTNormal;
 
-		if (ImGui::Button(XorStr("TFT Ranked")))
+		if (ImGui::Button("TFT Ranked"))
 			gameID = TFTRanked;
 
-		if (ImGui::Button(XorStr("TFT Hyper Roll")))
+		if (ImGui::Button("TFT Hyper Roll"))
 			gameID = TFTHyperRoll;
 
-		if (ImGui::Button(XorStr("TFT Tutorial")))
+		if (ImGui::Button("TFT Tutorial"))
 			gameID = TFTTutorial;
 
 		ImGui::NextColumn();
 
-		if (ImGui::Button(XorStr("Practice Tool")))
+		if (ImGui::Button("Practice Tool"))
 		{
-			custom = XorStr(R"({"customGameLobby":{"configuration":{"gameMode":"PRACTICETOOL","gameMutator":"","gameServerRegion":"","mapId":11,"mutators":{"id":1},"spectatorPolicy":"AllAllowed","teamSize":1},"lobbyName":"KBot","lobbyPassword":null},"isCustom":true})");
+			custom = R"({"customGameLobby":{"configuration":{"gameMode":"PRACTICETOOL","gameMutator":"","gameServerRegion":"","mapId":11,"mutators":{"id":1},"spectatorPolicy":"AllAllowed","teamSize":1},"lobbyName":"KBot","lobbyPassword":null},"isCustom":true})";
 		}
 
 		static bool fill = false;
-		if (ImGui::Button(XorStr("Practice Tool 5v5")))
+		if (ImGui::Button("Practice Tool 5v5"))
 		{
-			custom = XorStr(R"({"customGameLobby":{"configuration":{"gameMode":"PRACTICETOOL","gameMutator":"","gameServerRegion":"","mapId":11,"mutators":{"id":1},"spectatorPolicy":"AllAllowed","teamSize":5},"lobbyName":"KBot","lobbyPassword":null},"isCustom":true})");
+			custom = R"({"customGameLobby":{"configuration":{"gameMode":"PRACTICETOOL","gameMutator":"","gameServerRegion":"","mapId":11,"mutators":{"id":1},"spectatorPolicy":"AllAllowed","teamSize":5},"lobbyName":"KBot","lobbyPassword":null},"isCustom":true})";
 			fill = true;
 		}
 
-		if (ImGui::Button(XorStr("Clash")))
+		if (ImGui::Button("Clash"))
 			gameID = Clash;
 
 		ImGui::Columns(1);
@@ -289,33 +291,33 @@ void Direct3D9Render::GameTab()
 
 		ImGui::Columns(4, 0, false);
 
-		if (ImGui::Button(XorStr("Tutorial 1")))
+		if (ImGui::Button("Tutorial 1"))
 			gameID = Tutorial1;
 
-		if (ImGui::Button(XorStr("Tutorial 2")))
+		if (ImGui::Button("Tutorial 2"))
 			gameID = Tutorial2;
 
-		if (ImGui::Button(XorStr("Tutorial 3")))
+		if (ImGui::Button("Tutorial 3"))
 			gameID = Tutorial3;
 
 		ImGui::NextColumn();
 
-		if (ImGui::Button(XorStr("Intro Bots")))
+		if (ImGui::Button("Intro Bots"))
 			gameID = IntroBots;
 
-		if (ImGui::Button(XorStr("Beginner Bots")))
+		if (ImGui::Button("Beginner Bots"))
 			gameID = BeginnerBots;
 
-		if (ImGui::Button(XorStr("Intermediate Bots")))
+		if (ImGui::Button("Intermediate Bots"))
 			gameID = IntermediateBots;
 
 		ImGui::NextColumn();
 
-		if (ImGui::Button(XorStr("Custom Blind")))
-			custom = XorStr(R"({"customGameLobby":{"configuration":{"gameMode":"CLASSIC","gameMutator":"","gameServerRegion":"","mapId":11,"mutators":{"id":1},"spectatorPolicy":"AllAllowed","teamSize":5},"lobbyName":"KBot","lobbyPassword":null},"isCustom":true})");
+		if (ImGui::Button("Custom Blind"))
+			custom = R"({"customGameLobby":{"configuration":{"gameMode":"CLASSIC","gameMutator":"","gameServerRegion":"","mapId":11,"mutators":{"id":1},"spectatorPolicy":"AllAllowed","teamSize":5},"lobbyName":"KBot","lobbyPassword":null},"isCustom":true})";
 
-		if (ImGui::Button(XorStr("Custom ARAM")))
-			custom = XorStr(R"({"customGameLobby":{"configuration":{"gameMode":"ARAM","gameMutator":"","gameServerRegion":"","mapId":12,"mutators":{"id":1},"spectatorPolicy":"AllAllowed","teamSize":5},"lobbyName":"KBot","lobbyPassword":null},"isCustom":true})");
+		if (ImGui::Button("Custom ARAM"))
+			custom = R"({"customGameLobby":{"configuration":{"gameMode":"ARAM","gameMutator":"","gameServerRegion":"","mapId":12,"mutators":{"id":1},"spectatorPolicy":"AllAllowed","teamSize":5},"lobbyName":"KBot","lobbyPassword":null},"isCustom":true})";
 
 		//"id" 1- blind 2- draft -4 all random 6- tournament draft
 
@@ -323,9 +325,9 @@ void Direct3D9Render::GameTab()
 		ImGui::Separator();
 
 		static int inputGameID = 0;
-		ImGui::InputInt(XorStr("##inputGameID:"), &inputGameID, 1, 100);
+		ImGui::InputInt("##inputGameID:", &inputGameID, 1, 100);
 		ImGui::SameLine();
-		if (ImGui::Button(XorStr("Submit")))
+		if (ImGui::Button("Submit"))
 		{
 			gameID = inputGameID;
 		}
@@ -335,15 +337,15 @@ void Direct3D9Render::GameTab()
 			std::string result;
 			if (custom.empty())
 			{
-				result = XorStr(R"({"queueId":)") + std::to_string(gameID) + "}";
+				result = R"({"queueId":)" + std::to_string(gameID) + "}";
 			}
 			else
 			{
 				result = custom;
 				custom = "";
 			}
-			req = http.Request(XorStr("POST"), XorStr("https://127.0.0.1/lol-lobby/v2/lobby"), (result), LolHeader, "", "", clientPort);
-			if (req.find(XorStr("errorCode")) != std::string::npos)
+			req = http.Request("POST", "https://127.0.0.1/lol-lobby/v2/lobby", (result), LolHeader, "", "", clientPort);
+			if (req.find("errorCode") != std::string::npos)
 				MessageBoxA(0, req.c_str(), 0, 0);
 
 			/*	{
@@ -366,32 +368,30 @@ void Direct3D9Render::GameTab()
 			for (int i = 0; i < 4; i++)
 			{
 				std::this_thread::sleep_for(std::chrono::milliseconds(50));
-				std::string addBlue = XorStr(R"({"botDifficulty":"MEDIUM","championId":)") + std::to_string(RandomInt(0, champIDs.size() - 1)) + XorStr(R"(,"teamId":"100"})");
-				req = http.Request(XorStr("POST"), XorStr("https://127.0.0.1/lol-lobby/v1/lobby/custom/bots"), addBlue, LolHeader, "", "", clientPort);
+				std::string addBlue = R"({"botDifficulty":"MEDIUM","championId":)" + std::to_string(RandomInt(0, champIDs.size() - 1)) + R"(,"teamId":"100"})";
+				req = http.Request("POST", "https://127.0.0.1/lol-lobby/v1/lobby/custom/bots", addBlue, LolHeader, "", "", clientPort);
 			}
 			for (int i = 0; i < 5; i++)
 			{
 				std::this_thread::sleep_for(std::chrono::milliseconds(50));
-				std::string addRed = XorStr(R"({"botDifficulty":"MEDIUM","championId":)") + std::to_string(RandomInt(0, champIDs.size() - 1)) + XorStr(R"(,"teamId":"200"})");
-				req = http.Request(XorStr("POST"), XorStr("https://127.0.0.1/lol-lobby/v1/lobby/custom/bots"), addRed, LolHeader, "", "", clientPort);
+				std::string addRed = R"({"botDifficulty":"MEDIUM","championId":)" + std::to_string(RandomInt(0, champIDs.size() - 1)) + R"(,"teamId":"200"})";
+				req = http.Request("POST", "https://127.0.0.1/lol-lobby/v1/lobby/custom/bots", addRed, LolHeader, "", "", clientPort);
 			}
 			fill = false;
 		}
 		ImGui::Separator();
-		ImGui::Columns(2, 0, false);
-		if (ImGui::Button(XorStr("Start queue")))
+
+		if (ImGui::Button("Start queue"))
 		{
-			req = http.Request(XorStr("POST"), XorStr("https://127.0.0.1/lol-lobby/v2/lobby/matchmaking/search"), "", LolHeader, "", "", clientPort);
+			req = http.Request("POST", "https://127.0.0.1/lol-lobby/v2/lobby/matchmaking/search", "", LolHeader, "", "", clientPort);
 		}
 
-		ImGui::Columns(1);
+		ImGui::Checkbox("Auto accept", &bAutoAccept);
 
-		ImGui::Checkbox(XorStr("Auto accept"), &bAutoAccept);
-
-		ImGui::Text(XorStr("Instant message:"));
-		ImGui::InputText(XorStr("##inputInstantMessage"), instantMessage, IM_ARRAYSIZE(instantMessage));
-		ImGui::Checkbox(XorStr("Instalock"), &bInstalock);
-		if (ImGui::CollapsingHeader(XorStr("Instalock champ")))
+		ImGui::Text("Instant message:");
+		ImGui::InputText("##inputInstantMessage", instantMessage, IM_ARRAYSIZE(instantMessage));
+		ImGui::Checkbox("Instalock", &bInstalock);
+		if (ImGui::CollapsingHeader("Instalock champ"))
 		{
 			for (auto min : champsMinimal)
 			{
@@ -399,7 +399,7 @@ void Direct3D9Render::GameTab()
 					continue;
 
 				char bufchamp[128];
-				sprintf_s(bufchamp, XorStr("##Select %s"), min.alias.c_str());
+				sprintf_s(bufchamp, "##Select %s", min.alias.c_str());
 				ImGui::Text("%s", min.alias.c_str());
 				ImGui::SameLine();
 				ImGui::RadioButton(bufchamp, &instalockID, min.id);
@@ -409,15 +409,15 @@ void Direct3D9Render::GameTab()
 		ImGui::Separator();
 
 		static std::string boostMessage;
-		if (ImGui::Button(XorStr("Boost")))
+		if (ImGui::Button("Boost"))
 		{
-			if (MessageBoxA(0, XorStr("Are you sure? It will consume RP if you have enough for a boost"), 0, MB_OKCANCEL) == IDOK)
+			if (MessageBoxA(0, "Are you sure? It will consume RP if you have enough for a boost", 0, MB_OKCANCEL) == IDOK)
 			{
-				boostMessage = http.Request(XorStr("POST"), XorStr(R"(https://127.0.0.1/lol-login/v1/session/invoke?destination=lcdsServiceProxy&method=call&args=["","teambuilder-draft","activateBattleBoostV1",""])"), "", LolHeader, "", "", clientPort);
+				boostMessage = http.Request("POST", R"(https://127.0.0.1/lol-login/v1/session/invoke?destination=lcdsServiceProxy&method=call&args=["","teambuilder-draft","activateBattleBoostV1",""])", "", LolHeader, "", "", clientPort);
 			}
 		}
 		ImGui::SameLine();
-		ImGui::Text(XorStr("ARAM/ARURF Boost, use only if you don't have enough RP for boost"));
+		ImGui::Text("ARAM/ARURF Boost, use only if you don't have enough RP for boost");
 
 		ImGui::TextWrapped("%s", req.c_str());
 		ImGui::TextWrapped("%s", boostMessage.c_str());
@@ -427,15 +427,15 @@ void Direct3D9Render::GameTab()
 
 void Direct3D9Render::ProfileTab()
 {
-	if (ImGui::BeginTabItem(XorStr("Profile")))
+	if (ImGui::BeginTabItem("Profile"))
 	{
 		HTTP http;
 		static char statusText[1024 * 16];
-		ImGui::Text(XorStr("Status:"));
-		ImGui::InputTextMultiline(XorStr("##source"), (statusText), IM_ARRAYSIZE(statusText), ImVec2(400, 100), ImGuiInputTextFlags_AllowTabInput);
-		if (ImGui::Button(XorStr("Submit status")))
+		ImGui::Text("Status:");
+		ImGui::InputTextMultiline("##source", (statusText), IM_ARRAYSIZE(statusText), ImVec2(400, 100), ImGuiInputTextFlags_AllowTabInput);
+		if (ImGui::Button("Submit status"))
 		{
-			std::string result = XorStr("{\"statusMessage\":\"") + std::string(statusText) + "\"}";
+			std::string result = "{\"statusMessage\":\"" + std::string(statusText) + "\"}";
 
 			size_t nPos = 0;
 			while (nPos != std::string::npos)
@@ -447,8 +447,8 @@ void Direct3D9Render::ProfileTab()
 					result.insert(nPos, "\\n");
 				}
 			}
-			std::string req = http.Request(XorStr("PUT"), XorStr("https://127.0.0.1/lol-chat/v1/me"), (result), LolHeader, "", "", clientPort);
-			if (req.find(XorStr("errorCode")) != std::string::npos)
+			std::string req = http.Request("PUT", "https://127.0.0.1/lol-chat/v1/me", (result), LolHeader, "", "", clientPort);
+			if (req.find("errorCode") != std::string::npos)
 				MessageBoxA(0, req.c_str(), 0, 0);
 		}
 
@@ -457,7 +457,9 @@ void Direct3D9Render::ProfileTab()
 		static int lastavailability = 0;
 		ImGui::RadioButton("Online", &availability, 0); ImGui::SameLine();
 		ImGui::RadioButton("Mobile", &availability, 1); ImGui::SameLine();
-		ImGui::RadioButton("Offline", &availability, 2);
+		ImGui::RadioButton("Away", &availability, 2); ImGui::SameLine();
+		ImGui::RadioButton("Offline", &availability, 3);
+
 		if (availability != lastavailability)
 		{
 			lastavailability = availability;
@@ -471,11 +473,14 @@ void Direct3D9Render::ProfileTab()
 				body += "mobile";
 				break;
 			case 2:
+				body += "away";
+				break;
+			case 3:
 				body += "offline";
 				break;
 			}
 			body += "\"}";
-			http.Request(XorStr("PUT"), XorStr("https://127.0.0.1/lol-chat/v1/me"), body, LolHeader, "", "", clientPort);
+			http.Request("PUT", "https://127.0.0.1/lol-chat/v1/me", body, LolHeader, "", "", clientPort);
 		}
 
 		ImGui::Separator();
@@ -506,7 +511,7 @@ void Direct3D9Render::ProfileTab()
 		ImGui::RadioButton("TFT", &queue, 3); ImGui::SameLine();
 		ImGui::RadioButton("()", &queue, 4);
 
-		if (ImGui::Button(XorStr("Submit##rank")))
+		if (ImGui::Button("Submit##rank"))
 		{
 			std::string body = R"({"lol":{"rankedLeagueQueue":")";
 			switch (queue)
@@ -584,58 +589,58 @@ void Direct3D9Render::ProfileTab()
 
 			body += R"("}})";
 
-			http.Request(XorStr("PUT"), XorStr("https://127.0.0.1/lol-chat/v1/me"), body, LolHeader, "", "", clientPort);
+			http.Request("PUT", "https://127.0.0.1/lol-chat/v1/me", body, LolHeader, "", "", clientPort);
 		}
 
 		ImGui::SameLine();
-		if (ImGui::Button(XorStr("Empty##rank")))
+		if (ImGui::Button("Empty##rank"))
 		{
-			http.Request(XorStr("PUT"), XorStr("https://127.0.0.1/lol-chat/v1/me"), R"({"lol":{"rankedLeagueQueue":"","rankedLeagueTier":"","rankedLeagueDivision":""}})", LolHeader, "", "", clientPort);
+			http.Request("PUT", "https://127.0.0.1/lol-chat/v1/me", R"({"lol":{"rankedLeagueQueue":"","rankedLeagueTier":"","rankedLeagueDivision":""}})", LolHeader, "", "", clientPort);
 		}
 
 		ImGui::Separator();
 
 		static int iconID;
-		ImGui::Text(XorStr("Icon:"));
-		ImGui::InputInt(XorStr("##Icon:"), &iconID, 1, 100);
+		ImGui::Text("Icon:");
+		ImGui::InputInt("##Icon:", &iconID, 1, 100);
 		ImGui::SameLine();
-		if (ImGui::Button(XorStr("Submit##icon")))
+		if (ImGui::Button("Submit##icon"))
 		{
-			std::string result = XorStr(R"({"profileIconId":)") + std::to_string(iconID) + "}";
-			std::string req = http.Request(XorStr("PUT"), XorStr("https://127.0.0.1/lol-summoner/v1/current-summoner/icon"), (result), LolHeader, "", "", clientPort);
-			if (req.find(XorStr("errorCode")) != std::string::npos)
+			std::string result = R"({"profileIconId":)" + std::to_string(iconID) + "}";
+			std::string req = http.Request("PUT", "https://127.0.0.1/lol-summoner/v1/current-summoner/icon", (result), LolHeader, "", "", clientPort);
+			if (req.find("errorCode") != std::string::npos)
 			{
 				MessageBoxA(0, req.c_str(), 0, 0);
 			}
 		}
 		ImGui::SameLine();
-		if (ImGui::Button(XorStr("Submit 2##icon")))
+		if (ImGui::Button("Submit 2##icon"))
 		{
-			std::string result = XorStr(R"({"icon":)") + std::to_string(iconID) + "}";
-			std::string req = http.Request(XorStr("PUT"), XorStr("https://127.0.0.1/lol-chat/v1/me/"), (result), LolHeader, "", "", clientPort);
-			if (req.find(XorStr("errorCode")) != std::string::npos)
+			std::string result = R"({"icon":)" + std::to_string(iconID) + "}";
+			std::string req = http.Request("PUT", "https://127.0.0.1/lol-chat/v1/me/", (result), LolHeader, "", "", clientPort);
+			if (req.find("errorCode") != std::string::npos)
 			{
 				MessageBoxA(0, req.c_str(), 0, 0);
 			}
 		}
 
 		static int backgroundID;
-		ImGui::Text(XorStr("Background:"));
+		ImGui::Text("Background:");
 
-		ImGui::InputInt(XorStr("##Background:"), &backgroundID, 1, 100);
+		ImGui::InputInt("##Background:", &backgroundID, 1, 100);
 		ImGui::SameLine();
-		if (ImGui::Button(XorStr("Submit##background")))
+		if (ImGui::Button("Submit##background"))
 		{
-			std::string result = XorStr(R"({"key":"backgroundSkinId","value":)") + std::to_string(backgroundID) + "}";
-			std::string req = http.Request(XorStr("POST"), XorStr("https://127.0.0.1/lol-summoner/v1/current-summoner/summoner-profile/"), (result), LolHeader, "", "", clientPort);
+			std::string result = R"({"key":"backgroundSkinId","value":)" + std::to_string(backgroundID) + "}";
+			std::string req = http.Request("POST", "https://127.0.0.1/lol-summoner/v1/current-summoner/summoner-profile/", (result), LolHeader, "", "", clientPort);
 			//MessageBoxA(0, req.c_str(), 0, 0);
 		}
 
-		if (ImGui::CollapsingHeader(XorStr("Backgrounds")))
+		if (ImGui::CollapsingHeader("Backgrounds"))
 		{
 			if (champSkins.empty())
 			{
-				ImGui::Text(XorStr("Skin data still downloading"));
+				ImGui::Text("Skin data still downloading");
 			}
 			else
 			{
@@ -647,8 +652,8 @@ void Direct3D9Render::ProfileTab()
 						{
 							if (ImGui::Button(s.second.c_str()))
 							{
-								std::string result = XorStr(R"({"key":"backgroundSkinId","value":)") + s.first + "}";
-								std::string req = http.Request(XorStr("POST"), XorStr("https://127.0.0.1/lol-summoner/v1/current-summoner/summoner-profile/"), (result), LolHeader, "", "", clientPort);
+								std::string result = R"({"key":"backgroundSkinId","value":)" + s.first + "}";
+								std::string req = http.Request("POST", "https://127.0.0.1/lol-summoner/v1/current-summoner/summoner-profile/", (result), LolHeader, "", "", clientPort);
 							}
 						}
 						ImGui::TreePop();
@@ -663,29 +668,29 @@ void Direct3D9Render::ProfileTab()
 
 void Direct3D9Render::SessionTab()
 {
-	if (ImGui::BeginTabItem(XorStr("Session")))
+	if (ImGui::BeginTabItem("Session"))
 	{
 		HTTP http;
 		if (sessionOpen)
-			session = http.Request(XorStr("GET"), XorStr("https://127.0.0.1/lol-login/v1/session"), "", LolHeader, "", "", clientPort);
+			session = http.Request("GET", "https://127.0.0.1/lol-login/v1/session", "", LolHeader, "", "", clientPort);
 
 		Aws::String aws_s(session.c_str(), session.size());
 		Aws::Utils::Json::JsonValue Info(aws_s);
 
 		auto reqObj = Info.View().AsObject();
 
-		ImGui::Text(XorStr("accountId: %s"), std::to_string(reqObj.GetInt64(XorStr("accountId"))).c_str());
-		ImGui::Text(XorStr("connected: %d"), reqObj.GetBool(XorStr("connected")));
-		ImGui::TextWrapped(XorStr("idToken: %s"), reqObj.GetString(XorStr("idToken")).c_str());
-		ImGui::Text(XorStr("isInLoginQueue: %d"), reqObj.GetBool(XorStr("isInLoginQueue")));
-		ImGui::Text(XorStr("isNewPlayer: %d"), reqObj.GetBool(XorStr("isNewPlayer")));
-		ImGui::Text(XorStr("puuid: %s"), reqObj.GetString(XorStr("puuid")).c_str());
-		ImGui::Text(XorStr("state: %s"), reqObj.GetString(XorStr("state")).c_str());
-		ImGui::Text(XorStr("summonerId: %d"), reqObj.GetInteger(XorStr("summonerId")));
-		ImGui::Text(XorStr("userAuthToken: %d"), reqObj.GetInteger(XorStr("userAuthToken")));
-		ImGui::Text(XorStr("username: %s"), reqObj.GetString(XorStr("username")).c_str());
+		ImGui::Text("accountId: %s", std::to_string(reqObj.GetInt64("accountId")).c_str());
+		ImGui::Text("connected: %d", reqObj.GetBool("connected"));
+		ImGui::TextWrapped("idToken: %s", reqObj.GetString("idToken").c_str());
+		ImGui::Text("isInLoginQueue: %d", reqObj.GetBool("isInLoginQueue"));
+		ImGui::Text("isNewPlayer: %d", reqObj.GetBool("isNewPlayer"));
+		ImGui::Text("puuid: %s", reqObj.GetString("puuid").c_str());
+		ImGui::Text("state: %s", reqObj.GetString("state").c_str());
+		ImGui::Text("summonerId: %d", reqObj.GetInteger("summonerId"));
+		ImGui::Text("userAuthToken: %d", reqObj.GetInteger("userAuthToken"));
+		ImGui::Text("username: %s", reqObj.GetString("username").c_str());
 
-		if (ImGui::Button(XorStr("Copy to clipboard##sessionTab")))
+		if (ImGui::Button("Copy to clipboard##sessionTab"))
 		{
 			utils->CopyToClipboard(session);
 		}
@@ -700,7 +705,7 @@ void Direct3D9Render::SessionTab()
 
 void Direct3D9Render::InfoTab()
 {
-	if (ImGui::BeginTabItem(XorStr("Info")))
+	if (ImGui::BeginTabItem("Info"))
 	{
 		HTTP http;
 		static bool display = false;
@@ -709,16 +714,28 @@ void Direct3D9Render::InfoTab()
 		static std::string accID;
 		static int summID;
 		static std::string summName;
-		ImGui::Text(XorStr("Input player name:"));
-		ImGui::InputText(XorStr("##inputPlayerName"), playerName, IM_ARRAYSIZE(playerName));
+		ImGui::Text("Input player name:");
+		ImGui::InputText("##inputPlayerName", playerName, IM_ARRAYSIZE(playerName));
 		ImGui::SameLine();
 
-		if (ImGui::Button(XorStr("Submit##playerName")))
+		if (ImGui::Button("Submit##playerName"))
 		{
-			req = http.Request(XorStr("GET"), XorStr("https://127.0.0.1/lol-summoner/v1/summoners?name=") + std::string(playerName), "", LolHeader, "", "", clientPort);
+			req = http.Request("GET", "https://127.0.0.1/lol-summoner/v1/summoners?name=" + std::string(playerName), "", LolHeader, "", "", clientPort);
 			display = true;
 		}
-		if (req.find(XorStr("errorCode")) != std::string::npos)
+		ImGui::SameLine();
+		if (ImGui::Button("puuid##playerName"))
+		{
+			req = http.Request("GET", "https://127.0.0.1/lol-summoner/v1/summoners-by-puuid-cached/" + std::string(playerName), "", LolHeader, "", "", clientPort);
+			display = true;
+		}
+		ImGui::SameLine();
+		if (ImGui::Button("summId##playerName"))
+		{
+			req = http.Request("GET", "https://127.0.0.1/lol-summoner/v1/summoners/" + std::string(playerName), "", LolHeader, "", "", clientPort);
+			display = true;
+		}
+		if (req.find("errorCode") != std::string::npos)
 		{
 			ImGui::TextWrapped("%s", req.c_str());
 		}
@@ -728,44 +745,50 @@ void Direct3D9Render::InfoTab()
 			Aws::Utils::Json::JsonValue Info(aws_s);
 
 			auto reqObj = Info.View().AsObject();
-			accID = std::to_string(reqObj.GetInt64(XorStr("accountId"))).c_str();
-			ImGui::Text(XorStr("accountId: %s"), accID.c_str());
-			ImGui::TextWrapped(XorStr("displayName: %s"), reqObj.GetString(XorStr("displayName")).c_str());
-			summName = reqObj.GetString(XorStr("internalName")).c_str();
-			ImGui::TextWrapped(XorStr("internalName: %s"), summName.c_str());
-			ImGui::Text(XorStr("nameChangeFlag: %d"), reqObj.GetInteger(XorStr("nameChangeFlag")));
-			ImGui::Text(XorStr("percentCompleteForNextLevel: %d"), reqObj.GetInteger(XorStr("percentCompleteForNextLevel")));
-			ImGui::Text(XorStr("profileIconId: %d"), reqObj.GetInteger(XorStr("profileIconId")));
-			ImGui::Text(XorStr("puuid: %s"), reqObj.GetString(XorStr("puuid")).c_str());
-			summID = reqObj.GetInteger(XorStr("summonerId"));
-			ImGui::Text(XorStr("summonerId: %d"), summID);
-			ImGui::Text(XorStr("summonerLevel: %d"), reqObj.GetInteger(XorStr("summonerLevel")));
-			ImGui::Text(XorStr("unnamed: %d"), reqObj.GetInteger(XorStr("unnamed")));
-			ImGui::Text(XorStr("xpSinceLastLevel: %d"), reqObj.GetInteger(XorStr("xpSinceLastLevel")));
-			ImGui::Text(XorStr("xpUntilNextLevel: %d"), reqObj.GetInteger(XorStr("xpUntilNextLevel")));
+			accID = std::to_string(reqObj.GetInt64("accountId")).c_str();
+			ImGui::Text("accountId: %s", accID.c_str());
+			ImGui::TextWrapped("displayName: %s", reqObj.GetString("displayName").c_str());
+			summName = reqObj.GetString("internalName").c_str();
+			ImGui::TextWrapped("internalName: %s", summName.c_str());
+			ImGui::Text("nameChangeFlag: %d", reqObj.GetInteger("nameChangeFlag"));
+			ImGui::Text("percentCompleteForNextLevel: %d", reqObj.GetInteger("percentCompleteForNextLevel"));
+			ImGui::Text("profileIconId: %d", reqObj.GetInteger("profileIconId"));
+			ImGui::Text("puuid: %s", reqObj.GetString("puuid").c_str());
+			summID = reqObj.GetInteger("summonerId");
+			ImGui::Text("summonerId: %d", summID);
+			ImGui::Text("summonerLevel: %d", reqObj.GetInteger("summonerLevel"));
+			ImGui::Text("unnamed: %d", reqObj.GetInteger("unnamed"));
+			ImGui::Text("xpSinceLastLevel: %d", reqObj.GetInteger("xpSinceLastLevel"));
+			ImGui::Text("xpUntilNextLevel: %d", reqObj.GetInteger("xpUntilNextLevel"));
 
-			auto rerollPointsObj = reqObj.GetObject(XorStr("rerollPoints"));
-			ImGui::Text(XorStr("currentPoints: %d"), rerollPointsObj.GetInteger(XorStr("currentPoints")));
-			ImGui::Text(XorStr("maxRolls: %d"), rerollPointsObj.GetInteger(XorStr("maxRolls")));
-			ImGui::Text(XorStr("numberOfRolls: %d"), rerollPointsObj.GetInteger(XorStr("numberOfRolls")));
-			ImGui::Text(XorStr("pointsCostToRoll: %d"), rerollPointsObj.GetInteger(XorStr("pointsCostToRoll")));
-			ImGui::Text(XorStr("pointsToReroll: %d"), rerollPointsObj.GetInteger(XorStr("pointsToReroll")));
+			auto rerollPointsObj = reqObj.GetObject("rerollPoints");
+			ImGui::Text("currentPoints: %d", rerollPointsObj.GetInteger("currentPoints"));
+			ImGui::Text("maxRolls: %d", rerollPointsObj.GetInteger("maxRolls"));
+			ImGui::Text("numberOfRolls: %d", rerollPointsObj.GetInteger("numberOfRolls"));
+			ImGui::Text("pointsCostToRoll: %d", rerollPointsObj.GetInteger("pointsCostToRoll"));
+			ImGui::Text("pointsToReroll: %d", rerollPointsObj.GetInteger("pointsToReroll"));
 		}
-		if (ImGui::Button(XorStr("Invite to lobby##infoTab")))
+		if (ImGui::Button("Invite to lobby##infoTab"))
 		{
-			std::string invite = XorStr(R"([{"toSummonerId":)") + accID + R"(}])";
-			http.Request(XorStr("POST"), XorStr("https://127.0.0.1/lol-lobby/v2/lobby/invitations"), invite, LolHeader, "", "", clientPort);
-			invite = XorStr(R"([{"toSummonerId":)") + std::to_string(summID) + R"(}])";
-			http.Request(XorStr("POST"), XorStr("https://127.0.0.1/lol-lobby/v2/lobby/invitations"), invite, LolHeader, "", "", clientPort);
+			std::string invite = R"([{"toSummonerId":)" + accID + R"(}])";
+			http.Request("POST", "https://127.0.0.1/lol-lobby/v2/lobby/invitations", invite, LolHeader, "", "", clientPort);
+			invite = R"([{"toSummonerId":)" + std::to_string(summID) + R"(}])";
+			http.Request("POST", "https://127.0.0.1/lol-lobby/v2/lobby/invitations", invite, LolHeader, "", "", clientPort);
 		}
 		ImGui::SameLine();
-		if (ImGui::Button(XorStr("Invite to friends##infoTab")))
+		if (ImGui::Button("Invite to friends##infoTab"))
 		{
-			std::string invite = XorStr(R"({"name":")") + summName + R"("})";
-			http.Request(XorStr("POST"), XorStr("https://127.0.0.1/lol-chat/v1/friend-requests"), invite, LolHeader, "", "", clientPort);
+			std::string invite = R"({"name":")" + summName + R"("})";
+			http.Request("POST", "https://127.0.0.1/lol-chat/v1/friend-requests", invite, LolHeader, "", "", clientPort);
+		}
+		ImGui::SameLine();
+		if (ImGui::Button("Add to block list##infoTab"))
+		{
+			std::string body = R"({ "summonerId":)" + std::to_string(summID) + "}";
+			http.Request("POST", "https://127.0.0.1/lol-chat/v1/blocked-players", body, LolHeader, "", "", clientPort);
 		}
 
-		if (ImGui::Button(XorStr("Copy to clipboard##infoTab")))
+		if (ImGui::Button("Copy to clipboard##infoTab"))
 		{
 			utils->CopyToClipboard(req);
 		}
@@ -776,7 +799,7 @@ void Direct3D9Render::InfoTab()
 
 void Direct3D9Render::ChampsTab()
 {
-	if (ImGui::BeginTabItem(XorStr("Champs")))
+	if (ImGui::BeginTabItem("Champs"))
 	{
 		HTTP http;
 		static std::string req;
@@ -785,23 +808,23 @@ void Direct3D9Render::ChampsTab()
 		static int iChampsOwned = 0;
 		if (champsOpen)
 		{
-			session = http.Request(XorStr("GET"), XorStr("https://127.0.0.1/lol-login/v1/session"), "", LolHeader, "", "", clientPort);
+			session = http.Request("GET", "https://127.0.0.1/lol-login/v1/session", "", LolHeader, "", "", clientPort);
 			Aws::String aws_s(session.c_str(), session.size());
 			Aws::Utils::Json::JsonValue Info(aws_s);
 
 			auto reqObj = Info.View().AsObject();
-			int summonerId = reqObj.GetInteger(XorStr("summonerId"));
+			int summonerId = reqObj.GetInteger("summonerId");
 
-			req = http.Request(XorStr("GET"), XorStr("https://127.0.0.1/lol-collections/v1/inventories/") + std::to_string(summonerId) + XorStr("/champion-mastery"), "", LolHeader, "", "", clientPort);
+			req = http.Request("GET", "https://127.0.0.1/lol-collections/v1/inventories/" + std::to_string(summonerId) + "/champion-mastery", "", LolHeader, "", "", clientPort);
 
-			req2 = http.Request(XorStr("GET"), XorStr("https://127.0.0.1/lol-champions/v1/inventories/") + std::to_string(summonerId) + XorStr("/champions-minimal"), "", LolHeader, "", "", clientPort);
+			req2 = http.Request("GET", "https://127.0.0.1/lol-champions/v1/inventories/" + std::to_string(summonerId) + "/champions-minimal", "", LolHeader, "", "", clientPort);
 
 			added = false;
 			iChampsOwned = 0;
 			champsMinimal.clear();
 			champsMastery.clear();
 		}
-		if (req.find(XorStr("errorCode")) != std::string::npos || req2.find(XorStr("errorCode")) != std::string::npos || req == "[]")
+		if (req.find("errorCode") != std::string::npos || req2.find("errorCode") != std::string::npos || req == "[]")
 		{
 			ImGui::TextWrapped("%s", req.c_str());
 
@@ -819,26 +842,26 @@ void Direct3D9Render::ChampsTab()
 					auto champObj = req2Obj.GetItem(i).AsObject();
 					ChampMinimal champ;
 
-					champ.active = champObj.GetInteger(XorStr("active"));
-					champ.alias = champObj.GetString(XorStr("alias")).c_str();
-					champ.banVoPath = champObj.GetString(XorStr("banVoPath")).c_str();
-					champ.baseLoadScreenPath = champObj.GetString(XorStr("baseLoadScreenPath")).c_str();
-					champ.botEnabled = champObj.GetInteger(XorStr("botEnabled"));
-					champ.chooseVoPath = champObj.GetString(XorStr("chooseVoPath")).c_str();
-					champ.freeToPlay = champObj.GetInteger(XorStr("freeToPlay"));
-					champ.id = champObj.GetInteger(XorStr("id"));
-					champ.name = champObj.GetString(XorStr("name")).c_str();
-					auto ownershipObj = champObj.GetObject(XorStr("ownership"));
-					champ.freeToPlayReward = ownershipObj.GetInteger(XorStr("freeToPlayReward"));
-					champ.owned = ownershipObj.GetInteger(XorStr("owned"));
+					champ.active = champObj.GetInteger("active");
+					champ.alias = champObj.GetString("alias").c_str();
+					champ.banVoPath = champObj.GetString("banVoPath").c_str();
+					champ.baseLoadScreenPath = champObj.GetString("baseLoadScreenPath").c_str();
+					champ.botEnabled = champObj.GetInteger("botEnabled");
+					champ.chooseVoPath = champObj.GetString("chooseVoPath").c_str();
+					champ.freeToPlay = champObj.GetInteger("freeToPlay");
+					champ.id = champObj.GetInteger("id");
+					champ.name = champObj.GetString("name").c_str();
+					auto ownershipObj = champObj.GetObject("ownership");
+					champ.freeToPlayReward = ownershipObj.GetInteger("freeToPlayReward");
+					champ.owned = ownershipObj.GetInteger("owned");
 					if (champ.owned)
 						iChampsOwned++;
-					champ.purchased = std::to_string(champObj.GetInt64(XorStr("purchased"))).c_str();
-					champ.rankedPlayEnabled = champObj.GetInteger(XorStr("rankedPlayEnabled"));
+					champ.purchased = std::to_string(champObj.GetInt64("purchased")).c_str();
+					champ.rankedPlayEnabled = champObj.GetInteger("rankedPlayEnabled");
 					//auto rolesObj = champObj.GetObject("roles"); //todo
-					champ.squarePortraitPath = champObj.GetString(XorStr("squarePortraitPath")).c_str();
-					champ.stingerSfxPath = champObj.GetString(XorStr("stingerSfxPath")).c_str();
-					champ.title = champObj.GetString(XorStr("title")).c_str();
+					champ.squarePortraitPath = champObj.GetString("squarePortraitPath").c_str();
+					champ.stingerSfxPath = champObj.GetString("stingerSfxPath").c_str();
+					champ.title = champObj.GetString("title").c_str();
 
 					champsMinimal.emplace_back(champ);
 				}
@@ -856,18 +879,18 @@ void Direct3D9Render::ChampsTab()
 					//input player name
 
 					ChampMastery champ;
-					champ.championId = champObj.GetInteger(XorStr("championId"));
-					champ.championLevel = champObj.GetInteger(XorStr("championLevel"));
-					champ.championPoints = champObj.GetInteger(XorStr("championPoints"));
-					champ.championPointsSinceLastLevel = champObj.GetInteger(XorStr("championPointsSinceLastLevel"));
-					champ.championPointsUntilNextLevel = champObj.GetInteger(XorStr("championPointsUntilNextLevel"));
-					champ.chestGranted = champObj.GetInteger(XorStr("chestGranted"));
-					champ.formattedChampionPoints = champObj.GetString(XorStr("formattedChampionPoints")).c_str();
-					champ.formattedMasteryGoal = champObj.GetString(XorStr("formattedMasteryGoal")).c_str();
-					champ.highestGrade = champObj.GetInteger(XorStr("highestGrade"));
-					champ.lastPlayTime = std::to_string(champObj.GetInt64(XorStr("lastPlayTime"))).c_str();
-					champ.playerId = std::to_string(champObj.GetInt64(XorStr("playerId"))).c_str();
-					champ.tokensEarned = champObj.GetInteger(XorStr("tokensEarned"));
+					champ.championId = champObj.GetInteger("championId");
+					champ.championLevel = champObj.GetInteger("championLevel");
+					champ.championPoints = champObj.GetInteger("championPoints");
+					champ.championPointsSinceLastLevel = champObj.GetInteger("championPointsSinceLastLevel");
+					champ.championPointsUntilNextLevel = champObj.GetInteger("championPointsUntilNextLevel");
+					champ.chestGranted = champObj.GetInteger("chestGranted");
+					champ.formattedChampionPoints = champObj.GetString("formattedChampionPoints").c_str();
+					champ.formattedMasteryGoal = champObj.GetString("formattedMasteryGoal").c_str();
+					champ.highestGrade = champObj.GetInteger("highestGrade");
+					champ.lastPlayTime = std::to_string(champObj.GetInt64("lastPlayTime")).c_str();
+					champ.playerId = std::to_string(champObj.GetInt64("playerId")).c_str();
+					champ.tokensEarned = champObj.GetInteger("tokensEarned");
 
 					champsMastery.emplace_back(champ);
 				}
@@ -878,35 +901,35 @@ void Direct3D9Render::ChampsTab()
 				added = true;
 			}
 
-			ImGui::Text(XorStr("Champions owned: %d"), iChampsOwned);
+			ImGui::Text("Champions owned: %d", iChampsOwned);
 			for (auto min : champsMinimal)
 			{
 				if (!min.owned)
 					continue;
 
 				ImGui::Separator();
-				ImGui::Text(XorStr("name: %s"), min.name.c_str());
+				ImGui::Text("name: %s", min.name.c_str());
 				int64_t t = std::stoll(min.purchased);
 				t /= 1000;
 				char buffer[50];
-				strftime(buffer, 100, XorStr("%Y-%m-%d %H:%M:%S"), localtime(&t));
-				ImGui::Text(XorStr("purchased: %s"), buffer);
-				ImGui::Text(XorStr("id: %d"), min.id);
+				strftime(buffer, 100, "%Y-%m-%d %H:%M:%S", localtime(&t));
+				ImGui::Text("purchased: %s", buffer);
+				ImGui::Text("id: %d", min.id);
 				for (auto man : champsMastery)
 				{
 					if (min.id == man.championId)
 					{
-						ImGui::Text(XorStr("championLevel: %d"), man.championLevel);
-						ImGui::Text(XorStr("championPoints: %d"), man.championPoints);
-						ImGui::Text(XorStr("championPointsSinceLastLevel: %d"), man.championPointsSinceLastLevel);
-						ImGui::Text(XorStr("championPointsUntilNextLevel: %d"), man.championPointsUntilNextLevel);
-						ImGui::Text(XorStr("chestGranted: %d"), man.chestGranted);
-						ImGui::Text(XorStr("formattedChampionPoints: %s"), man.formattedChampionPoints.c_str());
-						ImGui::Text(XorStr("formattedMasteryGoal: %s"), man.formattedMasteryGoal.c_str());
-						ImGui::Text(XorStr("highestGrade: %d"), man.highestGrade);
-						ImGui::Text(XorStr("lastPlayTime: %s"), man.lastPlayTime.c_str());
-						ImGui::Text(XorStr("playerId: %s"), man.playerId.c_str());
-						ImGui::Text(XorStr("tokensEarned: %d"), man.tokensEarned);
+						ImGui::Text("championLevel: %d", man.championLevel);
+						ImGui::Text("championPoints: %d", man.championPoints);
+						ImGui::Text("championPointsSinceLastLevel: %d", man.championPointsSinceLastLevel);
+						ImGui::Text("championPointsUntilNextLevel: %d", man.championPointsUntilNextLevel);
+						ImGui::Text("chestGranted: %d", man.chestGranted);
+						ImGui::Text("formattedChampionPoints: %s", man.formattedChampionPoints.c_str());
+						ImGui::Text("formattedMasteryGoal: %s", man.formattedMasteryGoal.c_str());
+						ImGui::Text("highestGrade: %d", man.highestGrade);
+						ImGui::Text("lastPlayTime: %s", man.lastPlayTime.c_str());
+						ImGui::Text("playerId: %s", man.playerId.c_str());
+						ImGui::Text("tokensEarned: %d", man.tokensEarned);
 
 						break;
 					}
@@ -924,14 +947,14 @@ void Direct3D9Render::ChampsTab()
 
 void Direct3D9Render::LaunchOldClient()
 {
-	if (!std::filesystem::exists(XorStr("C:/Riot Games/League of Legends/LoL Companion")))
+	if (!std::filesystem::exists("C:/Riot Games/League of Legends/LoL Companion"))
 	{
-		std::filesystem::create_directory(XorStr("C:/Riot Games/League of Legends/LoL Companion"));
+		std::filesystem::create_directory("C:/Riot Games/League of Legends/LoL Companion");
 	}
-	if (!std::filesystem::exists(XorStr("C:/Riot Games/League of Legends/LoL Companion/system.yaml")))
+	if (!std::filesystem::exists("C:/Riot Games/League of Legends/LoL Companion/system.yaml"))
 	{
-		std::ifstream infile(XorStr("C:/Riot Games/League of Legends/system.yaml"));
-		std::ofstream outfile(XorStr("C:/Riot Games/League of Legends/LoL Companion/system.yaml"));
+		std::ifstream infile("C:/Riot Games/League of Legends/system.yaml");
+		std::ofstream outfile("C:/Riot Games/League of Legends/LoL Companion/system.yaml");
 		std::string content = "";
 		int i;
 
@@ -939,7 +962,7 @@ void Direct3D9Render::LaunchOldClient()
 			content += infile.get();
 
 		infile.close();
-		size_t pos = content.find(XorStr("riotclient:"));
+		size_t pos = content.find("riotclient:");
 		content = content.substr(0, pos + 11);
 
 		outfile << content;
@@ -947,13 +970,13 @@ void Direct3D9Render::LaunchOldClient()
 	}
 	for (std::string s : lolProcs)
 	{
-		std::string kill = XorStr("taskkill /im ") + s + XorStr(" /t /f");
+		std::string kill = "taskkill /im " + s + " /t /f";
 		utils->Exec(kill.c_str());
 	}
 	std::this_thread::sleep_for(std::chrono::milliseconds(2000));
 	//this doesnt work but works if I paste it into cmd
 	//std::string run = R"("C:\Riot Games\League of Legends\LeagueClient.exe" --system-yaml-override="C:\Riot Games\League of Legends\LoL Companion\system.yaml")";
-	std::cout << ShellExecute(NULL, NULL, LR"(C:\Riot Games\Riot Client\League of Legends\LeagueClient.exe)", NULL, NULL, SW_SHOWNORMAL);
+	ShellExecute(NULL, NULL, LR"(C:\Riot Games\Riot Client\League of Legends\LeagueClient.exe)", NULL, NULL, SW_SHOWNORMAL);
 	//ShellExecute(NULL, NULL, L"C:\\Riot Games\\Riot Client\\RiotClientServices.exe", L"--launch-product=league_of_legends --launch-patchline=live", NULL, SW_SHOWNORMAL);
 
 	//system(run.c_str());
@@ -961,48 +984,48 @@ void Direct3D9Render::LaunchOldClient()
 
 void Direct3D9Render::SkinsTab()
 {
-	if (ImGui::BeginTabItem(XorStr("Skins")))
+	if (ImGui::BeginTabItem("Skins"))
 	{
 		HTTP http;
 		static std::string req;
 		if (skinsOpen)
-			req = http.Request(XorStr("GET"), XorStr("https://127.0.0.1/lol-inventory/v2/inventory/CHAMPION_SKIN"), "", LolHeader, "", "", clientPort);
+			req = http.Request("GET", "https://127.0.0.1/lol-inventory/v2/inventory/CHAMPION_SKIN", "", LolHeader, "", "", clientPort);
 
 		Aws::String aws_s(req.c_str(), req.size());
 		Aws::Utils::Json::JsonValue Info(aws_s);
 
 		auto skinsArr = Info.View().AsArray();
 
-		ImGui::Text(XorStr("Skins owned: %d"), skinsArr.GetLength());
+		ImGui::Text("Skins owned: %d", skinsArr.GetLength());
 
 		for (size_t i = 0; i < skinsArr.GetLength(); ++i)
 		{
 			ImGui::Separator();
 			auto skinObj = skinsArr.GetItem(i).AsObject();
-			int itemId = skinObj.GetInteger(XorStr("itemId"));
+			int itemId = skinObj.GetInteger("itemId");
 			for (auto champ : champSkins)
 			{
 				for (auto skin : champ.skins)
 				{
 					if (std::to_string(itemId) == skin.first)
 					{
-						ImGui::Text(XorStr("Name: %s"), skin.second.c_str());
+						ImGui::Text("Name: %s", skin.second.c_str());
 					}
 				}
 			}
 
-			ImGui::Text(XorStr("inventoryType: %s"), skinObj.GetString(XorStr("inventoryType")).c_str());
-			ImGui::Text(XorStr("itemId: %d"), itemId);
-			ImGui::Text(XorStr("ownershipType: %s"), skinObj.GetString(XorStr("ownershipType")).c_str());
-			auto payloadObj = skinObj.GetObject(XorStr("payload"));
-			ImGui::Text(XorStr("isVintage: %d"), payloadObj.GetInteger(XorStr("isVintage")));
-			std::string purchaseDateFormatted = skinObj.GetString(XorStr("purchaseDate")).c_str();
+			ImGui::Text("inventoryType: %s", skinObj.GetString("inventoryType").c_str());
+			ImGui::Text("itemId: %d", itemId);
+			ImGui::Text("ownershipType: %s", skinObj.GetString("ownershipType").c_str());
+			auto payloadObj = skinObj.GetObject("payload");
+			ImGui::Text("isVintage: %d", payloadObj.GetInteger("isVintage"));
+			std::string purchaseDateFormatted = skinObj.GetString("purchaseDate").c_str();
 			purchaseDateFormatted.insert(4, ".");
 			purchaseDateFormatted.insert(7, ".");
 			purchaseDateFormatted.insert(10, " ");
-			ImGui::Text(XorStr("purchaseDate: %s"), purchaseDateFormatted.c_str());
-			ImGui::Text(XorStr("quantity: %d"), skinObj.GetInteger(XorStr("quantity")));
-			ImGui::Text(XorStr("uuid: %s"), skinObj.GetString(XorStr("uuid")).c_str());
+			ImGui::Text("purchaseDate: %s", purchaseDateFormatted.c_str());
+			ImGui::Text("quantity: %d", skinObj.GetInteger("quantity"));
+			ImGui::Text("uuid: %s", skinObj.GetString("uuid").c_str());
 		}
 
 		skinsOpen = false;
@@ -1013,10 +1036,10 @@ void Direct3D9Render::SkinsTab()
 
 void Direct3D9Render::LootTab()
 {
-	if (ImGui::BeginTabItem(XorStr("Loot")))
+	if (ImGui::BeginTabItem("Loot"))
 	{
 		HTTP http;
-		static std::string req;// = http.Request(XorStr("GET"), XorStr("https://127.0.0.1/lol-loot/v1/player-loot-map"), "", LolHeader, "", "", clientPort);
+		static std::string req;// = http.Request("GET"), "https://127.0.0.1/lol-loot/v1/player-loot-map"), "", LolHeader, "", "", clientPort);
 
 		//GET /lol-loot/v1/player-display-categories
 		//["CHEST","CHAMPION","SKIN","COMPANION","ETERNALS","EMOTE","WARDSKIN","SUMMONERICON"]
@@ -1037,14 +1060,14 @@ void Direct3D9Render::LootTab()
 		//lol-loot/v1/recipes/WARDSKIN_RENTAL_disenchant/craft?repeat=1
 		//["WARD_SKIN_RENTAL_199"]
 
-		if (ImGui::Button(XorStr("Craft Key")))
-			req = http.Request(XorStr("POST"), XorStr("https://127.0.0.1/lol-loot/v1/recipes/MATERIAL_key_fragment_forge/craft?repeat=1"), XorStr("[\"MATERIAL_key_fragment\"]"), LolHeader, "", "", clientPort);
+		if (ImGui::Button("Craft Key"))
+			req = http.Request("POST", "https://127.0.0.1/lol-loot/v1/recipes/MATERIAL_key_fragment_forge/craft?repeat=1", "[\"MATERIAL_key_fragment\"]", LolHeader, "", "", clientPort);
 
-		if (ImGui::Button(XorStr("Open Chest")))
-			req = http.Request(XorStr("POST"), XorStr("https://127.0.0.1/lol-loot/v1/recipes/CHEST_generic_OPEN/craft?repeat=1"), XorStr(R"(["CHEST_generic","MATERIAL_key"])"), LolHeader, "", "", clientPort);
+		if (ImGui::Button("Open Chest"))
+			req = http.Request("POST", "https://127.0.0.1/lol-loot/v1/recipes/CHEST_generic_OPEN/craft?repeat=1", R"(["CHEST_generic","MATERIAL_key"])", LolHeader, "", "", clientPort);
 
-		if (ImGui::Button(XorStr("Open Mastery Chest")))
-			req = http.Request(XorStr("POST"), XorStr("https://127.0.0.1/lol-loot/v1/recipes/CHEST_champion_mastery_OPEN/craft?repeat=1"), XorStr(R"(["CHEST_champion_mastery","MATERIAL_key"])"), LolHeader, "", "", clientPort);
+		if (ImGui::Button("Open Mastery Chest"))
+			req = http.Request("POST", "https://127.0.0.1/lol-loot/v1/recipes/CHEST_champion_mastery_OPEN/craft?repeat=1", R"(["CHEST_champion_mastery","MATERIAL_key"])", LolHeader, "", "", clientPort);
 
 		ImGui::TextWrapped("%s", req.c_str());
 
@@ -1054,26 +1077,26 @@ void Direct3D9Render::LootTab()
 
 void Direct3D9Render::MiscTab()
 {
-	if (ImGui::BeginTabItem(XorStr("Misc")))
+	if (ImGui::BeginTabItem("Misc"))
 	{
 		static std::string miscReq;
 		HTTP http;
 
 		ImGui::Columns(2, 0, false);
 
-		if (ImGui::Button(XorStr("Launch another client")))
+		if (ImGui::Button("Launch another client"))
 		{
 			ShellExecute(NULL, NULL, L"C:\\Riot Games\\Riot Client\\RiotClientServices.exe", L"--launch-product=league_of_legends --launch-patchline=live --allow-multiple-clients", NULL, SW_SHOWNORMAL);
 		}
 
 		ImGui::NextColumn();
 
-		if (ImGui::Button(XorStr("Launch legacy client")))
+		if (ImGui::Button("Launch legacy client"))
 		{
-			if (!std::filesystem::exists(XorStr("C:/Riot Games/League of Legends/")))
+			if (!std::filesystem::exists("C:/Riot Games/League of Legends/"))
 			{
 				//todo typing in lol path
-				miscReq = XorStr("League isnt installed in default path");
+				miscReq = "League isnt installed in default path";
 			}
 			else
 			{
@@ -1083,22 +1106,22 @@ void Direct3D9Render::MiscTab()
 
 		ImGui::Columns(1);
 
-		if (ImGui::Button(XorStr("Restart UX")))
+		if (ImGui::Button("Restart UX"))
 		{
-			miscReq = http.Request(XorStr("POST"), XorStr("https://127.0.0.1/riotclient/kill-and-restart-ux"), "", LolHeader, "", "", clientPort);
+			miscReq = http.Request("POST", "https://127.0.0.1/riotclient/kill-and-restart-ux", "", LolHeader, "", "", clientPort);
 			if (miscReq.find("failed") != std::string::npos)
 			{
 				MakeAuth();
 				Direct3D9.MakeHeader();
-				miscReq = XorStr("Rehooked to new league client");
+				miscReq = "Rehooked to new league client";
 			}
 		}
 
-		if (ImGui::Button(XorStr("Close client")))
-			miscReq = http.Request(XorStr("POST"), XorStr("https://127.0.0.1/process-control/v1/process/quit"), "", LolHeader, "", "", clientPort);
+		if (ImGui::Button("Close client"))
+			miscReq = http.Request("POST", "https://127.0.0.1/process-control/v1/process/quit", "", LolHeader, "", "", clientPort);
 
-		if (ImGui::Button(XorStr("Free Tristana + Riot Girl skin")))
-			miscReq = http.Request(XorStr("POST"), XorStr("https://127.0.0.1/lol-login/v1/session/invoke?destination=inventoryService&method=giftFacebookFan&args=[]"), "", LolHeader, "", "", clientPort);
+		if (ImGui::Button("Free Tristana + Riot Girl skin"))
+			miscReq = http.Request("POST", "https://127.0.0.1/lol-login/v1/session/invoke?destination=inventoryService&method=giftFacebookFan&args=[]", "", LolHeader, "", "", clientPort);
 
 		ImGui::TextWrapped(miscReq.c_str());
 		ImGui::EndTabItem();
@@ -1107,29 +1130,29 @@ void Direct3D9Render::MiscTab()
 
 void Direct3D9Render::CustomTab()
 {
-	if (ImGui::BeginTabItem(XorStr("Custom")))
+	if (ImGui::BeginTabItem("Custom"))
 	{
 		HTTP http;
 
 		static char method[50];
-		ImGui::Text(XorStr("Method:"));
-		ImGui::InputText(XorStr("##inputMethod"), method, IM_ARRAYSIZE(method));
+		ImGui::Text("Method:");
+		ImGui::InputText("##inputMethod", method, IM_ARRAYSIZE(method));
 
 		static char urlText[1024 * 16];
-		ImGui::Text(XorStr("URL:"));
-		ImGui::InputTextMultiline(XorStr("##inputUrl"), urlText, IM_ARRAYSIZE(urlText), ImVec2(600, 20));
+		ImGui::Text("URL:");
+		ImGui::InputTextMultiline("##inputUrl", urlText, IM_ARRAYSIZE(urlText), ImVec2(600, 20));
 
 		static char requestText[1024 * 16];
-		ImGui::Text(XorStr("Request:"));
-		ImGui::InputTextMultiline(XorStr("##requestText"), (requestText), IM_ARRAYSIZE(requestText), ImVec2(600, 100), ImGuiInputTextFlags_AllowTabInput);
+		ImGui::Text("Request:");
+		ImGui::InputTextMultiline("##requestText", (requestText), IM_ARRAYSIZE(requestText), ImVec2(600, 100), ImGuiInputTextFlags_AllowTabInput);
 
 		static std::string customHeader = LolHeader;
 		static int customPort = clientPort;
 
-		if (ImGui::CollapsingHeader(XorStr("Custom Port/Header")))
+		if (ImGui::CollapsingHeader("Custom Port/Header"))
 		{
 			static char inputPort[64] = "";
-			ImGui::Text(XorStr("Port:"));
+			ImGui::Text("Port:");
 			ImGui::InputText("##inputPort", inputPort, 64, ImGuiInputTextFlags_CharsDecimal);
 			std::string sPort = std::string(inputPort);
 			if (!sPort.empty())
@@ -1138,8 +1161,8 @@ void Direct3D9Render::CustomTab()
 				customPort = -1;
 
 			static char inputHeader[1024 * 16];
-			ImGui::Text(XorStr("Header:"));
-			ImGui::InputTextMultiline(XorStr("##inputHeader"), (inputHeader), IM_ARRAYSIZE(inputHeader), ImVec2(600, 100), ImGuiInputTextFlags_AllowTabInput);
+			ImGui::Text("Header:");
+			ImGui::InputTextMultiline("##inputHeader", (inputHeader), IM_ARRAYSIZE(inputHeader), ImVec2(600, 100), ImGuiInputTextFlags_AllowTabInput);
 			std::string sHeader = std::string(inputHeader);
 			customHeader = sHeader;
 		}
@@ -1150,28 +1173,42 @@ void Direct3D9Render::CustomTab()
 		}
 
 		static std::string req;
-		if (ImGui::Button(XorStr("Send custom request##customTab")))
+		if (ImGui::Button("Send custom request##customTab"))
 		{
 			std::string sURL = std::string(urlText);
 
-			if (sURL.find(XorStr("https://127.0.0.1")) == std::string::npos)
+			if (sURL.find("https://127.0.0.1") == std::string::npos)
 			{
-				if (sURL.find(XorStr("https://")) == std::string::npos && sURL.find(XorStr("http://")) == std::string::npos)
+				if (sURL.find("https://") == std::string::npos && sURL.find("http://") == std::string::npos)
 				{
 					if (sURL[0] != '/')
 						sURL.insert(0, "/");
-					sURL.insert(0, XorStr("https://127.0.0.1"));
+					sURL.insert(0, "https://127.0.0.1");
 				}
 			}
 			req = http.Request(method, sURL, requestText, customHeader, "", "", customPort);
 		}
-		ImGui::Text(XorStr("Result:"));
+		ImGui::Text("Result:");
 		ImGui::SameLine();
-		if (ImGui::Button(XorStr("Copy to clipboard##customTab")))
+		if (ImGui::Button("Copy to clipboard##customTab"))
 		{
 			utils->CopyToClipboard(req);
 		}
 		ImGui::TextWrapped(req.c_str());
+
+		/*static int i = 25360;
+		while (true)
+		{
+			std::string mmemam = "https://127.0.0.1/lol-clash/v1/tournament/"+std::to_string(i)+"/create-roster";
+			std::string nawasd = http.Request("POST"), mmemam, R"({"name":"","shortName":"","iconId":0})", LolHeader, "", "", clientPort);
+			if (nawasd.find("INVALID") == std::string::npos)
+			{
+				std::cout << nawasd << std::endl;
+			}
+			std::cout << i << std::endl;
+
+			i++;
+		}*/
 
 		ImGui::EndTabItem();
 	}
@@ -1179,33 +1216,33 @@ void Direct3D9Render::CustomTab()
 
 void Direct3D9Render::InvokeTab()
 {
-	if (ImGui::BeginTabItem(XorStr("Invoke")))
+	if (ImGui::BeginTabItem("Invoke"))
 	{
 		HTTP http;
 
 		static char destination[1024 * 16];
-		ImGui::Text(XorStr("Destination:"));
-		ImGui::InputTextMultiline(XorStr("##inputDestination"), destination, IM_ARRAYSIZE(destination), ImVec2(600, 20));
+		ImGui::Text("Destination:");
+		ImGui::InputTextMultiline("##inputDestination", destination, IM_ARRAYSIZE(destination), ImVec2(600, 20));
 
 		static char method[1024 * 16];
-		ImGui::Text(XorStr("Method:"));
-		ImGui::InputTextMultiline(XorStr("##inputMethod"), method, IM_ARRAYSIZE(method), ImVec2(600, 20));
+		ImGui::Text("Method:");
+		ImGui::InputTextMultiline("##inputMethod", method, IM_ARRAYSIZE(method), ImVec2(600, 20));
 
 		static char args[1024 * 16];
-		ImGui::Text(XorStr("Args:"));
-		ImGui::InputTextMultiline(XorStr("##inputArgs"), args, IM_ARRAYSIZE(args), ImVec2(600, 20));
+		ImGui::Text("Args:");
+		ImGui::InputTextMultiline("##inputArgs", args, IM_ARRAYSIZE(args), ImVec2(600, 20));
 
 		static std::string result;
-		if (ImGui::Button(XorStr("Submit")))
+		if (ImGui::Button("Submit"))
 		{
-			std::string req = XorStr("https://127.0.0.1/lol-login/v1/session/invoke?destination=") + std::string(destination) + XorStr("&method=") + std::string(method) + XorStr("&args=[") + std::string(args) + "]";
-			result = http.Request(XorStr("POST"), req, "", LolHeader, "", "", clientPort);
+			std::string req = "https://127.0.0.1/lol-login/v1/session/invoke?destination=" + std::string(destination) + "&method=" + std::string(method) + "&args=[" + std::string(args) + "]";
+			result = http.Request("POST", req, "", LolHeader, "", "", clientPort);
 		}
 
-		ImGui::Text(XorStr("Result:"));
+		ImGui::Text("Result:");
 		ImGui::SameLine();
 
-		if (ImGui::Button(XorStr("Copy to clipboard##invokeTab")))
+		if (ImGui::Button("Copy to clipboard##invokeTab"))
 		{
 			utils->CopyToClipboard(result);
 		}
@@ -1220,7 +1257,7 @@ int Direct3D9Render::Render()
 	auto timeBefore = std::chrono::high_resolution_clock::now();
 
 	char buf[128];
-	sprintf_s(buf, (XorStr("KBotExt by kebs#9546 - %s \t %s ###AnimatedTitle")), gamePatch.c_str(), champSkins.empty() ? XorStr("Downloading skin data...") : "");
+	sprintf_s(buf, ("KBotExt by kebs#9546 - %s \t %s ###AnimatedTitle"), gamePatch.c_str(), champSkins.empty() ? "Downloading skin data..." : "");
 
 	ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiCond_FirstUseEver);
 	ImGui::SetNextWindowSize(ImVec2(685, 462), ImGuiCond_FirstUseEver);
@@ -1228,7 +1265,7 @@ int Direct3D9Render::Render()
 	ImGui::Begin(buf, (bool*)0, flags);// , ImGuiWindowFlags_AlwaysAutoResize);
 
 	ImGuiTabBarFlags tab_bar_flags = ImGuiTabBarFlags_Reorderable;
-	if (ImGui::BeginTabBar(XorStr("TabBar"), tab_bar_flags))
+	if (ImGui::BeginTabBar("TabBar", tab_bar_flags))
 	{
 		if (!closedClient)
 		{
@@ -1255,23 +1292,23 @@ int Direct3D9Render::Render()
 		else
 		{
 			static std::string closedReq;
-			//ImGui::Text(XorStr("Client closed"));
+			//ImGui::Text("Client closed"));
 
 			ImGui::Columns(2, 0, false);
 
-			if (ImGui::Button(XorStr("Launch client")))
+			if (ImGui::Button("Launch client"))
 			{
 				ShellExecute(NULL, NULL, L"C:\\Riot Games\\Riot Client\\RiotClientServices.exe", L"--launch-product=league_of_legends --launch-patchline=live", NULL, SW_SHOWNORMAL);
 			}
 
 			ImGui::NextColumn();
 
-			if (ImGui::Button(XorStr("Launch legacy client")))
+			if (ImGui::Button("Launch legacy client"))
 			{
-				if (!std::filesystem::exists(XorStr("C:/Riot Games/League of Legends/")))
+				if (!std::filesystem::exists("C:/Riot Games/League of Legends/"))
 				{
 					//todo typing in lol path
-					//miscReq = XorStr("League isnt installed in default path");
+					//miscReq = "League isnt installed in default path");
 				}
 				else
 				{
@@ -1283,32 +1320,32 @@ int Direct3D9Render::Render()
 			ImGui::Separator();
 
 			static char username[50];
-			ImGui::Text(XorStr("Username:"));
-			ImGui::InputText(XorStr("##inputUsername"), username, IM_ARRAYSIZE(username));
+			ImGui::Text("Username:");
+			ImGui::InputText("##inputUsername", username, IM_ARRAYSIZE(username));
 
 			static char password[50];
-			ImGui::Text(XorStr("Password:"));
-			ImGui::InputText(XorStr("##inputPassword"), password, IM_ARRAYSIZE(password), ImGuiInputTextFlags_Password);
+			ImGui::Text("Password:");
+			ImGui::InputText("##inputPassword", password, IM_ARRAYSIZE(password), ImGuiInputTextFlags_Password);
 
-			if (ImGui::Button(XorStr("Login")))
+			if (ImGui::Button("Login"))
 			{
 				HTTP http;
-				std::string LoginHeader = XorStr("Host: 127.0.0.1:") + std::to_string(loginPort) + "\n" +
-					XorStr("Connection: keep-alive") + "\n" +
-					XorStr("Authorization: Basic ") + loginToken + "\n" +
-					XorStr("Accept: application/json") + "\n" +
-					XorStr("Content-Type: application/json") + "\n" +
-					XorStr("Origin: https://127.0.0.1:") + std::to_string(loginPort) + "\n" +
-					XorStr("User-Agent: Mozilla/5.0 (Windows NT 6.2; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) LeagueOfLegendsClient/11.3.356.7268 (CEF 74) Safari/537.36") + "\n" +
-					XorStr("Referer: https://127.0.0.1:") + std::to_string(loginPort) + XorStr("/index.html") + "\n" +
-					XorStr("Accept-Encoding: gzip, deflate, br") + "\n" +
-					XorStr("Accept-Language: en-US,en;q=0.8");
+				std::string LoginHeader = "Host: 127.0.0.1:" + std::to_string(loginPort) + "\n" +
+					"Connection: keep-alive" + "\n" +
+					"Authorization: Basic " + loginToken + "\n" +
+					"Accept: application/json" + "\n" +
+					"Content-Type: application/json" + "\n" +
+					"Origin: https://127.0.0.1:" + std::to_string(loginPort) + "\n" +
+					"User-Agent: Mozilla/5.0 (Windows NT 6.2; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) LeagueOfLegendsClient/11.3.356.7268 (CEF 74) Safari/537.36" + "\n" +
+					"Referer: https://127.0.0.1:" + std::to_string(loginPort) + "/index.html" + "\n" +
+					"Accept-Encoding: gzip, deflate, br" + "\n" +
+					"Accept-Language: en-US,en;q=0.8";
 
 				std::string loginBody = R"({"username":")" + std::string(username) + R"(","password":")" + std::string(password) + R"(","persistLogin":false})";
-				closedReq = http.Request(XorStr("PUT"), XorStr("https://127.0.0.1/rso-auth/v1/session/credentials"), loginBody, LoginHeader, "", "", loginPort);
+				closedReq = http.Request("PUT", "https://127.0.0.1/rso-auth/v1/session/credentials", loginBody, LoginHeader, "", "", loginPort);
 			}
 			ImGui::SameLine();
-			if (ImGui::Button(XorStr("Save")))
+			if (ImGui::Button("Save"))
 			{
 				std::ofstream accFile;
 				accFile.open("accounts.txt", std::ios_base::app);
@@ -1333,19 +1370,19 @@ int Direct3D9Render::Render()
 				if (ImGui::Button(username.c_str()))
 				{
 					HTTP http;
-					std::string LoginHeader = XorStr("Host: 127.0.0.1:") + std::to_string(loginPort) + "\n" +
-						XorStr("Connection: keep-alive") + "\n" +
-						XorStr("Authorization: Basic ") + loginToken + "\n" +
-						XorStr("Accept: application/json") + "\n" +
-						XorStr("Content-Type: application/json") + "\n" +
-						XorStr("Origin: https://127.0.0.1:") + std::to_string(loginPort) + "\n" +
-						XorStr("User-Agent: Mozilla/5.0 (Windows NT 6.2; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) LeagueOfLegendsClient/11.3.356.7268 (CEF 74) Safari/537.36") + "\n" +
-						XorStr("Referer: https://127.0.0.1:") + std::to_string(loginPort) + XorStr("/index.html") + "\n" +
-						XorStr("Accept-Encoding: gzip, deflate, br") + "\n" +
-						XorStr("Accept-Language: en-US,en;q=0.8");
+					std::string LoginHeader = "Host: 127.0.0.1:" + std::to_string(loginPort) + "\n" +
+						"Connection: keep-alive" + "\n" +
+						"Authorization: Basic " + loginToken + "\n" +
+						"Accept: application/json" + "\n" +
+						"Content-Type: application/json" + "\n" +
+						"Origin: https://127.0.0.1:" + std::to_string(loginPort) + "\n" +
+						"User-Agent: Mozilla/5.0 (Windows NT 6.2; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) LeagueOfLegendsClient/11.3.356.7268 (CEF 74) Safari/537.36" + "\n" +
+						"Referer: https://127.0.0.1:" + std::to_string(loginPort) + "/index.html" + "\n" +
+						"Accept-Encoding: gzip, deflate, br" + "\n" +
+						"Accept-Language: en-US,en;q=0.8";
 
 					std::string loginBody = R"({"username":")" + std::string(username) + R"(","password":")" + std::string(password) + R"(","persistLogin":false})";
-					closedReq = http.Request(XorStr("PUT"), XorStr("https://127.0.0.1/rso-auth/v1/session/credentials"), loginBody, LoginHeader, "", "", loginPort);
+					closedReq = http.Request("PUT", "https://127.0.0.1/rso-auth/v1/session/credentials", loginBody, LoginHeader, "", "", loginPort);
 				}
 				ImGui::SameLine();
 				std::string deleteButton = "Delete##" + acc;

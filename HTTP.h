@@ -11,8 +11,8 @@ class HTTP
 {
 private:
 
-	std::string sHttps = XorStr("https://");
-	std::string sHttp = XorStr("http://");
+	std::string sHttps = "https://";
+	std::string sHttp = "http://";
 
 	std::string GetHost(std::string url)
 	{
@@ -46,37 +46,37 @@ public:
 	std::string Request(std::string method, std::string url, std::string requestData = "", std::string header = "",
 		std::string cookies = "", std::string returnCookies = "", int port = -1)
 	{
-		if (header.find(XorStr("User-Agent:")) == std::string::npos)header.append(XorStr("User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36 Edge/16.16299\r\n"));
-		if (header.find(XorStr("Accept:")) == std::string::npos)header.append(XorStr("Accept: */*\r\n"));
-		if (header.find(XorStr("Accept-Language:")) == std::string::npos)header.append(XorStr("Accept-Language: en-US\r\n"));
-		if (header.find(XorStr("Content-Type:")) == std::string::npos)header.append(XorStr("Content-Type: application/x-www-form-urlencoded\r\n"));
-		if (header.find(XorStr("Host:")) == std::string::npos) {
-			header.append(XorStr("Host: "));
+		if (header.find(("User-Agent:")) == std::string::npos)header.append(("User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36 Edge/16.16299\r\n"));
+		if (header.find(("Accept:")) == std::string::npos)header.append(("Accept: */*\r\n"));
+		if (header.find(("Accept-Language:")) == std::string::npos)header.append(("Accept-Language: en-US\r\n"));
+		if (header.find(("Content-Type:")) == std::string::npos)header.append(("Content-Type: application/x-www-form-urlencoded\r\n"));
+		if (header.find(("Host:")) == std::string::npos) {
+			header.append(("Host: "));
 			header.append(GetHost(url));
-			header.append(XorStr("\r\n"));
+			header.append(("\r\n"));
 		}
-		if (header.find(XorStr("Referer:")) == std::string::npos) {
-			header.append(XorStr("Referer: "));
+		if (header.find(("Referer:")) == std::string::npos) {
+			header.append(("Referer: "));
 			header.append(url);
-			header.append(XorStr("\r\n"));
+			header.append(("\r\n"));
 		}
 		if (!cookies.empty()) {
-			if (header.find(XorStr("Cookies:")) == std::string::npos) {
-				header.append(XorStr("Cookies: "));
+			if (header.find(("Cookies:")) == std::string::npos) {
+				header.append(("Cookies: "));
 				header.append(cookies);
-				header.append(XorStr("\r\n"));
+				header.append(("\r\n"));
 			}
 			else {
 				header.append(cookies);
-				header.append(XorStr("\r\n"));
+				header.append(("\r\n"));
 			}
 		}
 		HINTERNET internetOpen = InternetOpenA(header.c_str(), INTERNET_OPEN_TYPE_DIRECT, nullptr, nullptr, NULL);
 		if (!internetOpen)
-			return XorStr("InternetOpenA failed") + std::to_string(GetLastError());
+			return ("InternetOpenA failed") + std::to_string(GetLastError());
 
 		bool isHttps = true;
-		url.find(XorStr("https")) == std::string::npos ? isHttps = false : isHttps = true;
+		url.find(("https")) == std::string::npos ? isHttps = false : isHttps = true;
 		INTERNET_PORT internetPort;
 		if (port != -1)
 		{
@@ -90,19 +90,19 @@ public:
 		if (!internetConnect)
 		{
 			InternetCloseHandle(internetOpen);
-			return XorStr("InternetConnectA failed") + std::to_string(GetLastError());
+			return ("InternetConnectA failed") + std::to_string(GetLastError());
 		}
 
 		DWORD RequestFlg = INTERNET_FLAG_RELOAD | INTERNET_COOKIE_THIRD_PARTY;
 		if (cookies.empty())RequestFlg = RequestFlg | INTERNET_FLAG_NO_COOKIES;
 		isHttps ? RequestFlg |= INTERNET_FLAG_SECURE : RequestFlg |= INTERNET_FLAG_IGNORE_REDIRECT_TO_HTTPS;
 
-		HINTERNET openRequest = HttpOpenRequestA(internetConnect, method.c_str(), GetURLPage(url).c_str(), XorStr("HTTP/1.1"), NULL, NULL, RequestFlg, NULL);
+		HINTERNET openRequest = HttpOpenRequestA(internetConnect, method.c_str(), GetURLPage(url).c_str(), ("HTTP/1.1"), NULL, NULL, RequestFlg, NULL);
 		if (!openRequest)
 		{
 			InternetCloseHandle(internetConnect);
 			InternetCloseHandle(internetOpen);
-			return XorStr("HttpOpenRequestA failed") + std::to_string(GetLastError());
+			return ("HttpOpenRequestA failed") + std::to_string(GetLastError());
 		}
 
 		// ignores ssl certificate
@@ -115,7 +115,7 @@ public:
 		}
 
 		bool sendRequest = false;
-		if (method == XorStr("GET"))
+		if (method == ("GET"))
 		{
 			sendRequest = HttpSendRequestA(openRequest, header.c_str(), header.length(), nullptr, NULL);
 		}
@@ -128,7 +128,7 @@ public:
 			InternetCloseHandle(internetConnect);
 			InternetCloseHandle(internetOpen);
 			InternetCloseHandle(openRequest);
-			return XorStr("HttpSendRequestA failed") + std::to_string(GetLastError());
+			return ("HttpSendRequestA failed") + std::to_string(GetLastError());
 		}
 
 		std::string ResultData;
@@ -139,7 +139,7 @@ public:
 			InternetCloseHandle(internetConnect);
 			InternetCloseHandle(internetOpen);
 			InternetCloseHandle(openRequest);
-			return XorStr("Failed to allocate char array1 ") + std::to_string(GetLastError());
+			return ("Failed to allocate char array1 ") + std::to_string(GetLastError());
 		}
 		UINT  ResultLen = 0;
 		do
@@ -155,7 +155,7 @@ public:
 			InternetCloseHandle(internetConnect);
 			InternetCloseHandle(internetOpen);
 			InternetCloseHandle(openRequest);
-			return XorStr("Failed to allocate char array2 ") + std::to_string(GetLastError());
+			return ("Failed to allocate char array2 ") + std::to_string(GetLastError());
 		}
 		ZeroMemory(pTmpQuery, 4096 * sizeof(char));
 		DWORD CookiesLength = 4095;

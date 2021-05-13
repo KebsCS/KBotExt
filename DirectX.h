@@ -56,11 +56,11 @@ private:
 
 	std::vector<std::string>lolProcs =
 	{
-		XorStr("RiotClientServices.exe"),
-	XorStr("LeagueClient.exe"),
-	XorStr("RiotClientCrashHandler.exe"),
-	XorStr("LeagueClientUx.exe"),
-	XorStr("LeagueClientUxRender.exe"),
+		"RiotClientServices.exe",
+	"LeagueClient.exe",
+	"RiotClientCrashHandler.exe",
+	"LeagueClientUx.exe",
+	"LeagueClientUxRender.exe",
 	};
 
 public:

@@ -2,9 +2,6 @@
 
 #include <vector>
 
-#define ENABLE_XOR
-#include "xor.h"
-
 #define RandomInt(min, max) (rand() % (max - min + 1) + min)
 
 struct ChampMinimal

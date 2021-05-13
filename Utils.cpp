@@ -2,6 +2,7 @@
 #include <codecvt>
 #include <sstream>
 #include <filesystem>
+#include <array>
 //URLDownloadToFileA
 #include <urlmon.h>
 #pragma comment(lib, "urlmon.lib")
@@ -203,7 +204,7 @@ std::string Utils::Exec(const char* cmd)
 	std::string result;
 	std::unique_ptr<FILE, decltype(&_pclose)> pipe(_popen(cmd, "r"), _pclose);
 	if (!pipe) {
-		throw std::runtime_error(XorStr("popen() failed!"));
+		throw std::runtime_error("popen() failed!");
 	}
 	while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
 		result += buffer.data();
