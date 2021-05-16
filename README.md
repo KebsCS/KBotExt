@@ -10,7 +10,7 @@ For fun project made in the span of 2 nights back in February 2021, which I'm no
 * DirectX 11 with ImGui for drawings
 
 ## Features
-* Auto update every patch
+* Works every patch
 * Launch multiple clients
 * Free skin and free champion (Riot Girl Tristana)
 * Start any lobby/game 
@@ -22,8 +22,7 @@ For fun project made in the span of 2 nights back in February 2021, which I'm no
 * Send any custom request
 * 1 click login 
 * Fast key crafer/chest opener
+* Remove all friends/disenchant all shards with 1 click
 
 ## TODO
-* Cleanup code
-* Fix loot tab
-* Fix launching legacy client
+* Cleanup code, different tabs in different files etc

@@ -42,6 +42,7 @@ private:
 	std::string session;
 	bool champsOpen = true;
 	bool skinsOpen = true;
+	bool lootOpen = true;
 
 	std::string gamePatch;
 	std::string GetCurrentPatch();
@@ -53,15 +54,6 @@ private:
 
 	std::vector<ChampMinimal>champsMinimal;
 	std::vector<ChampMastery>champsMastery;
-
-	std::vector<std::string>lolProcs =
-	{
-		"RiotClientServices.exe",
-	"LeagueClient.exe",
-	"RiotClientCrashHandler.exe",
-	"LeagueClientUx.exe",
-	"LeagueClientUxRender.exe",
-	};
 
 public:
 	bool closedClient = false;

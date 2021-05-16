@@ -50,6 +50,22 @@ void GetAllChampions(std::string patch)
 	champSkins = temp;
 }
 
+void CheckVersion()
+{
+	HTTP http;
+	std::string getLatest = http.Request("GET", "https://api.github.com/repos/KebsCS/KBotExt/releases/latest");
+	Aws::String aws_s(getLatest.c_str(), getLatest.size());
+	Aws::Utils::Json::JsonValue Info(aws_s);
+	std::string latestName = Info.View().AsObject().GetString("tag_name").c_str();
+	if (latestName != "1.2.1")
+	{
+		if (MessageBoxA(0, "Open download website?", "New version available", MB_YESNO) == IDYES)
+		{
+			ShellExecute(0, 0, L"https://github.com/KebsCS/KBotExt/releases/latest", 0, 0, SW_SHOW);
+		}
+	}
+}
+
 bool Direct3D9Render::DirectXInit(HWND hWnd)
 {
 	// Setup swap chain
@@ -82,6 +98,9 @@ bool Direct3D9Render::DirectXInit(HWND hWnd)
 	Renderimgui(hWnd);
 
 	gamePatch = GetCurrentPatch();
+
+	// Check latest app version
+	CheckVersion();
 
 	MakeHeader();
 
@@ -384,6 +403,11 @@ void Direct3D9Render::GameTab()
 		if (ImGui::Button("Start queue"))
 		{
 			req = http.Request("POST", "https://127.0.0.1/lol-lobby/v2/lobby/matchmaking/search", "", LolHeader, "", "", clientPort);
+		}
+		ImGui::SameLine();
+		if (ImGui::Button("Dodge"))
+		{
+			req = http.Request("POST", R"(https://127.0.0.1/lol-login/v1/session/invoke?destination=lcdsServiceProxy&method=call&args=["","teambuilder-draft","quitV2",""])", "", LolHeader, "", "", clientPort);
 		}
 
 		ImGui::Checkbox("Auto accept", &bAutoAccept);
@@ -968,18 +992,17 @@ void Direct3D9Render::LaunchOldClient()
 		outfile << content;
 		outfile.close();
 	}
-	for (std::string s : lolProcs)
-	{
-		std::string kill = "taskkill /im " + s + " /t /f";
-		utils->Exec(kill.c_str());
-	}
-	std::this_thread::sleep_for(std::chrono::milliseconds(2000));
-	//this doesnt work but works if I paste it into cmd
-	//std::string run = R"("C:\Riot Games\League of Legends\LeagueClient.exe" --system-yaml-override="C:\Riot Games\League of Legends\LoL Companion\system.yaml")";
-	ShellExecute(NULL, NULL, LR"(C:\Riot Games\Riot Client\League of Legends\LeagueClient.exe)", NULL, NULL, SW_SHOWNORMAL);
-	//ShellExecute(NULL, NULL, L"C:\\Riot Games\\Riot Client\\RiotClientServices.exe", L"--launch-product=league_of_legends --launch-patchline=live", NULL, SW_SHOWNORMAL);
 
-	//system(run.c_str());
+	if (::FindWindowA(0, "League of Legends"))
+	{
+		HTTP http;
+		http.Request("POST", "https://127.0.0.1/process-control/v1/process/quit", "", LolHeader, "", "", clientPort);
+
+		// wait for client to close (maybe theres a better method of doing that)
+		std::this_thread::sleep_for(std::chrono::milliseconds(4500));
+	}
+
+	ShellExecute(NULL, L"open", L"\"C:\\Riot Games\\League of Legends\\LeagueClient.exe\"", L"--system-yaml-override=\"C:\\Riot Games\\League of Legends\\LoL Companion\\system.yaml\"", NULL, SW_SHOWNORMAL);
 }
 
 void Direct3D9Render::SkinsTab()
@@ -988,11 +1011,13 @@ void Direct3D9Render::SkinsTab()
 	{
 		HTTP http;
 		static std::string req;
+		static Aws::Utils::Json::JsonValue Info;
 		if (skinsOpen)
+		{
 			req = http.Request("GET", "https://127.0.0.1/lol-inventory/v2/inventory/CHAMPION_SKIN", "", LolHeader, "", "", clientPort);
-
-		Aws::String aws_s(req.c_str(), req.size());
-		Aws::Utils::Json::JsonValue Info(aws_s);
+			Aws::String aws_s(req.c_str(), req.size());
+			Info = aws_s;
+		}
 
 		auto skinsArr = Info.View().AsArray();
 
@@ -1039,7 +1064,17 @@ void Direct3D9Render::LootTab()
 	if (ImGui::BeginTabItem("Loot"))
 	{
 		HTTP http;
-		static std::string req;// = http.Request("GET"), "https://127.0.0.1/lol-loot/v1/player-loot-map"), "", LolHeader, "", "", clientPort);
+		static std::string req;
+		static std::string getLoot;
+		static Aws::Utils::Json::JsonValue Info;
+		if (lootOpen)
+		{
+			getLoot = http.Request("GET", "https://127.0.0.1/lol-loot/v1/player-loot-map", "", LolHeader, "", "", clientPort);
+			Aws::String aws_s(getLoot.c_str(), getLoot.size());
+			Info = aws_s;
+		}
+
+		auto lootArr = Info.View().AsObject().GetAllObjects();
 
 		//GET /lol-loot/v1/player-display-categories
 		//["CHEST","CHAMPION","SKIN","COMPANION","ETERNALS","EMOTE","WARDSKIN","SUMMONERICON"]
@@ -1060,6 +1095,10 @@ void Direct3D9Render::LootTab()
 		//lol-loot/v1/recipes/WARDSKIN_RENTAL_disenchant/craft?repeat=1
 		//["WARD_SKIN_RENTAL_199"]
 
+		//disenchant champ shards
+		//lol-loot/v1/recipes/CHAMPION_RENTAL_disenchant/craft?repeat=1
+		//["CHAMPION_RENTAL_22"]
+
 		if (ImGui::Button("Craft Key"))
 			req = http.Request("POST", "https://127.0.0.1/lol-loot/v1/recipes/MATERIAL_key_fragment_forge/craft?repeat=1", "[\"MATERIAL_key_fragment\"]", LolHeader, "", "", clientPort);
 
@@ -1069,10 +1108,32 @@ void Direct3D9Render::LootTab()
 		if (ImGui::Button("Open Mastery Chest"))
 			req = http.Request("POST", "https://127.0.0.1/lol-loot/v1/recipes/CHEST_champion_mastery_OPEN/craft?repeat=1", R"(["CHEST_champion_mastery","MATERIAL_key"])", LolHeader, "", "", clientPort);
 
+		if (ImGui::Button("Disenchant all champion shards"))
+		{
+			if (MessageBoxA(0, "Are you sure?", 0, MB_OKCANCEL) == IDOK)
+			{
+				int i = 0;
+				for (auto a : lootArr)
+				{
+					std::string name = a.first.c_str();
+					if (name.find("CHAMPION_RENTAL") != std::string::npos)
+					{
+						std::string body = "[\"" + name + "\"]";
+						http.Request("POST", "https://127.0.0.1/lol-loot/v1/recipes/CHAMPION_RENTAL_disenchant/craft?repeat=1", body, LolHeader, "", "", clientPort);
+						i++;
+					}
+				}
+				req = "Disenchanted " + std::to_string(i) + " champion shards";
+			}
+		}
+
 		ImGui::TextWrapped("%s", req.c_str());
 
+		lootOpen = false;
 		ImGui::EndTabItem();
 	}
+	else
+		lootOpen = true;
 }
 
 void Direct3D9Render::MiscTab()
@@ -1120,8 +1181,31 @@ void Direct3D9Render::MiscTab()
 		if (ImGui::Button("Close client"))
 			miscReq = http.Request("POST", "https://127.0.0.1/process-control/v1/process/quit", "", LolHeader, "", "", clientPort);
 
+		ImGui::Separator();
+
 		if (ImGui::Button("Free Tristana + Riot Girl skin"))
 			miscReq = http.Request("POST", "https://127.0.0.1/lol-login/v1/session/invoke?destination=inventoryService&method=giftFacebookFan&args=[]", "", LolHeader, "", "", clientPort);
+
+		if (ImGui::Button("Remove all friends"))
+		{
+			if (MessageBoxA(0, "Are you sure?", 0, MB_OKCANCEL) == IDOK)
+			{
+				std::string getFriends = http.Request("GET", "https://127.0.0.1/lol-chat/v1/friends", "", LolHeader, "", "", clientPort);
+				Aws::String aws_s(getFriends.c_str(), getFriends.size());
+				Aws::Utils::Json::JsonValue Info(aws_s);
+
+				auto friendArr = Info.View().AsArray();
+				size_t friendArrSize = friendArr.GetLength();
+				for (size_t i = 0; i < friendArrSize; ++i)
+				{
+					auto friendObj = friendArr.GetItem(i).AsObject();
+
+					std::string req = "https://127.0.0.1/lol-chat/v1/friends/" + std::string(friendObj.GetString("pid").c_str());
+					http.Request("DELETE", req, "", LolHeader, "", "", clientPort);
+				}
+				miscReq = "Deleted " + std::to_string(friendArrSize) + " friends";
+			}
+		}
 
 		ImGui::TextWrapped(miscReq.c_str());
 		ImGui::EndTabItem();
