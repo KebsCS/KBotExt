@@ -39,13 +39,16 @@ struct ChampMastery
 	bool chestGranted;
 	std::string formattedChampionPoints;
 	std::string formattedMasteryGoal;
-	int highestGrade;
+	std::string highestGrade;
 	std::string lastPlayTime;
 	std::string playerId;
 	int tokensEarned;
 };
 
-enum QueueID
+inline std::vector<ChampMinimal>champsMinimal;
+inline std::vector<ChampMastery>champsMastery;
+
+enum QueueID : const int
 {
 	DraftPick = 400,
 	SoloDuo = 420,
@@ -68,6 +71,9 @@ enum QueueID
 
 struct Champ
 {
+	int key;
 	std::string name;
 	std::vector < std::pair<std::string, std::string>>skins;
 };
+
+inline std::vector<Champ>champSkins;

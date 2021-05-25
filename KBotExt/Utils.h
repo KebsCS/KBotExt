@@ -1,10 +1,6 @@
 #pragma once
 
-#ifndef _UTILS_H_
-#define _UTILS_H_
-
 #include <chrono>
-#include "Definitions.h"
 
 class Utils
 {
@@ -47,8 +43,9 @@ public:
 	std::string Utf8Encode(const std::wstring& wstr);
 
 	std::string Exec(const char* cmd);
+
+	// renames program to random string
+	bool RenameExe();
 };
 
 extern Utils* utils;
-
-#endif

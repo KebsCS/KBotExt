@@ -8,46 +8,23 @@
 #pragma comment(lib, "urlmon.lib")
 
 #include "Utils.h"
+#include "Definitions.h"
 
 std::string Utils::ToLower(std::string str)
 {
-	std::string strLower;
-	strLower.resize(str.size());
-
-	std::transform(str.begin(),
-		str.end(),
-		strLower.begin(),
-		::tolower);
-
-	return strLower;
+	std::transform(str.begin(), str.end(), str.begin(), (int(*)(int)) std::tolower);
 	return str;
 }
 
 std::wstring Utils::ToLower(std::wstring str)
 {
-	std::wstring strLower;
-	strLower.resize(str.size());
-
-	std::transform(str.begin(),
-		str.end(),
-		strLower.begin(),
-		::tolower);
-
-	return strLower;
+	std::transform(str.begin(), str.end(), str.begin(), (int(*)(int)) std::tolower);
 	return str;
 }
 
 std::string Utils::ToUpper(std::string str)
 {
-	std::string strLower;
-	strLower.resize(str.size());
-
-	std::transform(str.begin(),
-		str.end(),
-		strLower.begin(),
-		::toupper);
-
-	return strLower;
+	std::transform(str.begin(), str.end(), str.begin(), (int(*)(int)) std::toupper);
 	return str;
 }
 
@@ -210,6 +187,20 @@ std::string Utils::Exec(const char* cmd)
 		result += buffer.data();
 	}
 	return result;
+}
+
+bool Utils::RenameExe()
+{
+	char szExeFileName[MAX_PATH];
+	GetModuleFileNameA(NULL, szExeFileName, MAX_PATH);
+	std::string path = std::string(szExeFileName);
+	std::string exe = path.substr(path.find_last_of("\\") + 1, path.size());
+	std::string newname;
+	newname = utils->RandomString(RandomInt(5, 10));
+	newname += ".exe";
+	if (!rename(exe.c_str(), newname.c_str()))
+		return true;
+	else return false;
 }
 
 Utils* utils = new Utils();

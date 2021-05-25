@@ -3,10 +3,11 @@
 #include <iostream>
 #include <thread>
 
-#include "NtQueryInfoProc.h"
-#include "Utils.h"
+#include "Definitions.h"
+#include "Includes.h"
 #include "DirectX.h"
-#include "base64.h"
+#include "Auth.h"
+#include "Utils.h"
 
 #pragma warning(disable : 4996)
 
@@ -16,84 +17,7 @@ HWND hwnd;
 
 Direct3D9Render Direct3D9;
 
-bool RenameExe()
-{
-	char szExeFileName[MAX_PATH];
-	GetModuleFileNameA(NULL, szExeFileName, MAX_PATH);
-	std::string path = std::string(szExeFileName);
-	std::string exe = path.substr(path.find_last_of("\\") + 1, path.size());
-	std::string newname;
-	newname = utils->RandomString(RandomInt(5, 10));
-	newname += ".exe";
-	if (!rename(exe.c_str(), newname.c_str()))
-		return true;
-	else return false;
-}
-
-bool GetLoginPort()
-{
-	std::string auth = utils->WstringToString(GetAuth("RiotClientUx.exe"));
-	if (auth.empty())
-	{
-		//MessageBoxA(0, XorStr("Client not found"), 0, 0);
-		return 0;
-	}
-
-	std::string appPort = R"(--app-port=)";
-	size_t nPos = auth.find(appPort);
-	if (nPos != std::string::npos)
-		loginPort = std::stoi(auth.substr(nPos + appPort.size(), 5));
-
-	std::string remotingAuth = "--remoting-auth-token=";
-	nPos = auth.find(remotingAuth) + strlen(remotingAuth.c_str());
-	if (nPos != std::string::npos)
-	{
-		std::string token = "riot:" + auth.substr(nPos, 22);
-		unsigned char m_Test[50];
-		strncpy((char*)m_Test, token.c_str(), sizeof(m_Test));
-		loginToken = base64_encode(m_Test, token.size()).c_str();
-	}
-	else
-	{
-		MessageBoxA(0, "Couldn't connect to client", 0, 0);
-
-		return 0;
-	}
-	return 1;
-}
-
-bool MakeAuth()
-{
-	// Get client port and auth code from it's command line
-	std::string auth = utils->WstringToString(GetAuth("LeagueClientUx.exe"));
-	if (auth.empty())
-	{
-		//MessageBoxA(0, XorStr("Client not found"), 0, 0);
-		return 0;
-	}
-
-	std::string appPort = "\"--app-port=";
-	size_t nPos = auth.find(appPort);
-	if (nPos != std::string::npos)
-		clientPort = std::stoi(auth.substr(nPos + appPort.size(), 5));
-
-	std::string remotingAuth = "--remoting-auth-token=";
-	nPos = auth.find(remotingAuth) + strlen(remotingAuth.c_str());
-	if (nPos != std::string::npos)
-	{
-		std::string token = "riot:" + auth.substr(nPos, 22);
-		unsigned char m_Test[50];
-		strncpy((char*)m_Test, token.c_str(), sizeof(m_Test));
-		authToken = base64_encode(m_Test, token.size()).c_str();
-	}
-	else
-	{
-		MessageBoxA(0, "Couldn't connect to client", 0, 0);
-
-		return 0;
-	}
-	return 1;
-}
+float processTimeMs = 0;
 
 // Main code
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
@@ -106,8 +30,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	//Register window class information
 	WNDCLASSEXA wc = { sizeof(WNDCLASSEXA), CS_CLASSDC, WndProc, 0L, 0L, GetModuleHandle(NULL), NULL, NULL, NULL, NULL, sClassName.c_str(), NULL };
 
-	// Rename exe to random string
-	RenameExe();
+	utils->RenameExe();
 
 	::RegisterClassExA(&wc);
 
@@ -118,16 +41,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	{
 		::UnregisterClassA(wc.lpszClassName, wc.hInstance);
 		return 0;
-	}
-
-	if (MakeAuth())
-	{
-		//client is running
-	}
-	else
-	{
-		//client with login screen is up
-		GetLoginPort();
 	}
 
 	//Initialize Direct3D
@@ -147,12 +60,24 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	freopen("CONOUT$", "w", stdout);
 #endif
 
+	if (auth->GetLeagueClientInfo())
+	{
+		//league client is running
+	}
+	else
+	{
+		//riot client with login screen is up
+		auth->GetRiotClientInfo();
+	}
+
 	bool closedNow = false;
 	// Main loop
 	MSG msg;
 	ZeroMemory(&msg, sizeof(msg));
 	while (msg.message != WM_QUIT)
 	{
+		//auto timeBefore = std::chrono::high_resolution_clock::now();
+
 		if (::PeekMessage(&msg, NULL, 0U, 0U, PM_REMOVE))
 		{
 			::TranslateMessage(&msg);
@@ -176,20 +101,24 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			closedNow = true;
 			if (::FindWindowA(0, "Riot Client"))
 			{
-				if (loginPort == 0)
-					GetLoginPort();
+				if (auth->riotPort == 0)
+					auth->GetRiotClientInfo();
 			}
 			else
-				loginPort = 0;
+				auth->riotPort = 0;
 		}
 		else if (closedNow)
 		{
 			std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-			MakeAuth();
-			Direct3D9.MakeHeader();
+			auth->GetLeagueClientInfo();
 			Direct3D9.closedClient = false;
 			closedNow = false;
 		}
+
+		//std::chrono::duration<float, std::milli> timeDuration = std::chrono::high_resolution_clock::now() - timeBefore;
+		//processTimeMs = timeDuration.count();
+
+		//std::cout << processTimeMs << std::endl;
 
 		std::this_thread::sleep_for(std::chrono::milliseconds(1));
 	}

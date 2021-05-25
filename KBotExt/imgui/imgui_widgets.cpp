@@ -1942,7 +1942,7 @@ template<typename T>
 static int DataTypeCompareT(const T* lhs, const T* rhs)
 {
 	if (*lhs < *rhs) return -1;
-	if (*lhs > * rhs) return +1;
+	if (*lhs > *rhs) return +1;
 	return 0;
 }
 
@@ -1971,7 +1971,7 @@ static bool DataTypeClampT(T* v, const T* v_min, const T* v_max)
 {
 	// Clamp, both sides are optional, return true if modified
 	if (v_min && *v < *v_min) { *v = *v_min; return true; }
-	if (v_max && *v > * v_max) { *v = *v_max; return true; }
+	if (v_max && *v > *v_max) { *v = *v_max; return true; }
 	return false;
 }
 
@@ -2157,7 +2157,7 @@ bool ImGui::DragBehaviorT(ImGuiDataType data_type, TYPE* v, float v_speed, const
 	// Clamp values (+ handle overflow/wrap-around for integer types)
 	if (*v != v_cur && is_clamped)
 	{
-		if (v_cur < v_min || (v_cur > * v && adjust_delta < 0.0f && !is_decimal))
+		if (v_cur < v_min || (v_cur > *v && adjust_delta < 0.0f && !is_decimal))
 			v_cur = v_min;
 		if (v_cur > v_max || (v_cur < *v && adjust_delta > 0.0f && !is_decimal))
 			v_cur = v_max;

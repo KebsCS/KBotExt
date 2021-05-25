@@ -5,8 +5,6 @@
 #pragma comment(lib,"WinInet.lib")
 #include <string>
 
-#include "Definitions.h"
-
 class HTTP
 {
 private:
@@ -73,7 +71,7 @@ public:
 		}
 		HINTERNET internetOpen = InternetOpenA(header.c_str(), INTERNET_OPEN_TYPE_DIRECT, nullptr, nullptr, NULL);
 		if (!internetOpen)
-			return ("InternetOpenA failed") + std::to_string(GetLastError());
+			return ("InternetOpenA failed. Last error: ") + std::to_string(GetLastError());
 
 		bool isHttps = true;
 		url.find(("https")) == std::string::npos ? isHttps = false : isHttps = true;
@@ -90,7 +88,7 @@ public:
 		if (!internetConnect)
 		{
 			InternetCloseHandle(internetOpen);
-			return ("InternetConnectA failed") + std::to_string(GetLastError());
+			return ("InternetConnectA failed. Last error: ") + std::to_string(GetLastError());
 		}
 
 		DWORD RequestFlg = INTERNET_FLAG_RELOAD | INTERNET_COOKIE_THIRD_PARTY;
@@ -102,7 +100,7 @@ public:
 		{
 			InternetCloseHandle(internetConnect);
 			InternetCloseHandle(internetOpen);
-			return ("HttpOpenRequestA failed") + std::to_string(GetLastError());
+			return ("HttpOpenRequestA failed. Last error: ") + std::to_string(GetLastError());
 		}
 
 		// ignores ssl certificate
@@ -128,7 +126,7 @@ public:
 			InternetCloseHandle(internetConnect);
 			InternetCloseHandle(internetOpen);
 			InternetCloseHandle(openRequest);
-			return ("HttpSendRequestA failed") + std::to_string(GetLastError());
+			return ("HttpSendRequestA failed. Last error: ") + std::to_string(GetLastError());
 		}
 
 		std::string ResultData;
@@ -139,7 +137,7 @@ public:
 			InternetCloseHandle(internetConnect);
 			InternetCloseHandle(internetOpen);
 			InternetCloseHandle(openRequest);
-			return ("Failed to allocate char array1 ") + std::to_string(GetLastError());
+			return ("Failed to allocate char array1. Last error: ") + std::to_string(GetLastError());
 		}
 		UINT  ResultLen = 0;
 		do
@@ -155,7 +153,7 @@ public:
 			InternetCloseHandle(internetConnect);
 			InternetCloseHandle(internetOpen);
 			InternetCloseHandle(openRequest);
-			return ("Failed to allocate char array2 ") + std::to_string(GetLastError());
+			return ("Failed to allocate char array2. Last error: ") + std::to_string(GetLastError());
 		}
 		ZeroMemory(pTmpQuery, 4096 * sizeof(char));
 		DWORD CookiesLength = 4095;
@@ -182,3 +180,7 @@ public:
 		return Cookies;
 	}
 };
+
+extern HTTP* http;
+
+HTTP* http = new HTTP();

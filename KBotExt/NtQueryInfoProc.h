@@ -3,7 +3,6 @@
 #include <Windows.h>
 #include <tlhelp32.h>
 #include <string>
-#include "Definitions.h"
 
 #pragma warning (disable : 4996)
 
@@ -359,64 +358,3 @@ typedef struct _PROCESS_BASIC_INFORMATION
 	HANDLE UniqueProcessId;
 	HANDLE InheritedFromUniqueProcessId;
 } PROCESS_BASIC_INFORMATION, * PPROCESS_BASIC_INFORMATION;
-
-std::wstring GetAuth(std::string sProcessName)
-{
-	std::wstring wstrResult;
-	HANDLE Handle;
-	DWORD ProcessID = 0;
-	HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, NULL);
-	if (snapshot != INVALID_HANDLE_VALUE)
-	{
-		PROCESSENTRY32 entry;
-		entry.dwSize = sizeof(PROCESSENTRY32);
-		if (Process32First(snapshot, &entry))
-		{
-			while (Process32Next(snapshot, &entry))
-			{
-				char temp[260];
-				sprintf(temp, "%ws", entry.szExeFile);
-				if (!stricmp(temp, sProcessName.c_str()))
-				{
-					ProcessID = entry.th32ProcessID;
-					Handle = OpenProcess(PROCESS_ALL_ACCESS, 0, entry.th32ProcessID);
-
-					PROCESS_BASIC_INFORMATION pbi;
-					PEB peb = { 0 };
-					tNtQueryInformationProcess NtQueryInformationProcess =
-						(tNtQueryInformationProcess)GetProcAddress(GetModuleHandleA("ntdll.dll"), "NtQueryInformationProcess");
-					NTSTATUS status = NtQueryInformationProcess(Handle, ProcessBasicInformation, &pbi, sizeof(pbi), 0);
-
-					if (NT_SUCCESS(status))
-					{
-						ReadProcessMemory(Handle, pbi.PebBaseAddress, &peb, sizeof(peb), 0);
-					}
-					PRTL_USER_PROCESS_PARAMETERS pRtlProcParam = peb.ProcessParameters;
-					PRTL_USER_PROCESS_PARAMETERS pRtlProcParamCopy =
-						(PRTL_USER_PROCESS_PARAMETERS)malloc(sizeof(RTL_USER_PROCESS_PARAMETERS));
-
-					bool result = ReadProcessMemory(Handle,
-						pRtlProcParam,
-						pRtlProcParamCopy,
-						sizeof(RTL_USER_PROCESS_PARAMETERS),
-						NULL);
-					PWSTR wBuffer = pRtlProcParamCopy->CommandLine.Buffer;
-					USHORT len = pRtlProcParamCopy->CommandLine.Length;
-					PWSTR wBufferCopy = (PWSTR)malloc(len);
-					result = ReadProcessMemory(Handle,
-						wBuffer,
-						wBufferCopy,
-						len,
-						NULL);
-
-					wstrResult = std::wstring(wBufferCopy);
-
-					CloseHandle(Handle);
-					break;
-				}
-			}
-		}
-	}
-	CloseHandle(snapshot);
-	return wstrResult;
-}

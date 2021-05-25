@@ -6,8 +6,8 @@ For fun project made in the span of 2 nights back in February 2021, which I'm no
 
 ## Technologies used
 * No external libraries, only win32 functions for HTTP requests
-* AWS to parse JSON responses
-* DirectX 11 with ImGui for drawings
+* JsonCpp
+* DirectX 11 with ImGui
 
 ## Features
 * Works every patch
@@ -23,6 +23,3 @@ For fun project made in the span of 2 nights back in February 2021, which I'm no
 * 1 click login 
 * Fast key crafer/chest opener
 * Remove all friends/disenchant all shards with 1 click
-
-## TODO
-* Cleanup code, different tabs in different files etc
