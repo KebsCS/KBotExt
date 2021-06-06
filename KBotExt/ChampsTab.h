@@ -31,7 +31,7 @@ public:
 
 				if (reader->parse(session.c_str(), session.c_str() + static_cast<int>(session.length()), &root, &err))
 				{
-					int summonerId = root["summonerId"].asInt();
+					uint64_t summonerId = root["summonerId"].asUInt64();
 
 					req = http->Request("GET", "https://127.0.0.1/lol-collections/v1/inventories/" + std::to_string(summonerId) + "/champion-mastery", "", auth->leagueHeader, "", "", auth->leaguePort);
 

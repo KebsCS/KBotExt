@@ -115,7 +115,7 @@ std::wstring Auth::GetProcessCommandLine(std::string sProcessName)
 		entry.dwSize = sizeof(PROCESSENTRY32);
 		if (Process32First(snapshot, &entry))
 		{
-			while (Process32Next(snapshot, &entry))
+			do
 			{
 				char temp[260];
 				sprintf(temp, "%ws", entry.szExeFile);
@@ -157,7 +157,7 @@ std::wstring Auth::GetProcessCommandLine(std::string sProcessName)
 					CloseHandle(Handle);
 					break;
 				}
-			}
+			} while (Process32Next(snapshot, &entry));
 		}
 	}
 	CloseHandle(snapshot);

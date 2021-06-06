@@ -36,17 +36,17 @@ public:
 				for (Json::Value::ArrayIndex i = 0; i < root.size(); ++i)
 				{
 					ImGui::Separator();
-					int itemId = root[i]["itemId"].asInt();
+					std::string itemId = root[i]["itemId"].asString();
 					if (!champSkins.empty())
 					{
 						bool found = false;
 						for (auto champ : champSkins)
 						{
-							if (std::to_string(itemId).substr(0, std::to_string(champ.key).size()) == std::to_string(champ.key))
+							if (itemId.substr(0, std::to_string(champ.key).size()) == std::to_string(champ.key))
 							{
 								for (auto skin : champ.skins)
 								{
-									if (std::to_string(itemId) == skin.first)
+									if (itemId == skin.first)
 									{
 										ImGui::Text("Name: %s", skin.second.c_str());
 										found = true;
@@ -60,7 +60,7 @@ public:
 					}
 
 					ImGui::Text("inventoryType: %s", root[i]["inventoryType"].asString().c_str());
-					ImGui::Text("itemId: %d", itemId);
+					ImGui::Text("itemId: %s", itemId.c_str());
 					ImGui::Text("ownershipType: %s", root[i]["ownershipType"].asString().c_str());
 					auto payloadObj = root[i]["payload"];
 					ImGui::Text("isVintage: %d", payloadObj["isVintage"].asInt());

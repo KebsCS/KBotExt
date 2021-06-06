@@ -40,6 +40,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	if (hwnd == NULL)
 	{
 		::UnregisterClassA(wc.lpszClassName, wc.hInstance);
+		MessageBoxA(0, "Couldn't create window", 0, 0);
 		return 0;
 	}
 
@@ -48,6 +49,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	{
 		Direct3D9.Shutdown();
 		::UnregisterClassA(wc.lpszClassName, wc.hInstance);
+		MessageBoxA(0, "Couldn't initalize DirectX", 0, 0);
 		return 0;
 	}
 
