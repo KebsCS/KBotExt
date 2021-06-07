@@ -1,11 +1,14 @@
 #pragma once
 
-#include <filesystem>
 #include <fstream>
 #include <thread>
+#include <filesystem>
 
 #include "Auth.h"
 #include "HTTP.h"
+#include "Settings.h"
+
+#define ICON_FA_LINK "\xef\x83\x81"	// U+f0c1
 
 class Misc
 {
@@ -13,14 +16,14 @@ public:
 
 	static void LaunchLegacyClient()
 	{
-		if (!std::filesystem::exists("C:/Riot Games/League of Legends/LoL Companion"))
+		if (!std::filesystem::exists(std::format("{}LoL Companion", S.leaguePath)))
 		{
-			std::filesystem::create_directory("C:/Riot Games/League of Legends/LoL Companion");
+			std::filesystem::create_directory(std::format("{}LoL Companion", S.leaguePath));
 		}
-		if (!std::filesystem::exists("C:/Riot Games/League of Legends/LoL Companion/system.yaml"))
+		if (!std::filesystem::exists(std::format("{}LoL Companion/system.yaml", S.leaguePath)))
 		{
-			std::ifstream infile("C:/Riot Games/League of Legends/system.yaml");
-			std::ofstream outfile("C:/Riot Games/League of Legends/LoL Companion/system.yaml");
+			std::ifstream infile(std::format("{}system.yaml", S.leaguePath));
+			std::ofstream outfile(std::format("{}LoL Companion/system.yaml", S.leaguePath));
 			std::string content = "";
 			int i;
 
@@ -43,7 +46,8 @@ public:
 			std::this_thread::sleep_for(std::chrono::milliseconds(4500));
 		}
 
-		ShellExecute(NULL, L"open", L"\"C:\\Riot Games\\League of Legends\\LeagueClient.exe\"", L"--system-yaml-override=\"C:\\Riot Games\\League of Legends\\LoL Companion\\system.yaml\"", NULL, SW_SHOWNORMAL);
+		ShellExecuteA(NULL, "open", std::format("{}LeagueClient.exe", S.leaguePath).c_str(),
+			std::format("--system-yaml-override=\"{}LoL Companion/system.yaml\"", S.leaguePath).c_str(), NULL, SW_SHOWNORMAL);
 	}
 
 	static void CheckVersion()
@@ -101,5 +105,35 @@ public:
 		ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
 		ImGui::ArrowButton(id, dir);
 		ImGui::PopStyleVar();
+	}
+
+	static void AddUnderLine(ImColor col_)
+	{
+		ImVec2 min = ImGui::GetItemRectMin();
+		ImVec2 max = ImGui::GetItemRectMax();
+		min.y = max.y;
+		ImGui::GetWindowDrawList()->AddLine(min, max, col_, 1.0f);
+	}
+
+	static void TextURL(const char* name_, const char* URL_, uint8_t SameLineBefore_ = 1, uint8_t SameLineAfter_ = 1)
+	{
+		if (1 == SameLineBefore_) { ImGui::SameLine(0.0f, ImGui::GetStyle().ItemInnerSpacing.x); }
+		ImGui::PushStyleColor(ImGuiCol_Text, ImGui::GetStyle().Colors[ImGuiCol_ButtonHovered]);
+		ImGui::Text(name_);
+		ImGui::PopStyleColor();
+		if (ImGui::IsItemHovered())
+		{
+			if (ImGui::IsMouseClicked(0))
+			{
+				ShellExecuteA(NULL, "open", URL_, NULL, NULL, SW_SHOWNORMAL);
+			}
+			AddUnderLine(ImGui::GetStyle().Colors[ImGuiCol_ButtonHovered]);
+			ImGui::SetTooltip(ICON_FA_LINK "  Open in browser\n%s", URL_);
+		}
+		else
+		{
+			AddUnderLine(ImGui::GetStyle().Colors[ImGuiCol_Button]);
+		}
+		if (1 == SameLineAfter_) { ImGui::SameLine(0.0f, ImGui::GetStyle().ItemInnerSpacing.x); }
 	}
 };

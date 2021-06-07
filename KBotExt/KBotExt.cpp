@@ -1,6 +1,5 @@
 ﻿#include <chrono>
 #include <string>
-#include <iostream>
 #include <thread>
 
 #include "Definitions.h"
@@ -8,6 +7,9 @@
 #include "DirectX.h"
 #include "Auth.h"
 #include "Utils.h"
+#include "Settings.h"
+
+Settings S;
 
 #pragma warning(disable : 4996)
 
@@ -25,12 +27,15 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	//Randomize using current time, todo swap with recent c++ random
 	srand(time(0));
 
+	CSettings::Load();
+
 	std::string sClassName = utils->RandomString(RandomInt(5, 10));
 	LPCSTR lpszOverlayClassName = sClassName.c_str();
 	//Register window class information
 	WNDCLASSEXA wc = { sizeof(WNDCLASSEXA), CS_CLASSDC, WndProc, 0L, 0L, GetModuleHandle(NULL), NULL, NULL, NULL, NULL, sClassName.c_str(), NULL };
 
-	utils->RenameExe();
+	if (S.autoRename)
+		utils->RenameExe();
 
 	::RegisterClassExA(&wc);
 

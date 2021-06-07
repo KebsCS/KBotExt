@@ -7,6 +7,7 @@
 #include "HTTP.h"
 #include "Auth.h"
 #include "Misc.h"
+#include "Settings.h"
 
 class MiscTab
 {
@@ -21,17 +22,16 @@ public:
 
 			if (ImGui::Button("Launch another client"))
 			{
-				ShellExecute(NULL, NULL, L"C:\\Riot Games\\Riot Client\\RiotClientServices.exe", L"--launch-product=league_of_legends --launch-patchline=live --allow-multiple-clients", NULL, SW_SHOWNORMAL);
+				ShellExecuteA(NULL, NULL, std::format("{}RiotClientServices.exe", S.riotPath).c_str(), "--launch-product=league_of_legends --launch-patchline=live --allow-multiple-clients", NULL, SW_SHOWNORMAL);
 			}
 
 			ImGui::NextColumn();
 
 			if (ImGui::Button("Launch legacy client"))
 			{
-				if (!std::filesystem::exists("C:/Riot Games/League of Legends/"))
+				if (!std::filesystem::exists(S.leaguePath))
 				{
-					//todo typing in lol path
-					result = "League isnt installed in default path";
+					result = "Invadlid path, change it in Settings tab";
 				}
 				else
 				{

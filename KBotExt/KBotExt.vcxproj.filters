@@ -1,18 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="Pliki źródłowe">
-      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
-      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
-    </Filter>
-    <Filter Include="Pliki nagłówkowe">
-      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
-      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
-    </Filter>
-    <Filter Include="Pliki zasobów">
-      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
-      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
-    </Filter>
     <Filter Include="imgui">
       <UniqueIdentifier>{ed321358-528e-43a8-b1aa-992806430647}</UniqueIdentifier>
     </Filter>
@@ -25,16 +13,28 @@
     <Filter Include="Auth">
       <UniqueIdentifier>{888bd346-de16-4def-9ccf-4c21e22c708b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="DirectX.cpp">
-      <Filter>Pliki źródłowe</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="KBotExt.cpp">
-      <Filter>Pliki źródłowe</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Utils.cpp">
-      <Filter>Pliki źródłowe</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Auth.cpp">
       <Filter>Auth</Filter>
@@ -69,19 +69,19 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="HTTP.h">
-      <Filter>Pliki nagłówkowe</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="DirectX.h">
-      <Filter>Pliki nagłówkowe</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Utils.h">
-      <Filter>Pliki nagłówkowe</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Definitions.h">
-      <Filter>Pliki nagłówkowe</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Includes.h">
-      <Filter>Pliki nagłówkowe</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="LoginTab.h">
       <Filter>Tabs</Filter>
@@ -159,7 +159,7 @@
       <Filter>json</Filter>
     </ClInclude>
     <ClInclude Include="Misc.h">
-      <Filter>Pliki nagłówkowe</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ProfileTab.h">
       <Filter>Tabs</Filter>
@@ -181,6 +181,12 @@
     </ClInclude>
     <ClInclude Include="ChampsTab.h">
       <Filter>Tabs</Filter>
+    </ClInclude>
+    <ClInclude Include="SettingsTab.h">
+      <Filter>Tabs</Filter>
+    </ClInclude>
+    <ClInclude Include="Settings.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

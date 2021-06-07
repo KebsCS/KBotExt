@@ -8,6 +8,9 @@
 #include "Utils.h"
 #include "Auth.h"
 #include "Misc.h"
+#include "Settings.h"
+
+#pragma warning(disable : 4996)
 
 class LoginTab
 {
@@ -22,98 +25,128 @@ private:
 public:
 	static void Render()
 	{
-		static std::string result;
-		ImGui::Columns(2, 0, false);
-
-		if (ImGui::Button("Launch client"))
+		if (ImGui::BeginTabItem("Login"))
 		{
-			ShellExecute(NULL, NULL, L"C:\\Riot Games\\Riot Client\\RiotClientServices.exe", L"--launch-product=league_of_legends --launch-patchline=live", NULL, SW_SHOWNORMAL);
-		}
+			static std::string result;
+			ImGui::Columns(2, 0, false);
 
-		ImGui::SameLine();
-		Misc::HelpMarker("Typing in custom league path in future update");
-
-		ImGui::NextColumn();
-
-		if (ImGui::Button("Launch legacy client"))
-		{
-			if (!std::filesystem::exists("C:/Riot Games/League of Legends/"))
+			if (ImGui::Button("Launch client"))
 			{
-				//todo typing in lol path
-				result = "League isnt installed in default path";
+				ShellExecuteA(NULL, NULL, std::format("{}RiotClientServices.exe", S.riotPath).c_str(), "--launch-product=league_of_legends --launch-patchline=live", NULL, SW_SHOWNORMAL);
 			}
-			else
+
+			ImGui::NextColumn();
+
+			if (ImGui::Button("Launch legacy client"))
 			{
-				Misc::LaunchLegacyClient();
+				if (!std::filesystem::exists(S.leaguePath))
+				{
+					result = "Invadlid path, change it in Settings tab";
+				}
+				else
+				{
+					Misc::LaunchLegacyClient();
+				}
 			}
-		}
-		ImGui::Columns(1);
+			ImGui::Columns(1);
 
-		ImGui::Separator();
+			ImGui::Separator();
 
-		static char username[50];
-		ImGui::Text("Username:");
-		ImGui::InputText("##inputUsername", username, IM_ARRAYSIZE(username));
+			static char username[50];
+			ImGui::Text("Username:");
+			ImGui::InputText("##inputUsername", username, IM_ARRAYSIZE(username));
 
-		static char password[50];
-		ImGui::Text("Password:");
-		ImGui::InputText("##inputPassword", password, IM_ARRAYSIZE(password), ImGuiInputTextFlags_Password);
+			static char password[50];
+			ImGui::Text("Password:");
+			ImGui::InputText("##inputPassword", password, IM_ARRAYSIZE(password), ImGuiInputTextFlags_Password);
 
-		if (ImGui::Button("Login") || ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Enter), false))
-		{
-			result = Login(username, password);
-		}
-
-		ImGui::SameLine();
-		if (ImGui::Button("Save"))
-		{
-			std::ofstream accFile;
-			accFile.open("accounts.txt", std::ios_base::app);
-			accFile << username << ":" << password << std::endl;
-
-			accFile.close();
-		}
-
-		ImGui::SameLine();
-		Misc::HelpMarker("This part is only, if you want to save your login and pass to .txt file and login with 1 click. You don't have to do that, you can just log in the usual way in client and launch the tool anytime you want");
-
-		ImGui::Separator();
-
-		std::fstream accFile("accounts.txt");
-		std::vector<std::string> vAccounts;
-		std::string tempAcc;
-		while (accFile >> tempAcc)
-		{
-			vAccounts.emplace_back(tempAcc);
-		}
-		accFile.close();
-		for (std::string& acc : vAccounts)
-		{
-			std::string username = acc.substr(0, acc.find(":"));
-			std::string password = acc.substr(acc.find(":") + 1);
-			if (ImGui::Button(username.c_str()))
+			if (ImGui::Button("Login") || ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Enter), false))
 			{
-				result = Login(username, password);
+				if (!std::string(username).empty() && !std::string(password).empty())
+					result = Login(username, password);
 			}
 
 			ImGui::SameLine();
-			std::string deleteButton = "Delete##" + acc;
-			if (ImGui::Button(deleteButton.c_str()))
+			if (ImGui::Button("Save") && !std::string(username).empty() && !std::string(password).empty())
 			{
-				acc = "";
-				std::ofstream accFile1;
-				accFile1.open("accounts.txt");
-				for (std::string acc1 : vAccounts)
+				// if file doesn't exist, create new one with {} so it can be parsed
+				if (!std::filesystem::exists(S.settingsFile))
 				{
-					std::string username1 = acc1.substr(0, acc1.find(":"));
-					std::string password1 = acc1.substr(acc1.find(":") + 1);
-					if (acc1 != "")
-						accFile1 << username1 << ":" << password1 << std::endl;
+					std::ofstream file(S.settingsFile);
+					file << "{}";
+					file.close();
 				}
-				accFile1.close();
-			}
-		}
 
-		ImGui::TextWrapped(result.c_str());
+				Json::Reader reader;
+				Json::Value root;
+
+				std::ifstream iFile(S.settingsFile);
+
+				if (iFile.good())
+				{
+					if (reader.parse(iFile, root, false))
+					{
+						if (!root["accounts"].isArray())
+							root["accounts"] = Json::Value(Json::arrayValue);
+						Json::Value accArray = root["accounts"];
+
+						accArray.append(std::format("{0}:{1}", username, password));
+						root["accounts"] = accArray;
+
+						std::ofstream oFile(S.settingsFile);
+						oFile << root.toStyledString() << std::endl;
+						oFile.close();
+					}
+				}
+				iFile.close();
+			}
+
+			ImGui::SameLine();
+			Misc::HelpMarker("This part is only, if you want to save your login and pass to .txt file and login with 1 click. You don't have to do that, you can just log in the usual way in client and launch the tool anytime you want");
+
+			ImGui::Separator();
+
+			Json::Reader reader;
+			Json::Value root;
+
+			std::ifstream iFile(S.settingsFile);
+
+			if (iFile.good())
+			{
+				if (reader.parse(iFile, root, false))
+				{
+					auto accArray = root["accounts"];
+					if (accArray.isArray())
+					{
+						for (Json::Value::ArrayIndex i = 0; i < accArray.size(); ++i)
+						{
+							std::string acc = accArray[i].asString();
+							std::string username = acc.substr(0, acc.find(":"));
+							std::string password = acc.substr(acc.find(":") + 1);
+							if (ImGui::Button(username.c_str()))
+							{
+								result = Login(username, password);
+							}
+
+							ImGui::SameLine();
+							std::string deleteButton = "Delete##" + acc;
+							if (ImGui::Button(deleteButton.c_str()))
+							{
+								std::ofstream oFile(S.settingsFile);
+								accArray.removeIndex(i, 0);
+								root["accounts"] = accArray;
+								oFile << root.toStyledString() << std::endl;
+								oFile.close();
+							}
+						}
+					}
+				}
+			}
+			iFile.close();
+
+			ImGui::TextWrapped(result.c_str());
+
+			ImGui::EndTabItem();
+		}
 	}
 };

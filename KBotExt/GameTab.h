@@ -186,7 +186,6 @@ public:
 			{
 				result = http->Request("POST", R"(https://127.0.0.1/lol-login/v1/session/invoke?destination=lcdsServiceProxy&method=call&args=["","teambuilder-draft","quitV2",""])", "", auth->leagueHeader, "", "", auth->leaguePort);
 			}
-			ImGui::NextColumn();
 
 			ImGui::Columns(1);
 

@@ -46,6 +46,9 @@ public:
 
 	// renames program to random string
 	bool RenameExe();
+
+	// adds the "Hidden" attribute to a file
+	bool HideFile(std::string path);
 };
 
 extern Utils* utils;

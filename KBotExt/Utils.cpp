@@ -203,4 +203,15 @@ bool Utils::RenameExe()
 	else return false;
 }
 
+bool Utils::HideFile(std::string path)
+{
+	int attr = GetFileAttributesA(path.c_str());
+	if ((attr & FILE_ATTRIBUTE_HIDDEN) == 0)
+	{
+		SetFileAttributesA(path.c_str(), attr | FILE_ATTRIBUTE_HIDDEN);
+		return true;
+	}
+	return false;
+}
+
 Utils* utils = new Utils();

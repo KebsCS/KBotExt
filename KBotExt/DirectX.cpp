@@ -10,6 +10,7 @@
 #include "InvokeTab.h"
 #include "SkinsTab.h"
 #include "ChampsTab.h"
+#include "SettingsTab.h"
 
 void GetAllChampionSkins(std::string patch)
 {
@@ -207,10 +208,14 @@ int Direct3D9Render::Render()
 			CustomTab::Render();
 
 			InvokeTab::Render();
+
+			SettingsTab::Render();
 		}
 		else
 		{
 			LoginTab::Render();
+
+			SettingsTab::Render();
 		}
 		ImGui::EndTabBar();
 	}
