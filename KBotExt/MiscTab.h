@@ -22,7 +22,12 @@ public:
 
 			if (ImGui::Button("Launch another client"))
 			{
-				ShellExecuteA(NULL, NULL, std::format("{}RiotClientServices.exe", S.riotPath).c_str(), "--launch-product=league_of_legends --launch-patchline=live --allow-multiple-clients", NULL, SW_SHOWNORMAL);
+				if (!std::filesystem::exists(S.leaguePath))
+				{
+					result = "Invadlid path, change it in Settings tab";
+				}
+				else
+					ShellExecuteA(NULL, NULL, std::format("{}LeagueClient.exe", S.leaguePath).c_str(), "--allow-multiple-clients", NULL, SW_SHOWNORMAL);
 			}
 
 			ImGui::NextColumn();

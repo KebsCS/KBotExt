@@ -16,10 +16,10 @@
 #pragma comment(lib, "d3d11.lib")
 
 // Data
-static ID3D11Device* g_pd3dDevice = NULL;
-static ID3D11DeviceContext* g_pd3dDeviceContext = NULL;
-static ID3D11RenderTargetView* g_pd3dRenderTargetView = NULL;
-static IDXGISwapChain* g_pSwapChain = NULL;
+inline ID3D11Device* g_pd3dDevice = NULL;
+inline ID3D11DeviceContext* g_pd3dDeviceContext = NULL;
+inline ID3D11RenderTargetView* g_pd3dRenderTargetView = NULL;
+inline IDXGISwapChain* g_pSwapChain = NULL;
 
 class Direct3D9Render
 {

@@ -27,8 +27,10 @@ public:
 			static std::string customHeader = auth->leagueHeader;
 			static int customPort = auth->leaguePort;
 
+			static bool bCustom = false;
 			if (ImGui::CollapsingHeader("Custom Port/Header"))
 			{
+				bCustom = true;
 				static char inputPort[64] = "";
 				ImGui::Text("Port:");
 				ImGui::InputText("##inputPort", inputPort, 64, ImGuiInputTextFlags_CharsDecimal);
@@ -46,6 +48,7 @@ public:
 			}
 			else
 			{
+				bCustom = false;
 				customHeader = auth->leagueHeader;
 				customPort = auth->leaguePort;
 			}
@@ -85,7 +88,7 @@ public:
 				const std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
 				JSONCPP_STRING err;
 				Json::Value root;
-				if (!reader->parse(result.c_str(), result.c_str() + static_cast<int>(result.length()), &root, &err))
+				if (!reader->parse(result.c_str(), result.c_str() + static_cast<int>(result.length()), &root, &err) || bCustom)
 					sResultJson = result;
 				else
 				{

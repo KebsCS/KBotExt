@@ -13,13 +13,13 @@ Settings S;
 
 #pragma warning(disable : 4996)
 
+Direct3D9Render Direct3D9;
+
 LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 HWND hwnd;
 
-Direct3D9Render Direct3D9;
-
-float processTimeMs = 0;
+//float processTimeMs = 0;
 
 // Main code
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
@@ -40,7 +40,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	::RegisterClassExA(&wc);
 
 	// Create application window
-	hwnd = ::CreateWindowA(sClassName.c_str(), lpszOverlayClassName, WS_OVERLAPPED | WS_SYSMENU | WS_MINIMIZEBOX, 100, 100, 700, 500, NULL, NULL, wc.hInstance, NULL);
+	hwnd = ::CreateWindowA(sClassName.c_str(), lpszOverlayClassName, WS_OVERLAPPED | WS_SYSMENU | WS_MINIMIZEBOX | WS_SIZEBOX, 100, 100, S.Window.width, S.Window.height, NULL, NULL, wc.hInstance, NULL);
 
 	if (hwnd == NULL)
 	{
@@ -78,6 +78,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	}
 
 	bool closedNow = false;
+	bool done = false;
 	// Main loop
 	MSG msg;
 	ZeroMemory(&msg, sizeof(msg));
@@ -89,7 +90,18 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		{
 			::TranslateMessage(&msg);
 			::DispatchMessage(&msg);
+			if (msg.message == WM_QUIT)
+				done = true;
 			continue;
+		}
+		if (done)
+			break;
+
+		// pressed button to reset to original size
+		if (S.Window.resize)
+		{
+			S.Window.resize = false;
+			::SetWindowPos(hwnd, 0, 0, 0, S.Window.width, S.Window.height, SWP_NOMOVE | SWP_NOOWNERZORDER | SWP_NOZORDER);
 		}
 
 		//Start rendering
@@ -160,6 +172,14 @@ LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			Direct3D9.CleanupRenderTarget();
 			g_pSwapChain->ResizeBuffers(0, (UINT)LOWORD(lParam), (UINT)HIWORD(lParam), DXGI_FORMAT_UNKNOWN, 0);
 			Direct3D9.CreateRenderTarget();
+
+			RECT rect;
+			if (GetWindowRect(hWnd, &rect))
+			{
+				S.Window.height = rect.bottom - rect.top;
+				S.Window.width = rect.right - rect.left;
+				CSettings::Save();
+			}
 		}
 		return 0;
 	case WM_SYSCOMMAND:

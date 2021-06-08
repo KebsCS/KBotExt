@@ -183,9 +183,9 @@ int Direct3D9Render::Render()
 
 	ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiCond_FirstUseEver);
 	ImGui::SetNextWindowSize(ImVec2(685, 462), ImGuiCond_FirstUseEver);
+	ImGui::SetNextWindowSize(ImVec2(S.Window.width - 15, S.Window.height - 38));
 	ImGuiWindowFlags flags = /*ImGuiWindowFlags_NoTitleBar |*/ ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoSavedSettings;
 	ImGui::Begin(buf, (bool*)0, flags);// , ImGuiWindowFlags_AlwaysAutoResize);
-
 	ImGuiTabBarFlags tab_bar_flags = 0;// ImGuiTabBarFlags_Reorderable;
 	if (ImGui::BeginTabBar("TabBar", tab_bar_flags))
 	{
@@ -235,7 +235,7 @@ void Direct3D9Render::Shutdown()
 
 bool Direct3D9Render::CreateRenderTarget()
 {
-	ID3D11Resource* pBackBuffer;
+	ID3D11Texture2D* pBackBuffer;
 	if (S_OK != g_pSwapChain->GetBuffer(0, IID_PPV_ARGS(&pBackBuffer)))
 		return false;
 	if (S_OK != g_pd3dDevice->CreateRenderTargetView(pBackBuffer, NULL, &g_pd3dRenderTargetView))
@@ -268,6 +268,15 @@ void Direct3D9Render::MenuInit()
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
 	io.IniFilename = nullptr;
 	io.LogFilename = nullptr;
+
+	io.Fonts->AddFontDefault();
+
+	for (std::string font : S.vFonts)
+	{
+		io.Fonts->AddFontFromFileTTF(font.c_str(), 13.0f, NULL, io.Fonts->GetGlyphRangesChineseFull());
+	}
+	if (S.selectedFont < io.Fonts->Fonts.size())
+		io.FontDefault = io.Fonts->Fonts[S.selectedFont];
 
 	ImGuiStyle& style = ImGui::GetStyle();
 

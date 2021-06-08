@@ -176,7 +176,7 @@ public:
 
 			ImGui::Separator();
 
-			ImGui::Columns(2, 0, false);
+			ImGui::Columns(3, 0, false);
 			if (ImGui::Button("Start queue"))
 			{
 				result = http->Request("POST", "https://127.0.0.1/lol-lobby/v2/lobby/matchmaking/search", "", auth->leagueHeader, "", "", auth->leaguePort);
@@ -186,7 +186,52 @@ public:
 			{
 				result = http->Request("POST", R"(https://127.0.0.1/lol-login/v1/session/invoke?destination=lcdsServiceProxy&method=call&args=["","teambuilder-draft","quitV2",""])", "", auth->leagueHeader, "", "", auth->leaguePort);
 			}
+			ImGui::SameLine();
+			if (ImGui::Button("Multi OP.GG"))
+			{
+				std::string names;
+				std::string champSelect = http->Request("GET", "https://127.0.0.1/lol-champ-select/v1/session", "", auth->leagueHeader, "", "", auth->leaguePort);
+				if (!champSelect.empty() && champSelect.find("RPC_ERROR") == std::string::npos)
+				{
+					Json::CharReaderBuilder builder;
+					const std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
+					JSONCPP_STRING err;
+					Json::Value rootLocale;
+					Json::Value rootCSelect;
+					Json::Value rootSummoner;
 
+					std::string regionLocale = http->Request("GET", "https://127.0.0.1/riotclient/get_region_locale", "", auth->leagueHeader, "", "", auth->leaguePort);
+					if (reader->parse(regionLocale.c_str(), regionLocale.c_str() + static_cast<int>(regionLocale.length()), &rootLocale, &err))
+					{
+						std::string region = rootLocale["webRegion"].asString();
+						if (reader->parse(champSelect.c_str(), champSelect.c_str() + static_cast<int>(champSelect.length()), &rootCSelect, &err))
+						{
+							std::string url = "https://" + region + ".op.gg/multi/query=";
+							auto teamArr = rootCSelect["myTeam"];
+							if (teamArr.isArray())
+							{
+								for (Json::Value::ArrayIndex i = 0; i < teamArr.size(); ++i)
+								{
+									std::string summId = teamArr[i]["summonerId"].asString();
+									if (summId != "0")
+									{
+										std::string summoner = http->Request("GET", "https://127.0.0.1/lol-summoner/v1/summoners/" + summId, "", auth->leagueHeader, "", "", auth->leaguePort);
+										if (reader->parse(summoner.c_str(), summoner.c_str() + static_cast<int>(summoner.length()), &rootSummoner, &err))
+										{
+											std::string summName = rootSummoner["internalName"].asString();
+											url += summName + ",";
+										}
+									}
+								}
+								ShellExecuteA(0, 0, url.c_str(), 0, 0, SW_SHOW);
+							}
+						}
+					}
+				}
+				else
+					result = "Champion select not found";
+			}
+		
 			ImGui::Columns(1);
 
 			// TODO

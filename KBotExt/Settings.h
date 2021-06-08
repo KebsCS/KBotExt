@@ -3,6 +3,7 @@
 #include <string>
 #include <fstream>
 #include <filesystem>
+#include <vector>
 
 #include "Includes.h"
 
@@ -16,7 +17,17 @@ struct Settings
 
 	bool autoRename = false;
 	std::string leaguePath = "C:/Riot Games/League of Legends/";
-	std::string riotPath = "C:/Riot Games/Riot Client/";
+	std::vector<std::string>vFonts;
+	int selectedFont = 0;
+	bool bAddFont = false;
+	std::string language = "en_US";
+
+	struct
+	{
+		int width = 700;
+		int height = 500;
+		bool resize = false;
+	}Window;
 };
 extern Settings S;
 
@@ -45,11 +56,31 @@ public:
 			{
 				root["autoRename"] = S.autoRename;
 				root["leaguePath"] = S.leaguePath;
-				root["riotPath"] = S.riotPath;
+				root["window"]["width"] = S.Window.width;
+				root["window"]["height"] = S.Window.height;
+				root["selectedFont"] = S.selectedFont;
+				root["language"] = S.language;
 
-				std::ofstream oFile(S.settingsFile);
-				oFile << root.toStyledString() << std::endl;
-				oFile.close();
+				if (S.bAddFont)
+				{
+					S.bAddFont = false;
+					if (!root["fonts"].isArray())
+						root["fonts"] = Json::Value(Json::arrayValue);
+					Json::Value fontsArray = root["fonts"];
+
+					// clear so we dont append same fonts again
+					fontsArray.clear();
+					for (std::string font : S.vFonts)
+						fontsArray.append(font);
+					root["fonts"] = fontsArray;
+				}
+
+				if (!root.toStyledString().empty())
+				{
+					std::ofstream oFile(S.settingsFile);
+					oFile << root.toStyledString() << std::endl;
+					oFile.close();
+				}
 			}
 		}
 		iFile.close();
@@ -76,7 +107,18 @@ public:
 			{
 				if (auto t = root["autoRename"]; !t.empty()) S.autoRename = t.asBool();
 				if (auto t = root["leaguePath"]; !t.empty()) S.leaguePath = t.asString();
-				if (auto t = root["riotPath"]; !t.empty()) S.riotPath = t.asString();
+				if (auto t = root["window"]["width"]; !t.empty()) S.Window.width = t.asInt();
+				if (auto t = root["window"]["height"]; !t.empty()) S.Window.height = t.asInt();
+				if (auto t = root["selectedFont"]; !t.empty()) S.selectedFont = t.asInt();
+				if (auto t = root["language"]; !t.empty()) S.language = t.asString();
+
+				if (root["fonts"].isArray() && !root["fonts"].empty())
+				{
+					for (Json::Value::ArrayIndex i = 0; i < root["fonts"].size(); i++)
+					{
+						S.vFonts.emplace_back(root["fonts"][i].asString());
+					}
+				}
 			}
 		}
 		file.close();

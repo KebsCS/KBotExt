@@ -30,9 +30,46 @@ public:
 			static std::string result;
 			ImGui::Columns(2, 0, false);
 
+			static std::vector<std::pair<std::string, std::string>>langs = {
+				{"English (US)", "en_US"},{"Japanese","ja_JP"},{"Korean","ko_KR"},{"Chinese (China)","zh_CN"},
+				{"German","de_DE"},{"Spanish (Spain)","es_ES"},{"Polish","pl_PL"},{"Russian","ru_RU"},
+				{"French","fr_FR"},{"Turkish","tr_TR"},{"Portuguese","pt_BR"},{"Czech","cs_CZ"},{"Greek","el_GR"},
+				{"Romanian","ro_RO"},{"Hungarian","hu_HU"},{"English (UK)","en_GB"},{"Italian","it_IT"},
+				{"Spanish (Mexico)","es_MX"},{"Spanish (Argentina)","es_AR"},{"English (Australia)","en_AU"},
+				{"Malay","ms_MY"},{"English (Philippines)","en_PH"},{"English (Singapore)","en_SG"},{"Thai","th_TH"},
+				{"Vietnamese","vn_VN"},{"Indonesian","id_ID"},{"Chinese (Malaysia)","zh_MY"},{"Chinese (Taiwan)","zh_TW"}
+			};
+			// find saved lang from cfg file
+			auto findLang = std::find_if(langs.begin(), langs.end(), [](std::pair<std::string, std::string>k) { return k.second == S.language; });
+
+			static std::pair<std::string, std::string>selectedLang = { findLang[0].first,findLang[0].second };
+
 			if (ImGui::Button("Launch client"))
 			{
-				ShellExecuteA(NULL, NULL, std::format("{}RiotClientServices.exe", S.riotPath).c_str(), "--launch-product=league_of_legends --launch-patchline=live", NULL, SW_SHOWNORMAL);
+				if (!std::filesystem::exists(S.leaguePath))
+				{
+					result = "Invadlid path, change it in Settings tab";
+				}
+				else
+				{
+					ShellExecuteA(NULL, NULL, std::format("{}LeagueClient.exe", S.leaguePath).c_str(), std::format("--locale={}", selectedLang.second).c_str(), NULL, SW_SHOWNORMAL);
+					result = S.leaguePath + "LeagueClient.exe --locale=" + selectedLang.second; // todo custom arguments
+				}
+			}
+			ImGui::SameLine();
+
+			if (ImGui::BeginCombo("##language", selectedLang.first.c_str()))
+			{
+				for (auto lang : langs)
+				{
+					if (ImGui::Selectable(lang.first.c_str(), lang.first == selectedLang.first))
+					{
+						selectedLang = { lang.first,lang.second };
+						S.language = lang.second;
+						CSettings::Save();
+					}
+				}
+				ImGui::EndCombo();
 			}
 
 			ImGui::NextColumn();

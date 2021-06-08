@@ -1,6 +1,6 @@
-![Example](https://i.imgur.com/rfUPFMg.png)
+![Example](https://i.imgur.com/mc9F6j1.png)
 
-[More screenshots](https://imgur.com/a/tdqsZpw)
+[More screenshots](https://imgur.com/a/dGIDRo6)
 
 For fun project made in the span of 2 nights back in February 2021, which I'm now updating
 
@@ -23,3 +23,6 @@ For fun project made in the span of 2 nights back in February 2021, which I'm no
 * 1 click login 
 * Fast key crafer/chest opener
 * Remove all friends/disenchant all shards with 1 click
+* Change League's language
+* Open multi op.gg with all players in champion select
+* Customizable font and window size
