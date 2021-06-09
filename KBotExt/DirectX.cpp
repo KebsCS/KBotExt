@@ -269,11 +269,36 @@ void Direct3D9Render::MenuInit()
 	io.IniFilename = nullptr;
 	io.LogFilename = nullptr;
 
+	static const ImWchar ranges[] =
+	{
+		0x0020, 0x00FF, // Basic Latin + Latin Supplement
+		0x2000, 0x206F, // General Punctuation
+		0x3000, 0x30FF, // CJK Symbols and Punctuations, Hiragana, Katakana
+		0x31F0, 0x31FF, // Katakana Phonetic Extensions
+		0xFF00, 0xFFEF, // Half-width characters
+		0x4e00, 0x9FAF, // CJK Ideograms
+		0x3131, 0x3163, // Korean alphabets
+		0xAC00, 0xD7A3, // Korean characters
+		0x0400, 0x052F, // Cyrillic + Cyrillic Supplement
+		0x2DE0, 0x2DFF, // Cyrillic Extended-A
+		0xA640, 0xA69F, // Cyrillic Extended-B
+		0x2010, 0x205E, // Punctuations
+		0x0E00, 0x0E7F, // Thai
+		0x0102, 0x0103,
+		0x0110, 0x0111,
+		0x0128, 0x0129,
+		0x0168, 0x0169,
+		0x01A0, 0x01A1,
+		0x01AF, 0x01B0,
+		0x1EA0, 0x1EF9,
+		0,
+	};
+
 	io.Fonts->AddFontDefault();
 
 	for (std::string font : S.vFonts)
 	{
-		io.Fonts->AddFontFromFileTTF(font.c_str(), 13.0f, NULL, io.Fonts->GetGlyphRangesChineseFull());
+		io.Fonts->AddFontFromFileTTF(font.c_str(), 13.0f, NULL, ranges);
 	}
 	if (S.selectedFont < io.Fonts->Fonts.size())
 		io.FontDefault = io.Fonts->Fonts[S.selectedFont];

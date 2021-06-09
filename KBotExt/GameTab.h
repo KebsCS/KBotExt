@@ -4,6 +4,7 @@
 #include "Includes.h"
 #include "HTTP.h"
 #include "Auth.h"
+#include "Utils.h"
 
 inline bool bAutoAccept = false;
 inline int instalockID;
@@ -203,10 +204,10 @@ public:
 					std::string regionLocale = http->Request("GET", "https://127.0.0.1/riotclient/get_region_locale", "", auth->leagueHeader, "", "", auth->leaguePort);
 					if (reader->parse(regionLocale.c_str(), regionLocale.c_str() + static_cast<int>(regionLocale.length()), &rootLocale, &err))
 					{
-						std::string region = rootLocale["webRegion"].asString();
+						std::wstring region = utils->StringToWstring(rootLocale["webRegion"].asString());
 						if (reader->parse(champSelect.c_str(), champSelect.c_str() + static_cast<int>(champSelect.length()), &rootCSelect, &err))
 						{
-							std::string url = "https://" + region + ".op.gg/multi/query=";
+							std::wstring url = L"https://" + region + L".op.gg/multi/query=";
 							auto teamArr = rootCSelect["myTeam"];
 							if (teamArr.isArray())
 							{
@@ -218,12 +219,12 @@ public:
 										std::string summoner = http->Request("GET", "https://127.0.0.1/lol-summoner/v1/summoners/" + summId, "", auth->leagueHeader, "", "", auth->leaguePort);
 										if (reader->parse(summoner.c_str(), summoner.c_str() + static_cast<int>(summoner.length()), &rootSummoner, &err))
 										{
-											std::string summName = rootSummoner["internalName"].asString();
-											url += summName + ",";
+											std::wstring summName = utils->StringToWstring(rootSummoner["internalName"].asString());
+											url += summName + L",";
 										}
 									}
 								}
-								ShellExecuteA(0, 0, url.c_str(), 0, 0, SW_SHOW);
+								ShellExecuteW(0, 0, url.c_str(), 0, 0, SW_SHOW);
 							}
 						}
 					}
