@@ -61,7 +61,7 @@ public:
 		if (reader->parse(getLatest.c_str(), getLatest.c_str() + static_cast<int>(getLatest.length()), &root, &err))
 		{
 			std::string latestName = root["tag_name"].asString();
-			if (latestName != "1.3.0")
+			if (latestName != "1.3.1")
 			{
 				if (MessageBoxA(0, "Open download website?", "New version available", MB_YESNO | MB_SETFOREGROUND) == IDYES)
 				{

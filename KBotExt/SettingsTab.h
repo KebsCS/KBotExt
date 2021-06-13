@@ -48,17 +48,19 @@ public:
 
 			ImGui::Checkbox("Auto-rename", &S.autoRename);
 
+			ImGui::Checkbox("Stream Proof", &S.streamProof);
+
 			static char bufLeaguePath[MAX_PATH];
 			std::copy(S.leaguePath.begin(), S.leaguePath.end(), bufLeaguePath);
 			ImGui::Text("League path:");
 			ImGui::InputText("##leaguePath", bufLeaguePath, MAX_PATH);
 			S.leaguePath = bufLeaguePath;
 
-			if (ImGui::Button("Save Settings"))
-			{
-				CSettings::Save();
-				result = "Saved";
-			}
+			/*	if (ImGui::Button("Save Settings"))
+				{
+					CSettings::Save();
+					result = "Saved";
+				}*/
 
 			ImGui::Separator();
 

@@ -27,6 +27,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	//Randomize using current time, todo swap with recent c++ random
 	srand(time(0));
 
+	bool oldStreamProof = S.streamProof;
+
 	CSettings::Load();
 
 	std::string sClassName = utils->RandomString(RandomInt(5, 10));
@@ -104,6 +106,15 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			::SetWindowPos(hwnd, 0, 0, 0, S.Window.width, S.Window.height, SWP_NOMOVE | SWP_NOOWNERZORDER | SWP_NOZORDER);
 		}
 
+		if (oldStreamProof != S.streamProof)
+		{
+			oldStreamProof = S.streamProof;
+			if (oldStreamProof)
+				SetWindowDisplayAffinity(hwnd, WDA_EXCLUDEFROMCAPTURE);
+			else
+				SetWindowDisplayAffinity(hwnd, WDA_NONE);
+		}
+
 		//Start rendering
 		Direct3D9.StartFrame();
 
@@ -141,6 +152,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 		std::this_thread::sleep_for(std::chrono::milliseconds(1));
 	}
+
+	CSettings::Save();
 
 	// Cleanup
 	ImGui_ImplDX11_Shutdown();

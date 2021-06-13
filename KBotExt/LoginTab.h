@@ -28,6 +28,16 @@ public:
 		if (ImGui::BeginTabItem("Login"))
 		{
 			static std::string result;
+			static bool once = true;
+			static char leagueArgs[1024 * 16];
+			static std::string sArgs;
+
+			if (once)
+			{
+				once = false;
+				std::copy(S.loginTab.leagueArgs.begin(), S.loginTab.leagueArgs.end(), leagueArgs);
+			}
+
 			ImGui::Columns(2, 0, false);
 
 			static std::vector<std::pair<std::string, std::string>>langs = {
@@ -40,7 +50,7 @@ public:
 				{"Vietnamese","vn_VN"},{"Indonesian","id_ID"},{"Chinese (Malaysia)","zh_MY"},{"Chinese (Taiwan)","zh_TW"}
 			};
 			// find saved lang from cfg file
-			auto findLang = std::find_if(langs.begin(), langs.end(), [](std::pair<std::string, std::string>k) { return k.second == S.language; });
+			auto findLang = std::find_if(langs.begin(), langs.end(), [](std::pair<std::string, std::string>k) { return k.second == S.loginTab.language; });
 
 			static std::pair<std::string, std::string>selectedLang = { findLang[0].first,findLang[0].second };
 
@@ -52,8 +62,8 @@ public:
 				}
 				else
 				{
-					ShellExecuteA(NULL, NULL, std::format("{}LeagueClient.exe", S.leaguePath).c_str(), std::format("--locale={}", selectedLang.second).c_str(), NULL, SW_SHOWNORMAL);
-					result = S.leaguePath + "LeagueClient.exe --locale=" + selectedLang.second; // todo custom arguments
+					ShellExecuteA(NULL, NULL, std::format("{}LeagueClient.exe", S.leaguePath).c_str(), sArgs.c_str(), NULL, SW_SHOWNORMAL);
+					result = S.leaguePath + "LeagueClient.exe " + sArgs;
 				}
 			}
 			ImGui::SameLine();
@@ -65,8 +75,17 @@ public:
 					if (ImGui::Selectable(lang.first.c_str(), lang.first == selectedLang.first))
 					{
 						selectedLang = { lang.first,lang.second };
-						S.language = lang.second;
+						S.loginTab.language = lang.second;
 						CSettings::Save();
+
+						std::string localeArg = std::format("--locale={} ", selectedLang.second);
+						size_t localePos = sArgs.find("--locale=");
+						if (localePos != std::string::npos)
+						{
+							sArgs.replace(localePos, localeArg.size(), localeArg);
+						}
+						else
+							sArgs += localeArg;
 					}
 				}
 				ImGui::EndCombo();
@@ -86,6 +105,14 @@ public:
 				}
 			}
 			ImGui::Columns(1);
+
+			std::copy(sArgs.begin(), sArgs.end(), leagueArgs);
+			ImGui::Text(" Args: ");
+			ImGui::SameLine();
+			ImGui::InputText("##inputLeagueArgs", leagueArgs, IM_ARRAYSIZE(leagueArgs));
+
+			sArgs = leagueArgs;
+			S.loginTab.leagueArgs = sArgs;
 
 			ImGui::Separator();
 
@@ -139,7 +166,7 @@ public:
 			}
 
 			ImGui::SameLine();
-			Misc::HelpMarker("This part is only, if you want to save your login and pass to .txt file and login with 1 click. You don't have to do that, you can just log in the usual way in client and launch the tool anytime you want");
+			Misc::HelpMarker("This part is only, if you want to save your login and pass to config file and login with 1 click. You don't have to do that, you can just log in the usual way in client and launch the tool anytime you want");
 
 			ImGui::Separator();
 

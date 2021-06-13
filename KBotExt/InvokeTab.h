@@ -8,17 +8,32 @@ public:
 	{
 		if (ImGui::BeginTabItem("Invoke"))
 		{
+			static bool once = true;
+
 			static char destination[1024 * 16];
+			static char method[1024 * 16];
+			static char args[1024 * 16];
+
+			if (once)
+			{
+				once = false;
+				std::copy(S.invokeTab.destination.begin(), S.invokeTab.destination.end(), destination);
+				std::copy(S.invokeTab.method.begin(), S.invokeTab.method.end(), method);
+				std::copy(S.invokeTab.args.begin(), S.invokeTab.args.end(), args);
+			}
+
 			ImGui::Text("Destination:");
 			ImGui::InputTextMultiline("##inputDestination", destination, IM_ARRAYSIZE(destination), ImVec2(600, 20));
 
-			static char method[1024 * 16];
 			ImGui::Text("Method:");
 			ImGui::InputTextMultiline("##inputMethod", method, IM_ARRAYSIZE(method), ImVec2(600, 20));
 
-			static char args[1024 * 16];
 			ImGui::Text("Args:");
 			ImGui::InputTextMultiline("##inputArgs", args, IM_ARRAYSIZE(args), ImVec2(600, 50));
+
+			S.invokeTab.destination = destination;
+			S.invokeTab.method = method;
+			S.invokeTab.args = args;
 
 			static std::string result;
 			if (ImGui::Button("Submit##submitInvoke"))

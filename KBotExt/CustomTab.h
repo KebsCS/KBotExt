@@ -12,17 +12,32 @@ public:
 	{
 		if (ImGui::BeginTabItem("Custom"))
 		{
+			static bool once = true;
+
 			static char method[50];
+			static char urlText[1024 * 16];
+			static char requestText[1024 * 16];
+
+			if (once)
+			{
+				once = false;
+				std::copy(S.customTab.method.begin(), S.customTab.method.end(), method);
+				std::copy(S.customTab.urlText.begin(), S.customTab.urlText.end(), urlText);
+				std::copy(S.customTab.requestText.begin(), S.customTab.requestText.end(), requestText);
+			}
+
 			ImGui::Text("Method:");
 			ImGui::InputText("##inputMethod", method, IM_ARRAYSIZE(method));
 
-			static char urlText[1024 * 16];
 			ImGui::Text("URL:");
 			ImGui::InputTextMultiline("##inputUrl", urlText, IM_ARRAYSIZE(urlText), ImVec2(600, 20));
 
-			static char requestText[1024 * 16];
 			ImGui::Text("Body:");
 			ImGui::InputTextMultiline("##inputBody", (requestText), IM_ARRAYSIZE(requestText), ImVec2(600, 100), ImGuiInputTextFlags_AllowTabInput);
+
+			S.customTab.method = method;
+			S.customTab.urlText = urlText;
+			S.customTab.requestText = requestText;
 
 			static std::string customHeader = auth->leagueHeader;
 			static int customPort = auth->leaguePort;

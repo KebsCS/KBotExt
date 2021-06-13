@@ -1,5 +1,7 @@
 #pragma once
 
+#include <utility>
+
 #include "Definitions.h"
 #include "Includes.h"
 #include "HTTP.h"
@@ -14,6 +16,7 @@ inline char instantMessage[50];
 class GameTab
 {
 public:
+
 	static void Render()
 	{
 		if (ImGui::BeginTabItem("Game"))
@@ -232,7 +235,7 @@ public:
 				else
 					result = "Champion select not found";
 			}
-		
+
 			ImGui::Columns(1);
 
 			// TODO
@@ -244,16 +247,14 @@ public:
 			ImGui::Checkbox("Instalock", &bInstalock);
 			if (ImGui::CollapsingHeader("Instalock champ"))
 			{
-				for (auto min : champsMinimal)
+				std::vector<std::pair<int, std::string>>instalockChamps = GetInstalockChamps();
+				for (auto champ : instalockChamps)
 				{
-					if (!min.owned)
-						continue;
-
 					char bufchamp[128];
-					sprintf_s(bufchamp, "##Select %s", min.alias.c_str());
-					ImGui::Text("%s", min.alias.c_str());
+					sprintf_s(bufchamp, "##Select %s", champ.second.c_str());
+					ImGui::Text("%s", champ.second.c_str());
 					ImGui::SameLine();
-					ImGui::RadioButton(bufchamp, &instalockID, min.id);
+					ImGui::RadioButton(bufchamp, &instalockID, champ.first);
 				}
 			}
 
@@ -326,5 +327,32 @@ public:
 
 			ImGui::EndTabItem();
 		}
+	}
+
+	static std::vector<std::pair<int, std::string>> GetInstalockChamps()
+	{
+		std::vector<std::pair<int, std::string>>temp;
+
+		std::string result = http->Request("GET", "https://127.0.0.1/lol-champions/v1/owned-champions-minimal", "", auth->leagueHeader, "", "", auth->leaguePort);
+		Json::CharReaderBuilder builder;
+		const std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
+		JSONCPP_STRING err;
+		Json::Value root;
+		if (reader->parse(result.c_str(), result.c_str() + static_cast<int>(result.length()), &root, &err))
+		{
+			if (root.isArray())
+			{
+				for (Json::Value::ArrayIndex i = 0; i < root.size(); i++)
+				{
+					if (root[i]["freeToPlay"].asBool() == true || root[i]["ownership"]["owned"].asBool() == true)
+					{
+						std::pair<int, std::string > champ = { root[i]["id"].asInt() , root[i]["alias"].asString() };
+						temp.emplace_back(champ);
+					}
+				}
+			}
+		}
+
+		return temp;
 	}
 };

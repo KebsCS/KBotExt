@@ -5,6 +5,7 @@
 #include "HTTP.h"
 #include "Utils.h"
 #include "Auth.h"
+#include "Settings.h"
 
 class InfoTab
 {
@@ -13,6 +14,7 @@ public:
 	{
 		if (ImGui::BeginTabItem("Info"))
 		{
+			static bool once = true;
 			static std::string result;
 			static bool bPressed = false;
 
@@ -21,8 +23,15 @@ public:
 			static std::string summName;
 
 			static char playerName[50];
+			if (once)
+			{
+				once = false;
+				std::copy(S.infoTab.playerName.begin(), S.infoTab.playerName.end(), playerName);
+			}
+
 			ImGui::Text("Input player name:");
 			ImGui::InputText("##inputPlayerName", playerName, IM_ARRAYSIZE(playerName));
+			S.infoTab.playerName = playerName;
 			ImGui::SameLine();
 
 			if (ImGui::Button("Submit##playerName") || ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Enter), false))

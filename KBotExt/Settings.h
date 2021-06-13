@@ -20,7 +20,7 @@ struct Settings
 	std::vector<std::string>vFonts;
 	int selectedFont = 0;
 	bool bAddFont = false;
-	std::string language = "en_US";
+	bool streamProof = false;
 
 	struct
 	{
@@ -28,6 +28,36 @@ struct Settings
 		int height = 500;
 		bool resize = false;
 	}Window;
+
+	struct
+	{
+		std::string playerName;
+	}infoTab;
+
+	struct
+	{
+		std::string method;
+		std::string urlText;
+		std::string requestText;
+	}customTab;
+
+	struct
+	{
+		std::string destination;
+		std::string method;
+		std::string args;
+	}invokeTab;
+
+	struct
+	{
+		std::string language = "en_US";
+		std::string leagueArgs = "--locale=en_US";
+	}loginTab;
+
+	//struct
+	//{
+	//
+	//}profileTab;
 };
 extern Settings S;
 
@@ -59,7 +89,16 @@ public:
 				root["window"]["width"] = S.Window.width;
 				root["window"]["height"] = S.Window.height;
 				root["selectedFont"] = S.selectedFont;
-				root["language"] = S.language;
+				root["loginTab"]["language"] = S.loginTab.language;
+				root["loginTab"]["leagueArgs"] = S.loginTab.leagueArgs;
+				root["streamProof"] = S.streamProof;
+				root["infoTab"]["playerName"] = S.infoTab.playerName;
+				root["customTab"]["method"] = S.customTab.method;
+				root["customTab"]["urlText"] = S.customTab.urlText;
+				root["customTab"]["requestText"] = S.customTab.requestText;
+				root["invokeTab"]["destination"] = S.invokeTab.destination;
+				root["invokeTab"]["method"] = S.invokeTab.method;
+				root["invokeTab"]["args"] = S.invokeTab.args;
 
 				if (S.bAddFont)
 				{
@@ -110,7 +149,16 @@ public:
 				if (auto t = root["window"]["width"]; !t.empty()) S.Window.width = t.asInt();
 				if (auto t = root["window"]["height"]; !t.empty()) S.Window.height = t.asInt();
 				if (auto t = root["selectedFont"]; !t.empty()) S.selectedFont = t.asInt();
-				if (auto t = root["language"]; !t.empty()) S.language = t.asString();
+				if (auto t = root["loginTab"]["language"]; !t.empty()) S.loginTab.language = t.asString();
+				if (auto t = root["loginTab"]["leagueArgs"]; !t.empty()) S.loginTab.leagueArgs = t.asString();
+				if (auto t = root["streamProof"]; !t.empty()) S.streamProof = t.asBool();
+				if (auto t = root["infoTab"]["playerName"]; !t.empty()) S.infoTab.playerName = t.asString();
+				if (auto t = root["customTab"]["method"]; !t.empty()) S.customTab.method = t.asString();
+				if (auto t = root["customTab"]["urlText"]; !t.empty()) S.customTab.urlText = t.asString();
+				if (auto t = root["customTab"]["requestText"]; !t.empty()) S.customTab.requestText = t.asString();
+				if (auto t = root["invokeTab"]["destination"]; !t.empty()) S.invokeTab.destination = t.asString();
+				if (auto t = root["invokeTab"]["method"]; !t.empty()) S.invokeTab.method = t.asString();
+				if (auto t = root["invokeTab"]["args"]; !t.empty()) S.invokeTab.args = t.asString();
 
 				if (root["fonts"].isArray() && !root["fonts"].empty())
 				{
