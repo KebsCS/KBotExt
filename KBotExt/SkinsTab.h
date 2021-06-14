@@ -65,9 +65,23 @@ public:
 					auto payloadObj = root[i]["payload"];
 					ImGui::Text("isVintage: %d", payloadObj["isVintage"].asInt());
 					std::string purchaseDateFormatted = root[i]["purchaseDate"].asString();
-					purchaseDateFormatted.insert(4, ".");
-					purchaseDateFormatted.insert(7, ".");
-					purchaseDateFormatted.insert(10, " ");
+					size_t fintTPos = purchaseDateFormatted.find("T");
+					size_t finddDotPos = purchaseDateFormatted.find(".");
+					size_t findMinusPos = purchaseDateFormatted.find("-");
+					if (findMinusPos == std::string::npos)
+					{
+						purchaseDateFormatted = purchaseDateFormatted.substr(0, finddDotPos);
+						purchaseDateFormatted.insert(4, "-");
+						purchaseDateFormatted.insert(7, "-");
+						purchaseDateFormatted.replace(fintTPos + 2, 1, " ");
+						purchaseDateFormatted.insert(fintTPos + 2 + 3, ":");
+						purchaseDateFormatted.insert(fintTPos + 2 + 3 + 3, ":");
+					}
+					else
+					{
+						purchaseDateFormatted = purchaseDateFormatted.substr(0, finddDotPos);
+						purchaseDateFormatted.replace(fintTPos, 1, " ");
+					}
 					ImGui::Text("purchaseDate: %s", purchaseDateFormatted.c_str());
 					ImGui::Text("quantity: %d", root[i]["quantity"].asInt());
 					ImGui::Text("uuid: %s", root[i]["uuid"].asString().c_str());

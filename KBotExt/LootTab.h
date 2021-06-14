@@ -100,12 +100,12 @@ public:
 				Json::CharReaderBuilder builder;
 				const std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
 				JSONCPP_STRING err;
-				Json::Value root;
-				if (!reader->parse(result.c_str(), result.c_str() + static_cast<int>(result.length()), &root, &err))
+				Json::Value root2;
+				if (!reader->parse(result.c_str(), result.c_str() + static_cast<int>(result.length()), &root2, &err))
 					sResultJson = result;
 				else
 				{
-					sResultJson = Json::writeString(wBuilder, root);
+					sResultJson = Json::writeString(wBuilder, root2);
 				}
 				result = "";
 			}

@@ -24,147 +24,238 @@ HWND hwnd;
 // Main code
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
-	//Randomize using current time, todo swap with recent c++ random
-	srand(time(0));
-
-	bool oldStreamProof = S.streamProof;
-
-	CSettings::Load();
-
-	std::string sClassName = utils->RandomString(RandomInt(5, 10));
-	LPCSTR lpszOverlayClassName = sClassName.c_str();
-	//Register window class information
-	WNDCLASSEXA wc = { sizeof(WNDCLASSEXA), CS_CLASSDC, WndProc, 0L, 0L, GetModuleHandle(NULL), NULL, NULL, NULL, NULL, sClassName.c_str(), NULL };
-
-	if (S.autoRename)
-		utils->RenameExe();
-
-	::RegisterClassExA(&wc);
-
-	// Create application window
-	hwnd = ::CreateWindowA(sClassName.c_str(), lpszOverlayClassName, WS_OVERLAPPED | WS_SYSMENU | WS_MINIMIZEBOX | WS_SIZEBOX, 100, 100, S.Window.width, S.Window.height, NULL, NULL, wc.hInstance, NULL);
-
-	if (hwnd == NULL)
+	LPWSTR* szArgList;
+	int argCount;
+	szArgList = CommandLineToArgvW(GetCommandLine(), &argCount);
+	if (argCount > 1)
 	{
-		::UnregisterClassA(wc.lpszClassName, wc.hInstance);
-		MessageBoxA(0, "Couldn't create window", 0, 0);
-		return 0;
-	}
+		std::string applicationName = utils->WstringToString(szArgList[1]);
+		std::string cmdLine;
+		for (int i = 2; i < argCount; i++)
+		{
+			cmdLine += "\"" + utils->WstringToString(szArgList[i]) + "\" ";
+		}
+		cmdLine.replace(cmdLine.find("\"--no-proxy-server\""), strlen("\"--no-proxy-server\""), "");
 
-	//Initialize Direct3D
-	if (!Direct3D9.DirectXInit(hwnd))
-	{
-		Direct3D9.Shutdown();
-		::UnregisterClassA(wc.lpszClassName, wc.hInstance);
-		MessageBoxA(0, "Couldn't initalize DirectX", 0, 0);
-		return 0;
-	}
+		AllocConsole();
+		freopen("CONOUT$", "w", stdout);
 
-	// Show the window
-	::ShowWindow(hwnd, SW_SHOWDEFAULT);
-	::UpdateWindow(hwnd);
+		STARTUPINFOA startupInfo;
+		memset(&startupInfo, 0, sizeof(STARTUPINFOA));
+		startupInfo.cb = sizeof(startupInfo);
+		PROCESS_INFORMATION processInformation;
+		memset(&processInformation, 0, sizeof(PROCESS_INFORMATION));
 
-#ifndef NDEBUG
-	AllocConsole();
-	freopen("CONOUT$", "w", stdout);
-#endif
+		if (!CreateProcessA(applicationName.c_str(), const_cast<char*>(cmdLine.c_str()), 0, 0, false, 2U, 0, 0, &startupInfo, &processInformation))
+			return 0;
 
-	if (auth->GetLeagueClientInfo())
-	{
-		//league client is running
+		std::cout << "App: " << applicationName << std::endl;
+		std::cout << "PID: " << processInformation.dwProcessId << std::endl;
+		std::cout << "Args: " << cmdLine << std::endl;
+
+		if (!DebugActiveProcessStop(processInformation.dwProcessId))
+		{
+			CloseHandle(processInformation.hProcess);
+			CloseHandle(processInformation.hThread);
+			return 0;
+		}
+
+		WaitForSingleObject(processInformation.hProcess, INFINITE);
+
+		std::cout << "Exited" << std::endl;
+
+		CloseHandle(processInformation.hProcess);
+		CloseHandle(processInformation.hThread);
+		std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 	}
 	else
 	{
-		//riot client with login screen is up
-		auth->GetRiotClientInfo();
-	}
+		//Randomize using current time, todo swap with recent c++ random
+		srand(time(0));
 
-	bool closedNow = false;
-	bool done = false;
-	// Main loop
-	MSG msg;
-	ZeroMemory(&msg, sizeof(msg));
-	while (msg.message != WM_QUIT)
-	{
-		//auto timeBefore = std::chrono::high_resolution_clock::now();
+		bool oldStreamProof = S.streamProof;
 
-		if (::PeekMessage(&msg, NULL, 0U, 0U, PM_REMOVE))
+		CSettings::Load();
+
+		bool oldDebugger = S.debugger;
+
+		std::string sClassName = utils->RandomString(RandomInt(5, 10));
+		LPCSTR lpszOverlayClassName = sClassName.c_str();
+		//Register window class information
+		WNDCLASSEXA wc = { sizeof(WNDCLASSEXA), CS_CLASSDC, WndProc, 0L, 0L, GetModuleHandle(NULL), NULL, NULL, NULL, NULL, sClassName.c_str(), NULL };
+
+		if (S.autoRename)
+			utils->RenameExe();
+
+		::RegisterClassExA(&wc);
+
+		// Create application window
+		hwnd = ::CreateWindowA(sClassName.c_str(), lpszOverlayClassName, WS_OVERLAPPED | WS_SYSMENU | WS_MINIMIZEBOX | WS_SIZEBOX, 100, 100, S.Window.width, S.Window.height, NULL, NULL, wc.hInstance, NULL);
+
+		if (hwnd == NULL)
 		{
-			::TranslateMessage(&msg);
-			::DispatchMessage(&msg);
-			if (msg.message == WM_QUIT)
-				done = true;
-			continue;
-		}
-		if (done)
-			break;
-
-		// pressed button to reset to original size
-		if (S.Window.resize)
-		{
-			S.Window.resize = false;
-			::SetWindowPos(hwnd, 0, 0, 0, S.Window.width, S.Window.height, SWP_NOMOVE | SWP_NOOWNERZORDER | SWP_NOZORDER);
+			::UnregisterClassA(wc.lpszClassName, wc.hInstance);
+			MessageBoxA(0, "Couldn't create window", 0, 0);
+			return 0;
 		}
 
-		if (oldStreamProof != S.streamProof)
+		//Initialize Direct3D
+		if (!Direct3D9.DirectXInit(hwnd))
 		{
-			oldStreamProof = S.streamProof;
-			if (oldStreamProof)
-				SetWindowDisplayAffinity(hwnd, WDA_EXCLUDEFROMCAPTURE);
-			else
-				SetWindowDisplayAffinity(hwnd, WDA_NONE);
+			Direct3D9.Shutdown();
+			::UnregisterClassA(wc.lpszClassName, wc.hInstance);
+			MessageBoxA(0, "Couldn't initalize DirectX", 0, 0);
+			return 0;
 		}
 
-		//Start rendering
-		Direct3D9.StartFrame();
+		// Show the window
+		::ShowWindow(hwnd, SW_SHOWDEFAULT);
+		::UpdateWindow(hwnd);
 
-		//Render UI
-		Direct3D9.Render();
+#ifndef NDEBUG
+		AllocConsole();
+		freopen("CONOUT$", "w", stdout);
+#endif
 
-		//End rendering
-		Direct3D9.EndFrame();
-
-		// idle if client closed and reconnect to it
-		if (!::FindWindowA(0, "League of Legends"))
+		if (auth->GetLeagueClientInfo())
 		{
-			Direct3D9.closedClient = true;
-			closedNow = true;
-			if (::FindWindowA(0, "Riot Client"))
+			//league client is running
+		}
+		else
+		{
+			//riot client with login screen is up
+			auth->GetRiotClientInfo();
+		}
+
+		std::cout << lpCmdLine << std::endl;
+
+		bool closedNow = false;
+		bool done = false;
+		// Main loop
+		MSG msg;
+		ZeroMemory(&msg, sizeof(msg));
+		while (msg.message != WM_QUIT)
+		{
+			//auto timeBefore = std::chrono::high_resolution_clock::now();
+
+			if (::PeekMessage(&msg, NULL, 0U, 0U, PM_REMOVE))
 			{
-				if (auth->riotPort == 0)
-					auth->GetRiotClientInfo();
+				::TranslateMessage(&msg);
+				::DispatchMessage(&msg);
+				if (msg.message == WM_QUIT)
+					done = true;
+				continue;
 			}
-			else
-				auth->riotPort = 0;
+			if (done)
+				break;
+
+			// pressed button to reset to original size
+			if (S.Window.resize)
+			{
+				S.Window.resize = false;
+				::SetWindowPos(hwnd, 0, 0, 0, S.Window.width, S.Window.height, SWP_NOMOVE | SWP_NOOWNERZORDER | SWP_NOZORDER);
+			}
+
+			if (oldStreamProof != S.streamProof)
+			{
+				oldStreamProof = S.streamProof;
+				if (oldStreamProof)
+					SetWindowDisplayAffinity(hwnd, WDA_EXCLUDEFROMCAPTURE);
+				else
+					SetWindowDisplayAffinity(hwnd, WDA_NONE);
+			}
+
+			if (oldDebugger != S.debugger)
+			{
+				oldDebugger = S.debugger;
+				HKEY hkResult;
+				if (RegOpenKeyExA(HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\LeagueClientUx.exe", 0, KEY_SET_VALUE | KEY_QUERY_VALUE, &hkResult) == ERROR_SUCCESS)
+				{
+					char* buffer[MAX_PATH];
+					DWORD bufferLen;
+
+					char filePath[MAX_PATH + 1];
+					GetModuleFileNameA(NULL, filePath, MAX_PATH);
+					DWORD len = (DWORD)(strlen(filePath) + 1);
+
+					LSTATUS regQuery = RegQueryValueExA(hkResult, "debugger", 0, 0, (LPBYTE)buffer, &bufferLen);
+					if (regQuery == ERROR_SUCCESS)
+					{
+						if (oldDebugger)
+						{
+							if (RegSetValueExA(hkResult, "debugger", 0, REG_SZ, (const BYTE*)filePath, len) == ERROR_SUCCESS)
+							{
+								std::cout << "changed key " << std::endl;
+							}
+							else
+								std::cout << "failed change" << std::endl;
+						}
+						else
+						{
+							std::cout << "delete key" << RegDeleteValueA(hkResult, "debugger") << std::endl;
+						}
+					}
+					else if (regQuery == ERROR_FILE_NOT_FOUND && oldDebugger) // if key doesnt exist, create it
+					{
+						if (RegSetValueExA(hkResult, "debugger", 0, REG_SZ, (const BYTE*)filePath, len) == ERROR_SUCCESS)
+						{
+							std::cout << "created key " << std::endl;
+						}
+					}
+					RegCloseKey(hkResult);
+				}
+			}
+
+			//Start rendering
+			Direct3D9.StartFrame();
+
+			//Render UI
+			Direct3D9.Render();
+
+			//End rendering
+			Direct3D9.EndFrame();
+
+			// idle if client closed and reconnect to it
+			if (!::FindWindowA(0, "League of Legends"))
+			{
+				Direct3D9.closedClient = true;
+				closedNow = true;
+				if (::FindWindowA(0, "Riot Client"))
+				{
+					if (auth->riotPort == 0)
+						auth->GetRiotClientInfo();
+				}
+				else
+					auth->riotPort = 0;
+			}
+			else if (closedNow)
+			{
+				std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+				auth->GetLeagueClientInfo();
+				Direct3D9.closedClient = false;
+				closedNow = false;
+			}
+
+			//std::chrono::duration<float, std::milli> timeDuration = std::chrono::high_resolution_clock::now() - timeBefore;
+			//processTimeMs = timeDuration.count();
+
+			//std::cout << processTimeMs << std::endl;
+
+			std::this_thread::sleep_for(std::chrono::milliseconds(1));
 		}
-		else if (closedNow)
-		{
-			std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-			auth->GetLeagueClientInfo();
-			Direct3D9.closedClient = false;
-			closedNow = false;
-		}
 
-		//std::chrono::duration<float, std::milli> timeDuration = std::chrono::high_resolution_clock::now() - timeBefore;
-		//processTimeMs = timeDuration.count();
+		CSettings::Save();
 
-		//std::cout << processTimeMs << std::endl;
+		// Cleanup
+		ImGui_ImplDX11_Shutdown();
+		ImGui_ImplWin32_Shutdown();
+		ImGui::DestroyContext();
 
-		std::this_thread::sleep_for(std::chrono::milliseconds(1));
+		//Exit
+		Direct3D9.Shutdown();
+		::DestroyWindow(hwnd);
+		::UnregisterClassA(wc.lpszClassName, wc.hInstance);
 	}
-
-	CSettings::Save();
-
-	// Cleanup
-	ImGui_ImplDX11_Shutdown();
-	ImGui_ImplWin32_Shutdown();
-	ImGui::DestroyContext();
-
-	//Exit
-	Direct3D9.Shutdown();
-	::DestroyWindow(hwnd);
-	::UnregisterClassA(wc.lpszClassName, wc.hInstance);
-
 	return 0;
 }
 

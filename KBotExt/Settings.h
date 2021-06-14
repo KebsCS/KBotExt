@@ -21,6 +21,7 @@ struct Settings
 	int selectedFont = 0;
 	bool bAddFont = false;
 	bool streamProof = false;
+	bool debugger = false;
 
 	struct
 	{
@@ -86,6 +87,7 @@ public:
 			{
 				root["autoRename"] = S.autoRename;
 				root["leaguePath"] = S.leaguePath;
+				root["debugger"] = S.debugger;
 				root["window"]["width"] = S.Window.width;
 				root["window"]["height"] = S.Window.height;
 				root["selectedFont"] = S.selectedFont;
@@ -146,6 +148,7 @@ public:
 			{
 				if (auto t = root["autoRename"]; !t.empty()) S.autoRename = t.asBool();
 				if (auto t = root["leaguePath"]; !t.empty()) S.leaguePath = t.asString();
+				if (auto t = root["debugger"]; !t.empty()) S.debugger = t.asBool();
 				if (auto t = root["window"]["width"]; !t.empty()) S.Window.width = t.asInt();
 				if (auto t = root["window"]["height"]; !t.empty()) S.Window.height = t.asInt();
 				if (auto t = root["selectedFont"]; !t.empty()) S.selectedFont = t.asInt();

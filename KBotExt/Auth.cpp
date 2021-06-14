@@ -5,23 +5,23 @@
 
 bool Auth::GetRiotClientInfo()
 {
-	std::string auth = utils->WstringToString(GetProcessCommandLine("RiotClientUx.exe"));
-	if (auth.empty())
+	std::string sAuth = utils->WstringToString(GetProcessCommandLine("RiotClientUx.exe"));
+	if (sAuth.empty())
 	{
 		//MessageBoxA(0, "Client not found", 0, 0);
 		return 0;
 	}
 
 	std::string appPort = "--app-port=";
-	size_t nPos = auth.find(appPort);
+	size_t nPos = sAuth.find(appPort);
 	if (nPos != std::string::npos)
-		riotPort = std::stoi(auth.substr(nPos + appPort.size(), 5)); // port is always 5 numbers long
+		riotPort = std::stoi(sAuth.substr(nPos + appPort.size(), 5)); // port is always 5 numbers long
 
 	std::string remotingAuth = "--remoting-auth-token=";
-	nPos = auth.find(remotingAuth) + strlen(remotingAuth.c_str());
+	nPos = sAuth.find(remotingAuth) + strlen(remotingAuth.c_str());
 	if (nPos != std::string::npos)
 	{
-		std::string token = "riot:" + auth.substr(nPos, 22); // token is always 22 chars long
+		std::string token = "riot:" + sAuth.substr(nPos, 22); // token is always 22 chars long
 		unsigned char m_Test[50];
 		strncpy((char*)m_Test, token.c_str(), sizeof(m_Test));
 		riotToken = base64_encode(m_Test, token.size()).c_str();
@@ -44,34 +44,36 @@ void Auth::MakeRiotHeader()
 		"Connection: keep-alive" + "\n" +
 		"Authorization: Basic " + riotToken + "\n" +
 		"Accept: application/json" + "\n" +
+		"Access-Control-Allow-Credentials: true" + "\n" +
+		"Access-Control-Allow-Origin: 127.0.0.1" + "\n" +
 		"Content-Type: application/json" + "\n" +
 		"Origin: https://127.0.0.1:" + std::to_string(riotPort) + "\n" +
 		"User-Agent: Mozilla/5.0 (Windows NT 6.2; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) LeagueOfLegendsClient/11.3.356.7268 (CEF 74) Safari/537.36" + "\n" +
 		"Referer: https://127.0.0.1:" + std::to_string(riotPort) + "/index.html" + "\n" +
 		"Accept-Encoding: gzip, deflate, br" + "\n" +
-		"Accept-Language: en-US,en;q=0.8";
+		"Accept-Language: en-US,en;q=0.9";
 }
 
 bool  Auth::GetLeagueClientInfo()
 {
 	// Get client port and auth code from it's command line
-	std::string auth = utils->WstringToString(GetProcessCommandLine("LeagueClientUx.exe"));
-	if (auth.empty())
+	std::string sAuth = utils->WstringToString(GetProcessCommandLine("LeagueClientUx.exe"));
+	if (sAuth.empty())
 	{
 		//MessageBoxA(0, "Client not found", 0, 0);
 		return 0;
 	}
 
 	std::string appPort = "\"--app-port=";
-	size_t nPos = auth.find(appPort);
+	size_t nPos = sAuth.find(appPort);
 	if (nPos != std::string::npos)
-		leaguePort = std::stoi(auth.substr(nPos + appPort.size(), 5));
+		leaguePort = std::stoi(sAuth.substr(nPos + appPort.size(), 5));
 
 	std::string remotingAuth = "--remoting-auth-token=";
-	nPos = auth.find(remotingAuth) + strlen(remotingAuth.c_str());
+	nPos = sAuth.find(remotingAuth) + strlen(remotingAuth.c_str());
 	if (nPos != std::string::npos)
 	{
-		std::string token = "riot:" + auth.substr(nPos, 22);
+		std::string token = "riot:" + sAuth.substr(nPos, 22);
 		unsigned char m_Test[50];
 		strncpy((char*)m_Test, token.c_str(), sizeof(m_Test));
 		leagueToken = base64_encode(m_Test, token.size()).c_str();

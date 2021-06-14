@@ -48,6 +48,9 @@ public:
 			if (ImGui::Button("ARURF"))
 				gameID = ARURF;
 
+			if (ImGui::Button("Nexus Blitz"))
+				gameID = NexusBlitz;
+
 			/*if (ImGui::Button("URF"))
 				gameID = 318;*/
 
@@ -228,6 +231,7 @@ public:
 									}
 								}
 								ShellExecuteW(0, 0, url.c_str(), 0, 0, SW_SHOW);
+								result = utils->WstringToString(url);
 							}
 						}
 					}
@@ -352,7 +356,7 @@ public:
 				}
 			}
 		}
-
+		std::sort(temp.begin(), temp.end(), [](std::pair<int, std::string > a, std::pair<int, std::string >b) {return a.second < b.second; });
 		return temp;
 	}
 };

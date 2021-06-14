@@ -141,9 +141,8 @@ public:
 							ImGui::Text("formattedChampionPoints: %s", man.formattedChampionPoints.c_str());
 							ImGui::Text("formattedMasteryGoal: %s", man.formattedMasteryGoal.c_str());
 							ImGui::Text("highestGrade: %s", man.highestGrade.c_str());
-							int64_t t = std::stoll(man.lastPlayTime);
+							t = std::stoll(man.lastPlayTime);
 							t /= 1000;
-							char buffer[50];
 							strftime(buffer, 100, "%Y-%m-%d %H:%M:%S", localtime(&t));
 							ImGui::Text("lastPlayTime: %s", buffer);
 							ImGui::Text("playerId: %s", man.playerId.c_str());

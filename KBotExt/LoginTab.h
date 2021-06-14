@@ -18,8 +18,24 @@ private:
 
 	static std::string Login(std::string username, std::string password)
 	{
+		// refresh session
+		http->Request("POST", "https://127.0.0.1/rso-auth/v2/authorizations", R"({"clientId":"riot-client","trustLevels":["always_trusted"]})", auth->riotHeader, "", "", auth->riotPort);
+
 		std::string loginBody = R"({"username":")" + username + R"(","password":")" + password + R"(","persistLogin":false})";
-		return http->Request("PUT", "https://127.0.0.1/rso-auth/v1/session/credentials", loginBody, auth->riotHeader, "", "", auth->riotPort);
+		std::string result = http->Request("PUT", "https://127.0.0.1/rso-auth/v1/session/credentials", loginBody, auth->riotHeader, "", "", auth->riotPort);
+
+		Json::CharReaderBuilder builder;
+		const std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
+		JSONCPP_STRING err;
+		Json::Value root;
+		if (reader->parse(result.c_str(), result.c_str() + static_cast<int>(result.length()), &root, &err))
+		{
+			if (!root["type"].empty())
+				return root["type"].asString();
+			else if (!root["message"].empty())
+				return root["message"].asString();
+		}
+		return result;
 	}
 
 public:
@@ -185,11 +201,11 @@ public:
 						for (Json::Value::ArrayIndex i = 0; i < accArray.size(); ++i)
 						{
 							std::string acc = accArray[i].asString();
-							std::string username = acc.substr(0, acc.find(":"));
-							std::string password = acc.substr(acc.find(":") + 1);
-							if (ImGui::Button(username.c_str()))
+							std::string accUsername = acc.substr(0, acc.find(":"));
+							std::string accPassword = acc.substr(acc.find(":") + 1);
+							if (ImGui::Button(accUsername.c_str()))
 							{
-								result = Login(username, password);
+								result = Login(accUsername, accPassword);
 							}
 
 							ImGui::SameLine();

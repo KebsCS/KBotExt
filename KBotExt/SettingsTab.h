@@ -50,6 +50,8 @@ public:
 
 			ImGui::Checkbox("Stream Proof", &S.streamProof);
 
+			ImGui::Checkbox("Register debugger IFEO", &S.debugger);
+
 			static char bufLeaguePath[MAX_PATH];
 			std::copy(S.leaguePath.begin(), S.leaguePath.end(), bufLeaguePath);
 			ImGui::Text("League path:");
