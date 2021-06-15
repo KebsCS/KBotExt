@@ -3,6 +3,7 @@
 #include <fstream>
 #include <thread>
 #include <filesystem>
+#include <tlhelp32.h>
 
 #include "Auth.h"
 #include "HTTP.h"
@@ -61,7 +62,7 @@ public:
 		if (reader->parse(getLatest.c_str(), getLatest.c_str() + static_cast<int>(getLatest.length()), &root, &err))
 		{
 			std::string latestName = root["tag_name"].asString();
-			if (latestName != "1.3.1")
+			if (latestName != "1.3.2")
 			{
 				if (MessageBoxA(0, "Open download website?", "New version available", MB_YESNO | MB_SETFOREGROUND) == IDYES)
 				{
@@ -135,5 +136,33 @@ public:
 			AddUnderLine(ImGui::GetStyle().Colors[ImGuiCol_Button]);
 		}
 		if (1 == SameLineAfter_) { ImGui::SameLine(0.0f, ImGui::GetStyle().ItemInnerSpacing.x); }
+	}
+	// If the function succeeds, the return value is nonzero.
+	static bool TerminateProcessByName(std::string sProcessName)
+	{
+		HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, NULL);
+		if (snapshot != INVALID_HANDLE_VALUE)
+		{
+			PROCESSENTRY32 entry;
+			entry.dwSize = sizeof(PROCESSENTRY32);
+			if (Process32First(snapshot, &entry))
+			{
+				do
+				{
+					char temp[260];
+					sprintf(temp, "%ws", entry.szExeFile);
+					if (!stricmp(temp, sProcessName.c_str()))
+					{
+						HANDLE process = OpenProcess(PROCESS_TERMINATE, false, entry.th32ProcessID);
+						bool terminate = TerminateProcess(process, 0);
+						CloseHandle(snapshot);
+						CloseHandle(process);
+						return terminate;
+					}
+				} while (Process32Next(snapshot, &entry));
+			}
+		}
+		CloseHandle(snapshot);
+		return false;
 	}
 };

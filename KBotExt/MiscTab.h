@@ -1,6 +1,7 @@
 #pragma once
 
 #include <filesystem>
+#include <cstdio>
 
 #include "Definitions.h"
 #include "Includes.h"
@@ -30,6 +31,16 @@ public:
 					ShellExecuteA(NULL, NULL, std::format("{}LeagueClient.exe", S.leaguePath).c_str(), "--allow-multiple-clients", NULL, SW_SHOWNORMAL);
 			}
 
+			if (ImGui::Button("Restart UX"))
+			{
+				result = http->Request("POST", "https://127.0.0.1/riotclient/kill-and-restart-ux", "", auth->leagueHeader, "", "", auth->leaguePort);
+				if (result.find("failed") != std::string::npos)
+				{
+					if (auth->GetLeagueClientInfo())
+						result = "Rehooked to new league client";
+				}
+			}
+
 			ImGui::NextColumn();
 
 			if (ImGui::Button("Launch legacy client"))
@@ -44,20 +55,10 @@ public:
 				}
 			}
 
-			ImGui::Columns(1);
-
-			if (ImGui::Button("Restart UX"))
-			{
-				result = http->Request("POST", "https://127.0.0.1/riotclient/kill-and-restart-ux", "", auth->leagueHeader, "", "", auth->leaguePort);
-				if (result.find("failed") != std::string::npos)
-				{
-					if (auth->GetLeagueClientInfo())
-						result = "Rehooked to new league client";
-				}
-			}
-
 			if (ImGui::Button("Close client"))
 				result = http->Request("POST", "https://127.0.0.1/process-control/v1/process/quit", "", auth->leagueHeader, "", "", auth->leaguePort);
+
+			ImGui::Columns(1);
 
 			ImGui::Separator();
 

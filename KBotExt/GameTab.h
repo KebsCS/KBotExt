@@ -75,11 +75,9 @@ public:
 				custom = R"({"customGameLobby":{"configuration":{"gameMode":"PRACTICETOOL","gameMutator":"","gameServerRegion":"","mapId":11,"mutators":{"id":1},"spectatorPolicy":"AllAllowed","teamSize":1},"lobbyName":"KBot","lobbyPassword":null},"isCustom":true})";
 			}
 
-			static bool fill = false;
 			if (ImGui::Button("Practice Tool 5v5"))
 			{
 				custom = R"({"customGameLobby":{"configuration":{"gameMode":"PRACTICETOOL","gameMutator":"","gameServerRegion":"","mapId":11,"mutators":{"id":1},"spectatorPolicy":"AllAllowed","teamSize":5},"lobbyName":"KBot","lobbyPassword":null},"isCustom":true})";
-				fill = true;
 			}
 
 			if (ImGui::Button("Clash"))
@@ -121,6 +119,76 @@ public:
 
 			//"id" 1- blind 2- draft -4 all random 6- tournament draft
 
+			ImGui::NextColumn();
+
+			static std::vector<std::pair<int, std::string>>botChamps;
+			if (botChamps.empty())
+			{
+				std::string getBots = http->Request("GET", "https://127.0.0.1/lol-lobby/v2/lobby/custom/available-bots", "", auth->leagueHeader, "", "", auth->leaguePort);
+				Json::CharReaderBuilder builder;
+				const std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
+				JSONCPP_STRING err;
+				Json::Value root;
+				if (reader->parse(getBots.c_str(), getBots.c_str() + static_cast<int>(getBots.length()), &root, &err))
+				{
+					if (root.isArray())
+					{
+						for (Json::Value::ArrayIndex i = 0; i < root.size(); i++)
+						{
+							std::pair<int, std::string>temp = { root[i]["id"].asInt(),root[i]["name"].asString() };
+							botChamps.emplace_back(temp);
+						}
+						std::sort(botChamps.begin(), botChamps.end(), [](std::pair<int, std::string> a, std::pair<int, std::string >b) {return a.second < b.second; });
+					}
+				}
+			}
+
+			static int indexBots = 0; // Here we store our selection data as an index.
+			const char* labelBots = "Bot";
+			if (!botChamps.empty())
+				labelBots = botChamps[indexBots].second.c_str();
+			if (ImGui::BeginCombo("##comboBots", labelBots, 0))
+			{
+				for (int n = 0; n < botChamps.size(); n++)
+				{
+					const bool is_selected = (indexBots == n);
+					if (ImGui::Selectable(botChamps[n].second.c_str(), is_selected))
+						indexBots = n;
+
+					if (is_selected)
+						ImGui::SetItemDefaultFocus();
+				}
+				ImGui::EndCombo();
+			}
+			std::vector<std::string>difficulties = { "NONE","EASY","MEDIUM","HARD","UBER","TUTORIAL","INTRO" };
+			static int indexDifficulty = 0; // Here we store our selection data as an index.
+			const char* labelDifficulty = difficulties[indexDifficulty].c_str();
+
+			if (ImGui::BeginCombo("##comboDifficulty", labelDifficulty, 0))
+			{
+				for (int n = 0; n < difficulties.size(); n++)
+				{
+					const bool is_selected = (indexDifficulty == n);
+					if (ImGui::Selectable(difficulties[n].c_str(), is_selected))
+						indexDifficulty = n;
+
+					if (is_selected)
+						ImGui::SetItemDefaultFocus();
+				}
+				ImGui::EndCombo();
+			}
+			static int botTeam = 0;
+
+			if (ImGui::Button("Add bot##addBot"))
+			{
+				std::string team = botTeam ? R"(,"teamId":"200"})" : R"(,"teamId":"100"})";
+				std::string body = R"({"botDifficulty":")" + difficulties[indexDifficulty] + R"(","championId":)" + std::to_string(botChamps[indexBots].first) + team;
+				result = http->Request("POST", "https://127.0.0.1/lol-lobby/v1/lobby/custom/bots", body, auth->leagueHeader, "", "", auth->leaguePort);
+			}
+			ImGui::SameLine();
+			ImGui::RadioButton("Blue", &botTeam, 0); ImGui::SameLine();
+			ImGui::RadioButton("Red", &botTeam, 1);
+
 			ImGui::Columns(1);
 
 			ImGui::Separator();
@@ -160,25 +228,6 @@ public:
 					}*/
 
 				gameID = 0;
-			}
-			// fill practice tool with bots
-			if (fill)
-			{
-				std::this_thread::sleep_for(std::chrono::milliseconds(300));
-				std::vector<int>champIDs = { 22, 18, 33,12,10,21,62,89,44,51,96,54,81,98,30,122,11,13,69 };
-				for (int i = 0; i < 4; i++)
-				{
-					std::this_thread::sleep_for(std::chrono::milliseconds(50));
-					std::string addBlue = R"({"botDifficulty":"MEDIUM","championId":)" + std::to_string(RandomInt(0, champIDs.size() - 1)) + R"(,"teamId":"100"})";
-					result = http->Request("POST", "https://127.0.0.1/lol-lobby/v1/lobby/custom/bots", addBlue, auth->leagueHeader, "", "", auth->leaguePort);
-				}
-				for (int i = 0; i < 5; i++)
-				{
-					std::this_thread::sleep_for(std::chrono::milliseconds(50));
-					std::string addRed = R"({"botDifficulty":"MEDIUM","championId":)" + std::to_string(RandomInt(0, champIDs.size() - 1)) + R"(,"teamId":"200"})";
-					result = http->Request("POST", "https://127.0.0.1/lol-lobby/v1/lobby/custom/bots", addRed, auth->leagueHeader, "", "", auth->leaguePort);
-				}
-				fill = false;
 			}
 
 			ImGui::Separator();
