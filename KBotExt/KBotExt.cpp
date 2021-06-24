@@ -21,7 +21,6 @@ HWND hwnd;
 
 //float processTimeMs = 0;
 
-// Main code
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
 	LPWSTR* szArgList;
@@ -186,6 +185,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 							if (RegSetValueExA(hkResult, "debugger", 0, REG_SZ, (const BYTE*)filePath, len) == ERROR_SUCCESS)
 							{
 								std::cout << "changed key " << std::endl;
+								S.currentDebugger = filePath;
 							}
 							else
 								std::cout << "failed change" << std::endl;
@@ -193,6 +193,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 						else
 						{
 							std::cout << "delete key" << RegDeleteValueA(hkResult, "debugger") << std::endl;
+							S.currentDebugger = "Nothing";
 						}
 					}
 					else if (regQuery == ERROR_FILE_NOT_FOUND && oldDebugger) // if key doesnt exist, create it
@@ -200,6 +201,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 						if (RegSetValueExA(hkResult, "debugger", 0, REG_SZ, (const BYTE*)filePath, len) == ERROR_SUCCESS)
 						{
 							std::cout << "created key " << std::endl;
+							S.currentDebugger = filePath;
 						}
 					}
 					RegCloseKey(hkResult);

@@ -22,6 +22,7 @@ struct Settings
 	bool bAddFont = false;
 	bool streamProof = false;
 	bool debugger = false;
+	std::string currentDebugger;
 
 	struct
 	{

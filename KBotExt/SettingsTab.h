@@ -42,79 +42,52 @@ public:
 
 	static void Render()
 	{
+		static bool once = true;
 		if (ImGui::BeginTabItem("Settings"))
 		{
+			if (once)
+			{
+				once = false;
+				HKEY hkResult;
+				if (RegOpenKeyExA(HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\LeagueClientUx.exe", 0, KEY_SET_VALUE | KEY_QUERY_VALUE, &hkResult) == ERROR_SUCCESS)
+				{
+					char buffer[MAX_PATH];
+					DWORD dwLen;
+					LSTATUS regQuery = RegGetValueA(hkResult, 0, "debugger", RRF_RT_REG_SZ, 0, (PVOID)&buffer, &dwLen);
+					if (regQuery == ERROR_SUCCESS)
+					{
+						S.currentDebugger = buffer;
+					}
+					else if (regQuery == ERROR_FILE_NOT_FOUND)
+					{
+						S.currentDebugger = "Nothing";
+					}
+					else
+					{
+						S.currentDebugger = "Failed";
+					}
+				}
+			}
 			static std::string result;
 
 			ImGui::Checkbox("Auto-rename", &S.autoRename);
+			ImGui::SameLine();
+			Misc::HelpMarker("Automatically renames the program on launch");
 
 			ImGui::Checkbox("Stream Proof", &S.streamProof);
+			ImGui::SameLine();
+			Misc::HelpMarker("Hides the program in recordings and screenshots");
 
 			ImGui::Checkbox("Register debugger IFEO", &S.debugger);
+			ImGui::SameLine();
+			ImGui::Text(" | Hooked to: %s", S.currentDebugger.c_str());
 
 			// Terminate all league related processes,
 			// remove read only and hidden property from files
 			// and delete them
-			if (ImGui::Button("Clear logs"))
+			if (ImGui::Button("Clean logs"))
 			{
-				result = "";
-				Misc::TerminateProcessByName("RiotClientServices.exe");
-				Misc::TerminateProcessByName("RiotClientCrashHandler.exe");
-				Misc::TerminateProcessByName("RiotClientUx.exe");
-				Misc::TerminateProcessByName("RiotClientUxRender.exe");
-
-				Misc::TerminateProcessByName("LeagueClient.exe");
-				Misc::TerminateProcessByName("LeagueCrashHandler.exe");
-				Misc::TerminateProcessByName("LeagueClientUx.exe");
-				Misc::TerminateProcessByName("LeagueClientUxRender.exe");
-
-				std::this_thread::sleep_for(std::chrono::seconds(2));
-
-				std::error_code errorCode;
-
-				std::string logsFolder = S.leaguePath + "Logs";
-				if (std::filesystem::exists(logsFolder))
-				{
-					SetFileAttributesA(logsFolder.c_str(), GetFileAttributesA(logsFolder.c_str()) & ~FILE_ATTRIBUTE_READONLY & ~FILE_ATTRIBUTE_HIDDEN);
-					std::filesystem::remove_all(logsFolder, errorCode);
-					result += logsFolder + " - " + errorCode.message() + "\n";
-				}
-
-				std::string configFolder = S.leaguePath + "Config";
-				if (std::filesystem::exists(configFolder))
-				{
-					SetFileAttributesA(configFolder.c_str(), GetFileAttributesA(configFolder.c_str()) & ~FILE_ATTRIBUTE_READONLY & ~FILE_ATTRIBUTE_HIDDEN);
-					std::filesystem::remove_all(configFolder, errorCode);
-					result += configFolder + " - " + errorCode.message() + "\n";
-				}
-
-				std::string programData = "C:/ProgramData/Riot Games";
-				if (std::filesystem::exists(programData))
-				{
-					SetFileAttributesA(programData.c_str(), GetFileAttributesA(programData.c_str()) & ~FILE_ATTRIBUTE_READONLY & ~FILE_ATTRIBUTE_HIDDEN);
-					std::filesystem::remove_all(programData, errorCode);
-					result += programData + " - " + errorCode.message() + "\n";
-				}
-
-				char* pLocal;
-				size_t localLen;
-				_dupenv_s(&pLocal, &localLen, "LOCALAPPDATA");
-				std::string local = pLocal;
-				local += "\\Riot Games";
-				if (std::filesystem::exists(local))
-				{
-					SetFileAttributesA(local.c_str(), GetFileAttributesA(local.c_str()) & ~FILE_ATTRIBUTE_READONLY & ~FILE_ATTRIBUTE_HIDDEN);
-					std::filesystem::remove_all(local, errorCode);
-					result += local + " - " + errorCode.message() + "\n";
-				}
-
-				int k = 0;
-				for (const auto& file : std::filesystem::directory_iterator(std::filesystem::temp_directory_path()))
-				{
-					std::filesystem::remove_all(file, errorCode);
-					k++;
-				}
-				result += "Deleted " + std::to_string(k) + " files in temp directory\n";
+				result = Misc::ClearLogs();
 			}
 
 			static char bufLeaguePath[MAX_PATH];
@@ -174,5 +147,7 @@ public:
 
 			ImGui::EndTabItem();
 		}
+		else
+			once = true;
 	}
 };

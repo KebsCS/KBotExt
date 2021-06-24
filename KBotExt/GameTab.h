@@ -7,6 +7,7 @@
 #include "HTTP.h"
 #include "Auth.h"
 #include "Utils.h"
+#include "Misc.h"
 
 inline bool bAutoAccept = false;
 inline int instalockID;
@@ -191,15 +192,14 @@ public:
 
 			ImGui::Columns(1);
 
-			ImGui::Separator();
-
-			static int inputGameID = 0;
-			ImGui::InputInt("##inputGameID:", &inputGameID, 1, 100);
-			ImGui::SameLine();
-			if (ImGui::Button("Submit##gameID"))
-			{
-				gameID = inputGameID;
-			}
+			//ImGui::Separator();
+			//static int inputGameID = 0;
+			//ImGui::InputInt("##inputGameID:", &inputGameID, 1, 100);
+			//ImGui::SameLine();
+			//if (ImGui::Button("Submit##gameID"))
+			//{
+			//	gameID = inputGameID;
+			//}
 
 			// if pressed any button, gameID or custom changed
 			if (gameID != 0 || !custom.empty())
@@ -237,12 +237,14 @@ public:
 			{
 				result = http->Request("POST", "https://127.0.0.1/lol-lobby/v2/lobby/matchmaking/search", "", auth->leagueHeader, "", "", auth->leaguePort);
 			}
-			ImGui::SameLine();
+			ImGui::NextColumn();
 			if (ImGui::Button("Dodge"))
 			{
 				result = http->Request("POST", R"(https://127.0.0.1/lol-login/v1/session/invoke?destination=lcdsServiceProxy&method=call&args=["","teambuilder-draft","quitV2",""])", "", auth->leagueHeader, "", "", auth->leaguePort);
 			}
 			ImGui::SameLine();
+			Misc::HelpMarker("Dodges lobby instantly, you still lose LP, but you don't have to restart the client");
+			ImGui::NextColumn();
 			if (ImGui::Button("Multi OP.GG"))
 			{
 				std::string names;

@@ -86,6 +86,69 @@ public:
 		return "0.0.0";
 	}
 
+	static std::string ClearLogs()
+	{
+		std::string result = "";
+		Misc::TerminateProcessByName("RiotClientServices.exe");
+		Misc::TerminateProcessByName("RiotClientCrashHandler.exe");
+		Misc::TerminateProcessByName("RiotClientUx.exe");
+		Misc::TerminateProcessByName("RiotClientUxRender.exe");
+
+		Misc::TerminateProcessByName("LeagueClient.exe");
+		Misc::TerminateProcessByName("LeagueCrashHandler.exe");
+		Misc::TerminateProcessByName("LeagueClientUx.exe");
+		Misc::TerminateProcessByName("LeagueClientUxRender.exe");
+
+		std::this_thread::sleep_for(std::chrono::seconds(2));
+
+		std::error_code errorCode;
+
+		std::string logsFolder = S.leaguePath + "Logs";
+		if (std::filesystem::exists(logsFolder))
+		{
+			SetFileAttributesA(logsFolder.c_str(), GetFileAttributesA(logsFolder.c_str()) & ~FILE_ATTRIBUTE_READONLY & ~FILE_ATTRIBUTE_HIDDEN);
+			std::filesystem::remove_all(logsFolder, errorCode);
+			result += logsFolder + " - " + errorCode.message() + "\n";
+		}
+
+		std::string configFolder = S.leaguePath + "Config";
+		if (std::filesystem::exists(configFolder))
+		{
+			SetFileAttributesA(configFolder.c_str(), GetFileAttributesA(configFolder.c_str()) & ~FILE_ATTRIBUTE_READONLY & ~FILE_ATTRIBUTE_HIDDEN);
+			std::filesystem::remove_all(configFolder, errorCode);
+			result += configFolder + " - " + errorCode.message() + "\n";
+		}
+
+		std::string programData = "C:/ProgramData/Riot Games";
+		if (std::filesystem::exists(programData))
+		{
+			SetFileAttributesA(programData.c_str(), GetFileAttributesA(programData.c_str()) & ~FILE_ATTRIBUTE_READONLY & ~FILE_ATTRIBUTE_HIDDEN);
+			std::filesystem::remove_all(programData, errorCode);
+			result += programData + " - " + errorCode.message() + "\n";
+		}
+
+		char* pLocal;
+		size_t localLen;
+		_dupenv_s(&pLocal, &localLen, "LOCALAPPDATA");
+		std::string local = pLocal;
+		local += "\\Riot Games";
+		if (std::filesystem::exists(local))
+		{
+			SetFileAttributesA(local.c_str(), GetFileAttributesA(local.c_str()) & ~FILE_ATTRIBUTE_READONLY & ~FILE_ATTRIBUTE_HIDDEN);
+			std::filesystem::remove_all(local, errorCode);
+			result += local + " - " + errorCode.message() + "\n";
+		}
+
+		int k = 0;
+		for (const auto& file : std::filesystem::directory_iterator(std::filesystem::temp_directory_path()))
+		{
+			std::filesystem::remove_all(file, errorCode);
+			k++;
+		}
+		result += "Deleted " + std::to_string(k) + " files in temp directory\n";
+		return result;
+	}
+
 	// Helper to display a little (?) mark which shows a tooltip when hovered.
 	// In your own code you may want to display an actual icon if you are using a merged icon fonts (see docs/FONTS.md)
 	static void HelpMarker(const char* desc)
