@@ -132,11 +132,11 @@ public:
 
 			ImGui::Separator();
 
-			static char username[50];
+			static char username[128];
 			ImGui::Text("Username:");
 			ImGui::InputText("##inputUsername", username, IM_ARRAYSIZE(username));
 
-			static char password[50];
+			static char password[128];
 			ImGui::Text("Password:");
 			ImGui::InputText("##inputPassword", password, IM_ARRAYSIZE(password), ImGuiInputTextFlags_Password);
 

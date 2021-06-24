@@ -218,11 +218,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			Direct3D9.EndFrame();
 
 			// idle if client closed and reconnect to it
-			if (!::FindWindowA(0, "League of Legends"))
+			if (!::FindWindowA("RCLIENT", "League of Legends"))
 			{
 				Direct3D9.closedClient = true;
 				closedNow = true;
-				if (::FindWindowA(0, "Riot Client"))
+				if (::FindWindowA("RCLIENT", "Riot Client"))
 				{
 					if (auth->riotPort == 0)
 						auth->GetRiotClientInfo();
@@ -232,7 +232,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			}
 			else if (closedNow)
 			{
-				std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 				auth->GetLeagueClientInfo();
 				Direct3D9.closedClient = false;
 				closedNow = false;

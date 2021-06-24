@@ -39,7 +39,7 @@ public:
 			outfile.close();
 		}
 
-		if (::FindWindowA(0, "League of Legends"))
+		if (::FindWindowA("RCLIENT", "League of Legends"))
 		{
 			http->Request("POST", "https://127.0.0.1/process-control/v1/process/quit", "", auth->leagueHeader, "", "", auth->leaguePort);
 

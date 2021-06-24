@@ -123,33 +123,33 @@ public:
 			ImGui::NextColumn();
 
 			static std::vector<std::pair<int, std::string>>botChamps;
-			if (botChamps.empty())
-			{
-				std::string getBots = http->Request("GET", "https://127.0.0.1/lol-lobby/v2/lobby/custom/available-bots", "", auth->leagueHeader, "", "", auth->leaguePort);
-				Json::CharReaderBuilder builder;
-				const std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
-				JSONCPP_STRING err;
-				Json::Value root;
-				if (reader->parse(getBots.c_str(), getBots.c_str() + static_cast<int>(getBots.length()), &root, &err))
-				{
-					if (root.isArray())
-					{
-						for (Json::Value::ArrayIndex i = 0; i < root.size(); i++)
-						{
-							std::pair<int, std::string>temp = { root[i]["id"].asInt(),root[i]["name"].asString() };
-							botChamps.emplace_back(temp);
-						}
-						std::sort(botChamps.begin(), botChamps.end(), [](std::pair<int, std::string> a, std::pair<int, std::string >b) {return a.second < b.second; });
-					}
-				}
-			}
-
 			static int indexBots = 0; // Here we store our selection data as an index.
 			const char* labelBots = "Bot";
 			if (!botChamps.empty())
 				labelBots = botChamps[indexBots].second.c_str();
 			if (ImGui::BeginCombo("##comboBots", labelBots, 0))
 			{
+				if (botChamps.empty())
+				{
+					std::string getBots = http->Request("GET", "https://127.0.0.1/lol-lobby/v2/lobby/custom/available-bots", "", auth->leagueHeader, "", "", auth->leaguePort);
+					Json::CharReaderBuilder builder;
+					const std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
+					JSONCPP_STRING err;
+					Json::Value root;
+					if (reader->parse(getBots.c_str(), getBots.c_str() + static_cast<int>(getBots.length()), &root, &err))
+					{
+						if (root.isArray())
+						{
+							for (Json::Value::ArrayIndex i = 0; i < root.size(); i++)
+							{
+								std::pair<int, std::string>temp = { root[i]["id"].asInt(),root[i]["name"].asString() };
+								botChamps.emplace_back(temp);
+							}
+							std::sort(botChamps.begin(), botChamps.end(), [](std::pair<int, std::string> a, std::pair<int, std::string >b) {return a.second < b.second; });
+						}
+					}
+				}
+
 				for (int n = 0; n < botChamps.size(); n++)
 				{
 					const bool is_selected = (indexBots == n);
