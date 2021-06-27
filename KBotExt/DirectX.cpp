@@ -86,7 +86,7 @@ bool Direct3D9Render::DirectXInit(HWND hWnd)
 	std::thread t{ GetAllChampionSkins, gamePatch };
 	t.detach();
 
-	std::thread AutoAcceptThread(&Direct3D9Render::AutoAccept, this);
+	std::thread AutoAcceptThread(&GameTab::AutoAccept);
 	AutoAcceptThread.detach();
 
 	return true;
@@ -112,68 +112,6 @@ void Direct3D9Render::EndFrame()
 
 	g_pSwapChain->Present(1, 0); // Present with vsync
 	//g_pSwapChain->Present(0, 0); // Present without vsync
-}
-
-//use  /lol-lobby/v2/lobby/matchmaking/search-state or  /lol-lobby-team-builder/v1/matchmaking
-// /lol-lobby-team-builder/champ-select/v1/session/timer BAN_PICK
-// FINALIZATION
-void Direct3D9Render::AutoAccept()
-{
-	bool found = false;
-	while (true)
-	{
-		if (bAutoAccept && !FindWindowA(0, "League of Legends (TM) Client"))
-		{
-			// TODO intead of randomly posting accept, check if /lol-lobby-team-builder/v1/matchmaking searchState Found
-			std::string req = http->Request("POST", "https://127.0.0.1/lol-matchmaking/v1/ready-check/accept", "", auth->leagueHeader, "", "", auth->leaguePort);
-			//pressed accept
-			if (req.empty())
-			{
-				found = true;
-			}
-			if (found && ((bInstalock && instalockID) || !std::string(instantMessage).empty()))
-			{
-				std::string lobby = http->Request("GET", "https://127.0.0.1/lol-champ-select/v1/session", "", auth->leagueHeader, "", "", auth->leaguePort);
-
-				if (lobby.find("errorCode") == std::string::npos)
-				{
-					if (instalockID && bInstalock)
-					{
-						for (int i = 0; i < 10; i++)
-							std::string lock = http->Request("PATCH", "https://127.0.0.1/lol-champ-select/v1/session/actions/" + std::to_string(i),
-								R"({"completed":true,"championId":)" + std::to_string(instalockID) + "}", auth->leagueHeader, "", "", auth->leaguePort);
-					}
-					if (!std::string(instantMessage).empty())
-					{
-						Json::CharReaderBuilder builder;
-						const std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
-						JSONCPP_STRING err;
-						Json::Value root;
-						if (reader->parse(lobby.c_str(), lobby.c_str() + static_cast<int>(lobby.length()), &root, &err))
-						{
-							std::string lobbyID = root["chatDetails"]["chatRoomName"].asString();
-							lobbyID = lobbyID.substr(0, lobbyID.find("@"));
-							std::string param = "https://127.0.0.1/lol-chat/v1/conversations/" + lobbyID + R"(%40champ-select.eu1.pvp.net/messages)";
-							std::string error = "errorCode";
-							while (error.find("errorCode") != std::string::npos)
-							{
-								std::this_thread::sleep_for(std::chrono::milliseconds(50));
-								error = http->Request("POST", param, R"({"body":")" + std::string(instantMessage) + R"("})", auth->leagueHeader, "", "", auth->leaguePort);
-							}
-						}
-					}
-
-					found = false;
-				}
-			}
-			if (!found) // TODO instead of this that checks all the time when checkbox is checked, only loop when /lol-lobby-team-builder/v1/matchmaking isCurrentlyInQueue
-				std::this_thread::sleep_for(std::chrono::milliseconds(RandomInt(1000, 1500)));
-			else
-				std::this_thread::sleep_for(std::chrono::milliseconds(10));
-		}
-		else
-			std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-	}
 }
 
 int Direct3D9Render::Render()

@@ -34,8 +34,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		{
 			cmdLine += "\"" + utils->WstringToString(szArgList[i]) + "\" ";
 		}
-		cmdLine.replace(cmdLine.find("\"--no-proxy-server\""), strlen("\"--no-proxy-server\""), "");
 
+		cmdLine.replace(cmdLine.find("\"--no-proxy-server\""), strlen("\"--no-proxy-server\""), "");
+		
 		AllocConsole();
 		freopen("CONOUT$", "w", stdout);
 

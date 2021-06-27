@@ -9,11 +9,6 @@
 #include "Utils.h"
 #include "Misc.h"
 
-inline bool bAutoAccept = false;
-inline int instalockID;
-inline bool bInstalock = false;
-inline char instantMessage[50];
-
 class GameTab
 {
 public:
@@ -293,13 +288,19 @@ public:
 
 			ImGui::Columns(1);
 
-			// TODO
-
-			ImGui::Checkbox("Auto accept", &bAutoAccept);
+			ImGui::Checkbox("Auto accept", &S.gameTab.autoAcceptEnabled);
 
 			ImGui::Text("Instant message:");
-			ImGui::InputText("##inputInstantMessage", instantMessage, IM_ARRAYSIZE(instantMessage));
-			ImGui::Checkbox("Instalock", &bInstalock);
+			static char bufInstantMessage[500];
+			std::copy(S.gameTab.instantMessage.begin(), S.gameTab.instantMessage.end(), bufInstantMessage);
+			ImGui::InputText("##inputInstantMessage", bufInstantMessage, IM_ARRAYSIZE(bufInstantMessage));
+			S.gameTab.instantMessage = bufInstantMessage;
+
+			ImGui::SliderInt("Delay in ms##sliderInstantMessageDelay", &S.gameTab.instantMessageDelay, 0, 10000);
+
+			ImGui::Checkbox("Instalock", &S.gameTab.instalockEnabled);
+			ImGui::SameLine();
+			ImGui::SliderInt("Delay in ms##sliderInstalockDelay", &S.gameTab.instalockDelay, 0, 10000);
 			if (ImGui::CollapsingHeader("Instalock champ"))
 			{
 				std::vector<std::pair<int, std::string>>instalockChamps = GetInstalockChamps();
@@ -309,10 +310,11 @@ public:
 					sprintf_s(bufchamp, "##Select %s", champ.second.c_str());
 					ImGui::Text("%s", champ.second.c_str());
 					ImGui::SameLine();
-					ImGui::RadioButton(bufchamp, &instalockID, champ.first);
+					ImGui::RadioButton(bufchamp, &S.gameTab.instalockId, champ.first);
 				}
 			}
 
+			// TODO
 			//if (ImGui::CollapsingHeader("Auto ban champ"))
 			//{
 			//	//todo list of champions from communitydragon
@@ -409,5 +411,152 @@ public:
 		}
 		std::sort(temp.begin(), temp.end(), [](std::pair<int, std::string > a, std::pair<int, std::string >b) {return a.second < b.second; });
 		return temp;
+	}
+
+	static void InstantMessage()
+	{
+		std::this_thread::sleep_for(std::chrono::milliseconds(S.gameTab.instantMessageDelay));
+		Json::Value root;
+		Json::CharReaderBuilder builder;
+		const std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
+		JSONCPP_STRING err;
+		std::string getChat = http->Request("GET", "https://127.0.0.1/lol-chat/v1/conversations", "", auth->leagueHeader, "", "", auth->leaguePort);
+		if (reader->parse(getChat.c_str(), getChat.c_str() + static_cast<int>(getChat.length()), &root, &err))
+		{
+			std::string lobbyID = root[0]["id"].asString();
+			std::string request = "https://127.0.0.1/lol-chat/v1/conversations/" + lobbyID + "/messages";
+			std::string error = "errorCode";
+			while (error.find("errorCode") != std::string::npos)
+			{
+				error = http->Request("POST", request, R"({"type":"chat", "body":")" + std::string(S.gameTab.instantMessage) + R"("})", auth->leagueHeader, "", "", auth->leaguePort);
+				std::this_thread::sleep_for(std::chrono::milliseconds(1));
+			}
+		}
+	}
+
+	static void AutoAccept()
+	{
+		while (true)
+		{
+			if (!FindWindowA("RiotWindowClass", "League of Legends (TM) Client"))
+			{
+				if (::FindWindowA("RCLIENT", "League of Legends"))
+				{
+					if (S.gameTab.autoAcceptEnabled || (S.gameTab.instalockEnabled && S.gameTab.instalockId))
+					{
+						Json::Value rootSearch;
+						Json::Value rootChampSelect;
+						Json::Value rootSession;
+						Json::CharReaderBuilder builder;
+						const std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
+						JSONCPP_STRING err;
+						std::string getSearchState = http->Request("GET", "https://127.0.0.1/lol-lobby/v2/lobby/matchmaking/search-state", "", auth->leagueHeader, "", "", auth->leaguePort);
+						if (reader->parse(getSearchState.c_str(), getSearchState.c_str() + static_cast<int>(getSearchState.length()), &rootSearch, &err))
+						{
+							static bool foundCell = false;
+							static bool sendMessage = true;
+							std::string searchState = rootSearch["searchState"].asString();
+							if (searchState == "Found")
+							{
+								std::string getChampSelect = http->Request("GET", "https://127.0.0.1/lol-champ-select/v1/session", "", auth->leagueHeader, "", "", auth->leaguePort);
+								if (getChampSelect.find("RPC_ERROR") != std::string::npos)
+								{
+									foundCell = false;
+									sendMessage = true;
+									if (S.gameTab.autoAcceptEnabled)
+									{
+										http->Request("POST", "https://127.0.0.1/lol-matchmaking/v1/ready-check/accept", "", auth->leagueHeader, "", "", auth->leaguePort);
+									}
+								}
+								else
+								{
+									if (reader->parse(getChampSelect.c_str(), getChampSelect.c_str() + static_cast<int>(getChampSelect.length()), &rootChampSelect, &err))
+									{
+										if (sendMessage && !S.gameTab.instantMessage.empty())
+										{
+											sendMessage = false;
+											std::thread instantMessageThread(&GameTab::InstantMessage);
+											instantMessageThread.detach();
+										}
+										if (S.gameTab.instalockEnabled)
+										{
+											// get own summid
+											std::string getSession = http->Request("GET", "https://127.0.0.1/lol-login/v1/session", "", auth->leagueHeader, "", "", auth->leaguePort);
+											if (reader->parse(getSession.c_str(), getSession.c_str() + static_cast<int>(getSession.length()), &rootSession, &err))
+											{
+												static int cellId = 0;
+
+												if (!foundCell)
+												{
+													auto myTeam = rootChampSelect["myTeam"];
+													std::string summId = rootSession["summonerId"].asString();
+													if (myTeam.isArray())
+													{
+														// get own cellId
+														for (Json::Value::ArrayIndex i = 0; i < myTeam.size(); i++)
+														{
+															if (myTeam[i]["summonerId"].asString() == summId)
+															{
+																cellId = myTeam[i]["cellId"].asInt();
+																foundCell = true;
+																break;
+															}
+														}
+													}
+												}
+												else
+												{
+													auto actions = rootChampSelect["actions"][0];
+													if (actions.isArray())
+													{
+														for (Json::Value::ArrayIndex i = 0; i < actions.size(); i++)
+														{
+															// search for own actions
+															if (actions[i]["actorCellId"].asInt() == cellId)
+															{
+																// if action is pick
+																if (actions[i]["type"].asString() == "pick")
+																{
+																	// if havent picked yet
+																	if (actions[i]["completed"].asBool() == false)
+																	{
+																		std::this_thread::sleep_for(std::chrono::milliseconds(S.gameTab.instalockDelay));
+																		http->Request("PATCH", "https://127.0.0.1/lol-champ-select/v1/session/actions/" + actions[i]["id"].asString(),
+																			R"({"completed":true,"championId":)" + std::to_string(S.gameTab.instalockId) + "}", auth->leagueHeader, "", "", auth->leaguePort);
+																	}
+																	else
+																	{
+																		// we picked already, theres nothing to do so sleep
+																		std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+																		break;
+																	}
+																}
+																else continue;
+															}
+															else continue;
+														}
+													}
+												}
+											}
+										}
+										else
+										{
+											std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+										}
+									}
+								}
+							}
+							else
+							{
+								foundCell = false;
+								std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+							}
+						}
+					}
+				}
+			}
+
+			std::this_thread::sleep_for(std::chrono::milliseconds(1));
+		}
 	}
 };

@@ -56,10 +56,15 @@ struct Settings
 		std::string leagueArgs = "--locale=en_US";
 	}loginTab;
 
-	//struct
-	//{
-	//
-	//}profileTab;
+	struct
+	{
+		bool autoAcceptEnabled = false;
+		bool instalockEnabled = false;
+		int instalockId = 0;
+		int instalockDelay = 0;
+		std::string instantMessage;
+		int instantMessageDelay = 0;
+	}gameTab;
 };
 extern Settings S;
 
@@ -102,6 +107,12 @@ public:
 				root["invokeTab"]["destination"] = S.invokeTab.destination;
 				root["invokeTab"]["method"] = S.invokeTab.method;
 				root["invokeTab"]["args"] = S.invokeTab.args;
+				root["gameTab"]["autoAcceptEnabled"] = S.gameTab.autoAcceptEnabled;
+				root["gameTab"]["instalockEnabled"] = S.gameTab.instalockEnabled;
+				root["gameTab"]["instalockDelay"] = S.gameTab.instalockDelay;
+				root["gameTab"]["instalockId"] = S.gameTab.instalockId;
+				root["gameTab"]["instantMessage"] = S.gameTab.instantMessage;
+				root["gameTab"]["instantMessageDelay"] = S.gameTab.instantMessageDelay;
 
 				if (S.bAddFont)
 				{
@@ -163,6 +174,12 @@ public:
 				if (auto t = root["invokeTab"]["destination"]; !t.empty()) S.invokeTab.destination = t.asString();
 				if (auto t = root["invokeTab"]["method"]; !t.empty()) S.invokeTab.method = t.asString();
 				if (auto t = root["invokeTab"]["args"]; !t.empty()) S.invokeTab.args = t.asString();
+				if (auto t = root["gameTab"]["autoAcceptEnabled"]; !t.empty()) S.gameTab.autoAcceptEnabled = t.asBool();
+				if (auto t = root["gameTab"]["instalockEnabled"]; !t.empty()) S.gameTab.instalockEnabled = t.asBool();
+				if (auto t = root["gameTab"]["instalockDelay"]; !t.empty()) S.gameTab.instalockDelay = t.asInt();
+				if (auto t = root["gameTab"]["instalockId"]; !t.empty()) S.gameTab.instalockId = t.asInt();
+				if (auto t = root["gameTab"]["instantMessage"]; !t.empty()) S.gameTab.instantMessage = t.asString();
+				if (auto t = root["gameTab"]["instantMessageDelay"]; !t.empty()) S.gameTab.instantMessageDelay = t.asInt();
 
 				if (root["fonts"].isArray() && !root["fonts"].empty())
 				{
