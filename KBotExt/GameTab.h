@@ -314,6 +314,29 @@ public:
 				}
 			}
 
+			if (ImGui::CollapsingHeader("Auto ban"))
+			{
+				if (champSkins.empty())
+				{
+					ImGui::Text("Champion data still downloading");
+				}
+				else
+				{
+					ImGui::Text("None");
+					ImGui::SameLine();
+					ImGui::RadioButton("##nonechamp", &S.gameTab.autoBanId, 0);
+					for (auto c : champSkins)
+					{
+						char bufchamp[128];
+						sprintf_s(bufchamp, "##Select %s", c.name.c_str());
+						ImGui::Text("%s", c.name.c_str());
+						ImGui::SameLine();
+						ImGui::RadioButton(bufchamp, &S.gameTab.autoBanId, c.key);
+					}
+				}
+			}
+
+
 			// TODO
 			//if (ImGui::CollapsingHeader("Auto ban champ"))
 			//{
@@ -442,7 +465,7 @@ public:
 			{
 				if (::FindWindowA("RCLIENT", "League of Legends"))
 				{
-					if (S.gameTab.autoAcceptEnabled || (S.gameTab.instalockEnabled && S.gameTab.instalockId))
+					if (S.gameTab.autoAcceptEnabled || S.gameTab.autoBanId || (S.gameTab.instalockEnabled && S.gameTab.instalockId))
 					{
 						Json::Value rootSearch;
 						Json::Value rootChampSelect;
@@ -478,7 +501,7 @@ public:
 											std::thread instantMessageThread(&GameTab::InstantMessage);
 											instantMessageThread.detach();
 										}
-										if (S.gameTab.instalockEnabled)
+										if (S.gameTab.instalockEnabled || S.gameTab.autoBanId)
 										{
 											// get own summid
 											std::string getSession = http->Request("GET", "https://127.0.0.1/lol-login/v1/session", "", auth->leagueHeader, "", "", auth->leaguePort);
@@ -506,34 +529,45 @@ public:
 												}
 												else
 												{
-													auto actions = rootChampSelect["actions"][0];
-													if (actions.isArray())
+													for (Json::Value::ArrayIndex j = 0; j < rootChampSelect["actions"].size(); j++)
 													{
-														for (Json::Value::ArrayIndex i = 0; i < actions.size(); i++)
+														auto actions = rootChampSelect["actions"][j];
+														if (actions.isArray())
 														{
-															// search for own actions
-															if (actions[i]["actorCellId"].asInt() == cellId)
+															for (Json::Value::ArrayIndex i = 0; i < actions.size(); i++)
 															{
-																// if action is pick
-																if (actions[i]["type"].asString() == "pick")
+																// search for own actions
+																if (actions[i]["actorCellId"].asInt() == cellId)
 																{
-																	// if havent picked yet
-																	if (actions[i]["completed"].asBool() == false)
+																	std::string actionType = actions[i]["type"].asString();
+																	if (actionType == "pick" && S.gameTab.instalockId)
 																	{
-																		std::this_thread::sleep_for(std::chrono::milliseconds(S.gameTab.instalockDelay));
-																		http->Request("PATCH", "https://127.0.0.1/lol-champ-select/v1/session/actions/" + actions[i]["id"].asString(),
-																			R"({"completed":true,"championId":)" + std::to_string(S.gameTab.instalockId) + "}", auth->leagueHeader, "", "", auth->leaguePort);
+																		// if havent picked yet
+																		if (actions[i]["completed"].asBool() == false)
+																		{
+																			std::this_thread::sleep_for(std::chrono::milliseconds(S.gameTab.instalockDelay));
+																			http->Request("PATCH", "https://127.0.0.1/lol-champ-select/v1/session/actions/" + actions[i]["id"].asString(),
+																				R"({"completed":true,"championId":)" + std::to_string(S.gameTab.instalockId) + "}", auth->leagueHeader, "", "", auth->leaguePort);
+																		}
+																		else
+																		{
+																			// we picked already, theres nothing to do so sleep
+																			std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+																			break;
+																		}
 																	}
-																	else
+																	else if (actionType == "ban" && S.gameTab.autoBanId)
 																	{
-																		// we picked already, theres nothing to do so sleep
-																		std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-																		break;
+																		if (actions[i]["completed"].asBool() == false)
+																		{
+																			http->Request("PATCH", "https://127.0.0.1/lol-champ-select/v1/session/actions/" + actions[i]["id"].asString(),
+																				R"({"completed":true,"championId":)" + std::to_string(S.gameTab.autoBanId) + "}", auth->leagueHeader, "", "", auth->leaguePort);
+																		}
 																	}
+																	else break;
 																}
 																else continue;
 															}
-															else continue;
 														}
 													}
 												}

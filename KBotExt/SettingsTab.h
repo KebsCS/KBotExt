@@ -1,5 +1,7 @@
 #pragma once
 
+#include <Winbase.h>
+
 #include "Definitions.h"
 #include "Includes.h"
 #include "HTTP.h"
@@ -49,14 +51,14 @@ public:
 			{
 				once = false;
 				HKEY hkResult;
-				if (RegOpenKeyExA(HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\LeagueClientUx.exe", 0, KEY_SET_VALUE | KEY_QUERY_VALUE, &hkResult) == ERROR_SUCCESS)
+				if (RegOpenKeyExA(HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\LeagueClientUx.exe", 0, KEY_QUERY_VALUE, &hkResult) == ERROR_SUCCESS)
 				{
 					char buffer[MAX_PATH];
-					DWORD dwLen;
+					DWORD dwLen = 0;
 					LSTATUS regQuery = RegGetValueA(hkResult, 0, "debugger", RRF_RT_REG_SZ, 0, (PVOID)&buffer, &dwLen);
 					if (regQuery == ERROR_SUCCESS)
 					{
-						S.currentDebugger = buffer;
+						S.currentDebugger = std::string(buffer, dwLen);
 					}
 					else if (regQuery == ERROR_FILE_NOT_FOUND)
 					{
@@ -64,9 +66,12 @@ public:
 					}
 					else
 					{
-						S.currentDebugger = "Failed";
+						S.currentDebugger = "Failed, error code " + regQuery;
 					}
+					RegCloseKey(hkResult);
 				}
+				else
+					S.currentDebugger = "Error";
 			}
 			static std::string result;
 

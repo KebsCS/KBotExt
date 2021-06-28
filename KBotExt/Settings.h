@@ -64,6 +64,7 @@ struct Settings
 		int instalockDelay = 0;
 		std::string instantMessage;
 		int instantMessageDelay = 0;
+		int autoBanId = 0;
 	}gameTab;
 };
 extern Settings S;
@@ -113,6 +114,7 @@ public:
 				root["gameTab"]["instalockId"] = S.gameTab.instalockId;
 				root["gameTab"]["instantMessage"] = S.gameTab.instantMessage;
 				root["gameTab"]["instantMessageDelay"] = S.gameTab.instantMessageDelay;
+				root["gameTab"]["autoBanId"] = S.gameTab.autoBanId;
 
 				if (S.bAddFont)
 				{
@@ -180,6 +182,7 @@ public:
 				if (auto t = root["gameTab"]["instalockId"]; !t.empty()) S.gameTab.instalockId = t.asInt();
 				if (auto t = root["gameTab"]["instantMessage"]; !t.empty()) S.gameTab.instantMessage = t.asString();
 				if (auto t = root["gameTab"]["instantMessageDelay"]; !t.empty()) S.gameTab.instantMessageDelay = t.asInt();
+				if (auto t = root["gameTab"]["autoBanId"]; !t.empty()) S.gameTab.autoBanId = t.asInt();
 
 				if (root["fonts"].isArray() && !root["fonts"].empty())
 				{
