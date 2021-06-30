@@ -23,18 +23,18 @@ private:
 		if (Ishttps)host = url.substr(strpos, coutof - strlen(sHttps.c_str()));
 		else host = url.substr(strpos, coutof - strlen(sHttp.c_str()));
 		strpos = host.find(':');
-		if (strpos != std::wstring::npos)host = host.substr(0, strpos);
+		if (strpos != std::string::npos)host = host.substr(0, strpos);
 		return host;
 	}
 
 	std::string GetURLPage(std::string url)
 	{
 		bool Ishttps;
-		url.find(sHttps) == std::wstring::npos ? Ishttps = false : Ishttps = true;
+		url.find(sHttps) == std::string::npos ? Ishttps = false : Ishttps = true;
 		size_t strpos, coutof;
 		Ishttps ? strpos = url.find(sHttps) + strlen(sHttps.c_str()) : strpos = url.find(sHttp) + strlen(sHttp.c_str());
 		coutof = url.find('/', strpos) + 1;
-		if (coutof == std::wstring::npos)return "";
+		if (coutof == std::string::npos)return "";
 		std::string urlpage = url.substr(coutof, strpos - coutof);
 		return urlpage;
 	}
@@ -43,6 +43,12 @@ public:
 
 	std::string Request(std::string method, std::string url, std::string requestData = "", std::string header = "",
 		std::string cookies = "", std::string returnCookies = "", int port = -1)
+	{
+		return RequestWithCookies(method, url, requestData, header, cookies, returnCookies, port);
+	}
+
+	std::string RequestWithCookies(std::string method, std::string url, std::string requestData, std::string header,
+		std::string cookies, std::string& returnCookies, int port = -1)
 	{
 		if (header.find(("User-Agent:")) == std::string::npos)header.append(("User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36 Edge/16.16299\r\n"));
 		if (header.find(("Accept:")) == std::string::npos)header.append(("Accept: */*\r\n"));
@@ -78,7 +84,7 @@ public:
 		INTERNET_PORT internetPort;
 		if (port != -1)
 		{
-			internetPort = port;
+			internetPort = static_cast<INTERNET_PORT>(port);
 		}
 		else
 		{
@@ -87,8 +93,9 @@ public:
 		HINTERNET internetConnect = InternetConnectA(internetOpen, GetHost(url).c_str(), internetPort, NULL, NULL, INTERNET_SERVICE_HTTP, NULL, NULL);
 		if (!internetConnect)
 		{
+			std::string err = "InternetConnectA failed. Last error: " + std::to_string(GetLastError());
 			InternetCloseHandle(internetOpen);
-			return ("InternetConnectA failed. Last error: ") + std::to_string(GetLastError());
+			return err;
 		}
 
 		DWORD RequestFlg = INTERNET_FLAG_RELOAD | INTERNET_COOKIE_THIRD_PARTY;
@@ -98,17 +105,18 @@ public:
 		HINTERNET openRequest = HttpOpenRequestA(internetConnect, method.c_str(), GetURLPage(url).c_str(), ("HTTP/1.1"), NULL, NULL, RequestFlg, NULL);
 		if (!openRequest)
 		{
+			std::string err = "HttpOpenRequestA failed. Last error: " + std::to_string(GetLastError());
 			InternetCloseHandle(internetConnect);
 			InternetCloseHandle(internetOpen);
-			return ("HttpOpenRequestA failed. Last error: ") + std::to_string(GetLastError());
+			return err;
 		}
 
-		// ignores ssl certificate
+		// ignores ssl certificate errors
 		DWORD dwFlags;
 		DWORD dwBuffLen = sizeof(dwFlags);
 		if (InternetQueryOptionA(openRequest, INTERNET_OPTION_SECURITY_FLAGS, &dwFlags, &dwBuffLen))
 		{
-			dwFlags |= SECURITY_FLAG_IGNORE_UNKNOWN_CA | SECURITY_FLAG_IGNORE_REVOCATION;
+			dwFlags |= SECURITY_FLAG_IGNORE_UNKNOWN_CA | SECURITY_FLAG_IGNORE_REVOCATION | SECURITY_FLAG_IGNORE_CERT_CN_INVALID;
 			InternetSetOptionA(openRequest, INTERNET_OPTION_SECURITY_FLAGS, &dwFlags, sizeof(dwFlags));
 		}
 
@@ -123,10 +131,11 @@ public:
 		}
 		if (!sendRequest)
 		{
+			std::string err = "HttpSendRequestA failed. Last error: " + std::to_string(GetLastError());
 			InternetCloseHandle(internetConnect);
 			InternetCloseHandle(internetOpen);
 			InternetCloseHandle(openRequest);
-			return ("HttpSendRequestA failed. Last error: ") + std::to_string(GetLastError());
+			return err;
 		}
 
 		std::string ResultData;
@@ -134,10 +143,11 @@ public:
 		try { pResultData = new char[1025]; }
 		catch (...)
 		{
+			std::string err = "Failed to allocate char array1. Last error: " + std::to_string(GetLastError());
 			InternetCloseHandle(internetConnect);
 			InternetCloseHandle(internetOpen);
 			InternetCloseHandle(openRequest);
-			return ("Failed to allocate char array1. Last error: ") + std::to_string(GetLastError());
+			return err;
 		}
 		UINT  ResultLen = 0;
 		do
@@ -150,10 +160,11 @@ public:
 		try { pTmpQuery = new char[4096]; }
 		catch (...)
 		{
+			std::string err = "Failed to allocate char array2. Last error: " + std::to_string(GetLastError());
 			InternetCloseHandle(internetConnect);
 			InternetCloseHandle(internetOpen);
 			InternetCloseHandle(openRequest);
-			return ("Failed to allocate char array2. Last error: ") + std::to_string(GetLastError());
+			return err;
 		}
 		ZeroMemory(pTmpQuery, 4096 * sizeof(char));
 		DWORD CookiesLength = 4095;

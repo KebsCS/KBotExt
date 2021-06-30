@@ -1,7 +1,6 @@
 #include "Auth.h"
 #include "Utils.h"
 #include "NtQueryInfoProc.h"
-#include "base64.h"
 
 bool Auth::GetRiotClientInfo()
 {
@@ -24,7 +23,7 @@ bool Auth::GetRiotClientInfo()
 		std::string token = "riot:" + sAuth.substr(nPos, 22); // token is always 22 chars long
 		unsigned char m_Test[50];
 		strncpy((char*)m_Test, token.c_str(), sizeof(m_Test));
-		riotToken = base64_encode(m_Test, token.size()).c_str();
+		riotToken = base64.Encode(m_Test, token.size()).c_str();
 	}
 	else
 	{
@@ -40,17 +39,17 @@ bool Auth::GetRiotClientInfo()
 
 void Auth::MakeRiotHeader()
 {
-	riotHeader = "Host: 127.0.0.1:" + std::to_string(riotPort) + "\n" +
-		"Connection: keep-alive" + "\n" +
-		"Authorization: Basic " + riotToken + "\n" +
-		"Accept: application/json" + "\n" +
-		"Access-Control-Allow-Credentials: true" + "\n" +
-		"Access-Control-Allow-Origin: 127.0.0.1" + "\n" +
-		"Content-Type: application/json" + "\n" +
-		"Origin: https://127.0.0.1:" + std::to_string(riotPort) + "\n" +
-		"User-Agent: Mozilla/5.0 (Windows NT 6.2; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) LeagueOfLegendsClient/11.3.356.7268 (CEF 74) Safari/537.36" + "\n" +
-		"Referer: https://127.0.0.1:" + std::to_string(riotPort) + "/index.html" + "\n" +
-		"Accept-Encoding: gzip, deflate, br" + "\n" +
+	riotHeader = "Host: 127.0.0.1:" + std::to_string(riotPort) + "\r\n" +
+		"Connection: keep-alive" + "\r\n" +
+		"Authorization: Basic " + riotToken + "\r\n" +
+		"Accept: application/json" + "\r\n" +
+		"Access-Control-Allow-Credentials: true" + "\r\n" +
+		"Access-Control-Allow-Origin: 127.0.0.1" + "\r\n" +
+		"Content-Type: application/json" + "\r\n" +
+		"Origin: https://127.0.0.1:" + std::to_string(riotPort) + "\r\n" +
+		"User-Agent: Mozilla/5.0 (Windows NT 6.2; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) RiotClient/34.0.2 (CEF 74) Safari/537.36" + "\r\n" +
+		"Referer: https://127.0.0.1:" + std::to_string(riotPort) + "/index.html" + "\r\n" +
+		"Accept-Encoding: gzip, deflate, br" + "\r\n" +
 		"Accept-Language: en-US,en;q=0.9";
 }
 
@@ -76,7 +75,7 @@ bool  Auth::GetLeagueClientInfo()
 		std::string token = "riot:" + sAuth.substr(nPos, 22);
 		unsigned char m_Test[50];
 		strncpy((char*)m_Test, token.c_str(), sizeof(m_Test));
-		leagueToken = base64_encode(m_Test, token.size()).c_str();
+		leagueToken = base64.Encode(m_Test, token.size()).c_str();
 	}
 	else
 	{
@@ -92,16 +91,16 @@ bool  Auth::GetLeagueClientInfo()
 
 void Auth::MakeLeagueHeader()
 {
-	leagueHeader = "Host: 127.0.0.1:" + std::to_string(leaguePort) + "\n" +
-		"Connection: keep-alive" + "\n" +
-		"Authorization: Basic " + leagueToken + "\n" +
-		"Accept: application/json" + "\n" +
-		"Content-Type: application/json" + "\n" +
-		"Origin: https://127.0.0.1:" + std::to_string(leaguePort) + "\n" +
-		"User-Agent: Mozilla/5.0 (Windows NT 6.2; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) LeagueOfLegendsClient/11.3.356.7268 (CEF 74) Safari/537.36" + "\n" +
-		"X-Riot-Source: rcp-fe-lol-social" + "\n" +
-		"Referer: https://127.0.0.1:" + std::to_string(leaguePort) + "/index.html" + "\n" +
-		"Accept-Encoding: gzip, deflate, br" + "\n" +
+	leagueHeader = "Host: 127.0.0.1:" + std::to_string(leaguePort) + "\r\n" +
+		"Connection: keep-alive" + "\r\n" +
+		"Authorization: Basic " + leagueToken + "\r\n" +
+		"Accept: application/json" + "\r\n" +
+		"Content-Type: application/json" + "\r\n" +
+		"Origin: https://127.0.0.1:" + std::to_string(leaguePort) + "\r\n" +
+		"User-Agent: Mozilla/5.0 (Windows NT 6.2; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) LeagueOfLegendsClient/11.13.382.1241 (CEF 74) Safari/537.36" + "\r\n" +
+		"X-Riot-Source: rcp-fe-lol-social" + "\r\n" +
+		"Referer: https://127.0.0.1:" + std::to_string(leaguePort) + "/index.html" + "\r\n" +
+		"Accept-Encoding: gzip, deflate, br" + "\r\n" +
 		"Accept-Language: en-US,en;q=0.9";
 }
 

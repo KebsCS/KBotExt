@@ -26,10 +26,10 @@ public:
 			std::ifstream infile(std::format("{}system.yaml", S.leaguePath));
 			std::ofstream outfile(std::format("{}LoL Companion/system.yaml", S.leaguePath));
 			std::string content = "";
-			int i;
 
-			for (i = 0; infile.eof() != true; i++)
-				content += infile.get();
+			std::string temp;
+			while (std::getline(infile, temp))
+				content += temp + "\n";
 
 			infile.close();
 			size_t pos = content.find("riotclient:");

@@ -1,7 +1,5 @@
 #pragma once
 
-#include <Winbase.h>
-
 #include "Definitions.h"
 #include "Includes.h"
 #include "HTTP.h"

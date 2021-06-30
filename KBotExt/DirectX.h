@@ -1,8 +1,5 @@
 #pragma once
 
-#ifndef _DIRECTX_H_
-#define _DIRECTX_H_
-
 #include <string>
 
 #include <d3d11.h>
@@ -60,5 +57,3 @@ public:
 	void MenuInit();
 };
 extern Direct3D9Render Direct3D9;
-
-#endif //_DIRECTX_H_

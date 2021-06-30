@@ -126,7 +126,7 @@ public:
 			ImGui::Columns(1);
 
 			static std::vector<std::pair<std::string, int>>items;
-			static int item_current_idx = 0; // Here we store our selection data as an index.
+			static size_t item_current_idx = 0; // Here we store our selection data as an index.
 			const char* combo_label = "**Default";
 			if (!items.empty())
 				combo_label = items[item_current_idx].first.c_str();
@@ -152,7 +152,7 @@ public:
 							int iDeleted = 0;
 							for (Json::Value::ArrayIndex i = 0; i < root.size(); ++i)
 							{
-								if (root[i]["groupId"].asInt() == item_current_idx)
+								if (root[i]["groupId"].asUInt() == item_current_idx)
 								{
 									std::string req = "https://127.0.0.1/lol-chat/v1/friends/" + root[i]["pid"].asString();
 									http->Request("DELETE", req, "", auth->leagueHeader, "", "", auth->leaguePort);
@@ -189,7 +189,7 @@ public:
 					}
 				}
 
-				for (int n = 0; n < items.size(); n++)
+				for (size_t n = 0; n < items.size(); n++)
 				{
 					const bool is_selected = (item_current_idx == n);
 					if (ImGui::Selectable(items[n].first.c_str(), is_selected))
@@ -200,6 +200,14 @@ public:
 				}
 				ImGui::EndCombo();
 			}
+
+			//if (ImGui::Button("Skip tutorial"))
+			//{
+			//	http->Request("POST", "https://127.0.0.1/telemetry/v1/events/new_player_experience", R"({"eventName":"hide_screen","plugin":"rcp-fe-lol-new-player-experience","screenName":"npe_tutorial_modules"})", auth->leagueHeader, "", "", auth->leaguePort);
+			//	http->Request("PUT", "https://127.0.0.1/lol-npe-tutorial-path/v1/settings", R"({"hasSeenTutorialPath":true,"hasSkippedTutorialPath":true,"shouldSeeNewPlayerExperience":true})", auth->leagueHeader, "", "", auth->leaguePort);
+			//	//DELETE https://127.0.0.1:63027/lol-statstones/v1/vignette-notifications HTTP/1.1
+			//	// ?
+			//}
 
 			if (ImGui::Button("Free Tristana + Riot Girl skin"))
 				result = http->Request("POST", "https://127.0.0.1/lol-login/v1/session/invoke?destination=inventoryService&method=giftFacebookFan&args=[]", "", auth->leagueHeader, "", "", auth->leaguePort);

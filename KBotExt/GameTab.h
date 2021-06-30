@@ -118,7 +118,7 @@ public:
 			ImGui::NextColumn();
 
 			static std::vector<std::pair<int, std::string>>botChamps;
-			static int indexBots = 0; // Here we store our selection data as an index.
+			static size_t indexBots = 0; // Here we store our selection data as an index.
 			const char* labelBots = "Bot";
 			if (!botChamps.empty())
 				labelBots = botChamps[indexBots].second.c_str();
@@ -145,7 +145,7 @@ public:
 					}
 				}
 
-				for (int n = 0; n < botChamps.size(); n++)
+				for (size_t n = 0; n < botChamps.size(); n++)
 				{
 					const bool is_selected = (indexBots == n);
 					if (ImGui::Selectable(botChamps[n].second.c_str(), is_selected))
@@ -157,12 +157,12 @@ public:
 				ImGui::EndCombo();
 			}
 			std::vector<std::string>difficulties = { "NONE","EASY","MEDIUM","HARD","UBER","TUTORIAL","INTRO" };
-			static int indexDifficulty = 0; // Here we store our selection data as an index.
+			static size_t indexDifficulty = 0; // Here we store our selection data as an index.
 			const char* labelDifficulty = difficulties[indexDifficulty].c_str();
 
 			if (ImGui::BeginCombo("##comboDifficulty", labelDifficulty, 0))
 			{
-				for (int n = 0; n < difficulties.size(); n++)
+				for (size_t n = 0; n < difficulties.size(); n++)
 				{
 					const bool is_selected = (indexDifficulty == n);
 					if (ImGui::Selectable(difficulties[n].c_str(), is_selected))
@@ -336,7 +336,6 @@ public:
 				}
 			}
 
-
 			// TODO
 			//if (ImGui::CollapsingHeader("Auto ban champ"))
 			//{
@@ -358,7 +357,7 @@ public:
 
 			ImGui::Separator();
 
-			if (ImGui::Button("Boost"))
+			if (ImGui::Button("Free ARAM/ARURF boost"))
 			{
 				std::string wallet = http->Request("GET", "https://127.0.0.1/lol-inventory/v1/wallet/RP", "", auth->leagueHeader, "", "", auth->leaguePort);
 
@@ -375,10 +374,14 @@ public:
 					{
 						result = http->Request("POST", R"(https://127.0.0.1/lol-login/v1/session/invoke?destination=lcdsServiceProxy&method=call&args=["","teambuilder-draft","activateBattleBoostV1",""])", "", auth->leagueHeader, "", "", auth->leaguePort);
 					}
+					else
+					{
+						MessageBoxA(0, "You have enough RP", "It's not possible to grant you a free skin boost", 0);
+					}
 				}
 			}
 			ImGui::SameLine();
-			ImGui::Text("ARAM/ARURF Boost, use only if you don't have enough RP for boost");
+			Misc::HelpMarker("Works only when you don't have enough RP for boost");
 
 			static Json::StreamWriterBuilder wBuilder;
 			static std::string sResultJson;

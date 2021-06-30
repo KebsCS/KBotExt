@@ -12,6 +12,7 @@
 #include "ChampsTab.h"
 #include "SettingsTab.h"
 
+// TODO: move this
 void GetAllChampionSkins(std::string patch)
 {
 	std::vector < Champ > temp;
@@ -121,7 +122,7 @@ int Direct3D9Render::Render()
 
 	ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiCond_FirstUseEver);
 	ImGui::SetNextWindowSize(ImVec2(685, 462), ImGuiCond_FirstUseEver);
-	ImGui::SetNextWindowSize(ImVec2(S.Window.width - 15, S.Window.height - 38));
+	ImGui::SetNextWindowSize(ImVec2(static_cast<float>(S.Window.width - 15), static_cast<float>(S.Window.height - 38)));
 	ImGuiWindowFlags flags = /*ImGuiWindowFlags_NoTitleBar |*/ ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoSavedSettings;
 	ImGui::Begin(buf, (bool*)0, flags);// , ImGuiWindowFlags_AlwaysAutoResize);
 	ImGuiTabBarFlags tab_bar_flags = 0;// ImGuiTabBarFlags_Reorderable;

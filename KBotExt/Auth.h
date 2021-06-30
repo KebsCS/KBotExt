@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include "base64.h"
 
 class Auth
 {
@@ -12,6 +13,8 @@ public:
 	int leaguePort = 0;
 	std::string leagueToken;
 	std::string leagueHeader;
+
+	Base64 base64;
 
 	// returns 1 when successfully got port and token
 	bool GetRiotClientInfo();

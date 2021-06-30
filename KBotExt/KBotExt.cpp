@@ -36,7 +36,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		}
 
 		cmdLine.replace(cmdLine.find("\"--no-proxy-server\""), strlen("\"--no-proxy-server\""), "");
-		
+
 		AllocConsole();
 		freopen("CONOUT$", "w", stdout);
 
@@ -71,7 +71,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	else
 	{
 		//Randomize using current time, todo swap with recent c++ random
-		srand(time(0));
+		srand(static_cast<unsigned>(time(0)));
 
 		bool oldStreamProof = S.streamProof;
 
@@ -169,7 +169,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			{
 				oldDebugger = S.debugger;
 				HKEY hkResult;
-				if (RegOpenKeyExA(HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\LeagueClientUx.exe", 0, KEY_SET_VALUE | KEY_QUERY_VALUE, &hkResult) == ERROR_SUCCESS)
+				LSTATUS regCreate = RegCreateKeyExA(HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\LeagueClientUx.exe", 0, 0, 0, KEY_SET_VALUE | KEY_QUERY_VALUE | KEY_CREATE_SUB_KEY, 0, &hkResult, 0);
+				if (regCreate == ERROR_SUCCESS)
 				{
 					char* buffer[MAX_PATH];
 					DWORD bufferLen;
