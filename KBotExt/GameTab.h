@@ -314,6 +314,8 @@ public:
 				}
 			}
 
+			// todo: backup pick or dodge
+
 			if (ImGui::CollapsingHeader("Auto ban"))
 			{
 				if (champSkins.empty())
@@ -336,28 +338,10 @@ public:
 				}
 			}
 
-			// TODO
-			//if (ImGui::CollapsingHeader("Auto ban champ"))
-			//{
-			//	//todo list of champions from communitydragon
-			//	//or /lol-champ-select/v1/bannable-champion-ids
-			//	for (auto champ : champSkins)
-			//	{
-			//		char bufchamp[128];
-			//		sprintf_s(bufchamp, "##Select %s", champ.name.c_str());
-			//		ImGui::Text("%s", champ.name.c_str());
-			//		//ImGui::RadioButton(bufchamp, &instalockID, chamnp);
-			//
-			// Add next to champ name, that goes into moveable list, and it bans from top to bottom if other champs are banned.
-			//	}
-			//}
-			//Ban champion
-			//PATCH https://127.0.0.1/lol-champ-select/v1/session/actions/8
-			//{"completed":true,"championId":131}
+			//ImGui::Separator();
 
-			ImGui::Separator();
-
-			if (ImGui::Button("Free ARAM/ARURF boost"))
+			// Patched :(
+		/*	if (ImGui::Button("Free ARAM/ARURF boost"))
 			{
 				std::string wallet = http->Request("GET", "https://127.0.0.1/lol-inventory/v1/wallet/RP", "", auth->leagueHeader, "", "", auth->leaguePort);
 
@@ -381,7 +365,7 @@ public:
 				}
 			}
 			ImGui::SameLine();
-			Misc::HelpMarker("Works only when you don't have enough RP for boost");
+			Misc::HelpMarker("Works only when you don't have enough RP for boost");*/
 
 			static Json::StreamWriterBuilder wBuilder;
 			static std::string sResultJson;

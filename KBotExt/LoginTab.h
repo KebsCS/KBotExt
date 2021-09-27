@@ -16,8 +16,37 @@ class LoginTab
 {
 private:
 
+	static void LoginOnClientOpen(std::string username, std::string password)
+	{
+		while (true)
+		{
+			if (::FindWindowA("RCLIENT", "Riot Client") && auth->riotPort != 0)
+			{
+				// waits to be sure that client is fully loaded
+				std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+				Login(username, password);
+				break;
+			}
+			std::this_thread::sleep_for(std::chrono::milliseconds(10));
+		}
+	}
+
 	static std::string Login(std::string username, std::string password)
 	{
+		// If riot client not open
+		if (auth->riotPort == 0)
+		{
+			if (std::filesystem::exists(S.leaguePath))
+			{
+				ShellExecuteA(NULL, NULL, std::format("{}LeagueClient.exe", S.leaguePath).c_str(), NULL, NULL, SW_SHOWNORMAL);
+				std::thread t(LoginOnClientOpen, username, password);
+				t.detach();
+				return "Launching client...";
+			}
+			else
+				return "Invadlid client path, change it in Settings tab";
+		}
+
 		// refresh session
 		http->Request("POST", "https://127.0.0.1/rso-auth/v2/authorizations", R"({"clientId":"riot-client","trustLevels":["always_trusted"]})", auth->riotHeader, "", "", auth->riotPort);
 

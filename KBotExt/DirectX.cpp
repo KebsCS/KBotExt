@@ -118,7 +118,7 @@ void Direct3D9Render::EndFrame()
 int Direct3D9Render::Render()
 {
 	char buf[90];
-	sprintf_s(buf, ("KBotExt by kebs#9546 - %s \t %s ###AnimatedTitle"), gamePatch.c_str(), champSkins.empty() ? "Downloading skin data..." : "");
+	sprintf_s(buf, ("KBotExt by kebs - %s \t %s ###AnimatedTitle"), gamePatch.c_str(), champSkins.empty() ? "Downloading skin data..." : "");
 
 	ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiCond_FirstUseEver);
 	ImGui::SetNextWindowSize(ImVec2(685, 462), ImGuiCond_FirstUseEver);

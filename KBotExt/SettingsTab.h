@@ -108,6 +108,9 @@ public:
 			ImGui::Separator();
 
 			ImGui::Text("Font:");
+			ImGui::SameLine();
+			Misc::HelpMarker("This is the program's font, not League's");
+
 			ShowFontSelector("##fontSelector");
 
 			static char buffAddFot[MAX_PATH];
@@ -145,6 +148,10 @@ public:
 			}
 			ImGui::SameLine();
 			ImGui::Text(std::format("{0}x{1}", S.Window.width, S.Window.height).c_str());
+
+			ImGui::Separator();
+			ImGui::Text("GitHub repository:");
+			Misc::TextURL("Click me!", "https://github.com/KebsCS/KBotExt");
 
 			ImGui::TextWrapped(result.c_str());
 

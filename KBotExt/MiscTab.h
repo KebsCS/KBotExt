@@ -209,11 +209,17 @@ public:
 			//	// ?
 			//}
 
-			if (ImGui::Button("Free Tristana + Riot Girl skin"))
+			// Patched :(
+			/*if (ImGui::Button("Free Tristana + Riot Girl skin"))
 				result = http->Request("POST", "https://127.0.0.1/lol-login/v1/session/invoke?destination=inventoryService&method=giftFacebookFan&args=[]", "", auth->leagueHeader, "", "", auth->leaguePort);
 
 			ImGui::SameLine();
 			Misc::HelpMarker("Relog after pressing the button");
+			*/
+
+			ImGui::Separator();
+			if (ImGui::Button("Check email of the account"))
+				result = http->Request("GET", "https://127.0.0.1/lol-email-verification/v1/email", "", auth->leagueHeader, "", "", auth->leaguePort);
 
 			static Json::StreamWriterBuilder wBuilder;
 			static std::string sResultJson;
