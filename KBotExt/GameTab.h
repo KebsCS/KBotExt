@@ -227,6 +227,8 @@ public:
 
 			ImGui::Separator();
 
+			// todo invite everyone from friendlist to lobby button
+
 			ImGui::Columns(3, 0, false);
 			if (ImGui::Button("Start queue"))
 			{
@@ -288,19 +290,38 @@ public:
 
 			ImGui::Columns(1);
 
+			ImGui::Separator();
+
 			ImGui::Checkbox("Auto accept", &S.gameTab.autoAcceptEnabled);
 
-			ImGui::Text("Instant message:");
+			ImGui::Columns(2, 0, false);
+
+			ImGui::Text("Instant message: ");
+			ImGui::SameLine();
 			static char bufInstantMessage[500];
 			std::copy(S.gameTab.instantMessage.begin(), S.gameTab.instantMessage.end(), bufInstantMessage);
+			//ImGui::SetNextItemWidth(S.Window.width / 3);
 			ImGui::InputText("##inputInstantMessage", bufInstantMessage, IM_ARRAYSIZE(bufInstantMessage));
 			S.gameTab.instantMessage = bufInstantMessage;
 
-			ImGui::SliderInt("Delay in ms##sliderInstantMessageDelay", &S.gameTab.instantMessageDelay, 0, 10000);
+			ImGui::NextColumn();
+			ImGui::SliderInt("Delay##sliderInstantMessageDelay", &S.gameTab.instantMessageDelay, 0, 10000, "%d ms");
+
+			ImGui::Columns(1);
+
+			ImGui::Columns(3, 0, false);
 
 			ImGui::Checkbox("Instalock", &S.gameTab.instalockEnabled);
-			ImGui::SameLine();
-			ImGui::SliderInt("Delay in ms##sliderInstalockDelay", &S.gameTab.instalockDelay, 0, 10000);
+			ImGui::NextColumn();
+
+			ImGui::SliderInt("Delay##sliderInstalockDelay", &S.gameTab.instalockDelay, 0, 10000, "%d ms");
+
+			ImGui::NextColumn();
+			bool test11;
+			ImGui::Checkbox("Dodge on champion ban", &test11);
+
+			ImGui::Columns(1);
+
 			if (ImGui::CollapsingHeader("Instalock champ"))
 			{
 				std::vector<std::pair<int, std::string>>instalockChamps = GetInstalockChamps();
@@ -311,6 +332,22 @@ public:
 					ImGui::Text("%s", champ.second.c_str());
 					ImGui::SameLine();
 					ImGui::RadioButton(bufchamp, &S.gameTab.instalockId, champ.first);
+				}
+			}
+
+			if (ImGui::CollapsingHeader("Backup pick"))
+			{
+				ImGui::Text("None");
+				ImGui::SameLine();
+				//ImGui::RadioButton("##noneBackupPick", &S.gameTab.backupId, 0);
+				std::vector<std::pair<int, std::string>>instalockChamps = GetInstalockChamps();
+				for (auto champ : instalockChamps)
+				{
+					char bufchamp[128];
+					sprintf_s(bufchamp, "##Select %s", champ.second.c_str());
+					ImGui::Text("%s", champ.second.c_str());
+					ImGui::SameLine();
+					//ImGui::RadioButton(bufchamp, &S.gameTab.backupId, champ.first);
 				}
 			}
 

@@ -12,83 +12,88 @@ class ChampsTab
 public:
 	static void Render()
 	{
-		static bool champsOpen = true;
+		static bool bOnOpen = true;
+		static unsigned iChampsOwned = 0;
+		bool bSortOnOpen = false;
+
 		if (ImGui::BeginTabItem("Champs"))
 		{
-			static std::string req;
-			static std::string req2;
-			static bool added = false;
-			static int iChampsOwned = 0;
+			ImGui::Text("Sort by: ");
+			ImGui::SameLine();
 
-			static Json::Value root;
-			static Json::CharReaderBuilder builder;
-			static const std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
-			static JSONCPP_STRING err;
+			static int iSort = 0;
+			static short iLastSort = -1;
+			ImGui::RadioButton("Alphabetically", &iSort, 0);
+			ImGui::SameLine();
+			ImGui::RadioButton("Purchase date", &iSort, 1);
+			ImGui::SameLine();
+			ImGui::RadioButton("Mastery points", &iSort, 2);
 
-			if (champsOpen)
+			if (bOnOpen)
 			{
-				std::string session = http->Request("GET", "https://127.0.0.1/lol-login/v1/session", "", auth->leagueHeader, "", "", auth->leaguePort);
+				bOnOpen = false;
+				bSortOnOpen = true;
+				iChampsOwned = 0;
+				champsMinimal.clear();
+				champsMastery.clear();
 
-				if (reader->parse(session.c_str(), session.c_str() + static_cast<int>(session.length()), &root, &err))
+				static Json::Value root;
+				static Json::CharReaderBuilder builder;
+				static const std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
+				static JSONCPP_STRING err;
+				std::string getSession = http->Request("GET", "https://127.0.0.1/lol-login/v1/session", "", auth->leagueHeader, "", "", auth->leaguePort);
+				if (reader->parse(getSession.c_str(), getSession.c_str() + static_cast<int>(getSession.length()), &root, &err))
 				{
-					uint64_t summonerId = root["summonerId"].asUInt64();
+					std::string summId = root["summonerId"].asString();
 
-					req = http->Request("GET", "https://127.0.0.1/lol-collections/v1/inventories/" + std::to_string(summonerId) + "/champion-mastery", "", auth->leagueHeader, "", "", auth->leaguePort);
+					std::string getChampions = http->Request("GET",
+						std::format("https://127.0.0.1/lol-champions/v1/inventories/{}/champions-minimal", summId), "", auth->leagueHeader, "", "", auth->leaguePort);
 
-					req2 = http->Request("GET", "https://127.0.0.1/lol-champions/v1/inventories/" + std::to_string(summonerId) + "/champions-minimal", "", auth->leagueHeader, "", "", auth->leaguePort);
-
-					added = false;
-					iChampsOwned = 0;
-					champsMinimal.clear();
-					champsMastery.clear();
-				}
-			}
-			if (req.find("errorCode") != std::string::npos || req2.find("errorCode") != std::string::npos || req == "[]")
-			{
-				ImGui::TextWrapped("%s", req.c_str());
-
-				ImGui::TextWrapped("%s", req2.c_str());
-			}
-			else
-			{
-				if (!added)
-				{
-					if (reader->parse(req2.c_str(), req2.c_str() + static_cast<int>(req2.length()), &root, &err))
+					if (reader->parse(getChampions.c_str(), getChampions.c_str() + static_cast<int>(getChampions.length()), &root, &err))
 					{
-						for (Json::Value::ArrayIndex i = 0; i < root.size(); ++i)
-						{
-							auto champObj = root[i];
-							ChampMinimal champ;
-
-							champ.active = champObj["active"].asBool();
-							champ.alias = champObj["alias"].asString();
-							champ.banVoPath = champObj["banVoPath"].asString();
-							champ.baseLoadScreenPath = champObj["baseLoadScreenPath"].asString();
-							champ.botEnabled = champObj["botEnabled"].asBool();
-							champ.chooseVoPath = champObj["chooseVoPath"].asString();
-							champ.freeToPlay = champObj["freeToPlay"].asBool();
-							champ.id = champObj["id"].asInt();
-							champ.name = champObj["name"].asString();
-							auto ownershipObj = champObj["ownership"];
-							champ.freeToPlayReward = ownershipObj["freeToPlayReward"].asBool();
-							champ.owned = ownershipObj["owned"].asInt();
-							if (champ.owned)
-								iChampsOwned++;
-							champ.purchased = std::to_string(champObj["purchased"].asInt64()).c_str();
-							champ.rankedPlayEnabled = champObj["rankedPlayEnabled"].asBool();
-							//auto rolesObj = champObj.GetObject("roles"); //todo
-							champ.squarePortraitPath = champObj["squarePortraitPath"].asString();
-							champ.stingerSfxPath = champObj["stingerSfxPath"].asString();
-							champ.title = champObj["title"].asString();
-
-							champsMinimal.emplace_back(champ);
-						}
-
-						if (reader->parse(req.c_str(), req.c_str() + static_cast<int>(req.length()), &root, &err))
+						if (root.isArray())
 						{
 							for (Json::Value::ArrayIndex i = 0; i < root.size(); ++i)
 							{
 								auto champObj = root[i];
+								ChampMinimal champ;
+
+								champ.active = champObj["active"].asBool();
+								champ.alias = champObj["alias"].asString();
+								champ.banVoPath = champObj["banVoPath"].asString();
+								champ.baseLoadScreenPath = champObj["baseLoadScreenPath"].asString();
+								champ.botEnabled = champObj["botEnabled"].asBool();
+								champ.chooseVoPath = champObj["chooseVoPath"].asString();
+								champ.freeToPlay = champObj["freeToPlay"].asBool();
+								champ.id = champObj["id"].asInt();
+								champ.name = champObj["name"].asString();
+								auto ownershipObj = champObj["ownership"];
+								champ.freeToPlayReward = ownershipObj["freeToPlayReward"].asBool();
+								champ.owned = ownershipObj["owned"].asInt();
+								if (champ.owned)
+									iChampsOwned++;
+								champ.purchased = std::to_string(champObj["purchased"].asInt64()).c_str();
+								champ.rankedPlayEnabled = champObj["rankedPlayEnabled"].asBool();
+								//auto rolesObj = champObj.GetObject("roles"); //todo
+								champ.squarePortraitPath = champObj["squarePortraitPath"].asString();
+								champ.stingerSfxPath = champObj["stingerSfxPath"].asString();
+								champ.title = champObj["title"].asString();
+
+								champsMinimal.emplace_back(champ);
+							}
+						}
+					}
+
+					std::string getCollections = http->Request("GET",
+						std::format("https://127.0.0.1/lol-collections/v1/inventories/{}/champion-mastery", summId), "", auth->leagueHeader, "", "", auth->leaguePort);
+
+					if (reader->parse(getCollections.c_str(), getCollections.c_str() + static_cast<int>(getCollections.length()), &root, &err))
+					{
+						if (root.isArray())
+						{
+							for (Json::Value::ArrayIndex j = 0; j < root.size(); ++j)
+							{
+								auto champObj = root[j];
 
 								ChampMastery champ;
 								champ.championId = champObj["championId"].asInt();
@@ -100,65 +105,98 @@ public:
 								champ.formattedChampionPoints = champObj["formattedChampionPoints"].asString();
 								champ.formattedMasteryGoal = champObj["formattedMasteryGoal"].asString();
 								champ.highestGrade = champObj["highestGrade"].asString();
-								champ.lastPlayTime = std::to_string(champObj["lastPlayTime"].asInt64()).c_str();
+								champ.lastPlayTime = std::to_string(champObj["lastPlayTime"].asUInt64()).c_str();
 								champ.playerId = std::to_string(champObj["playerId"].asInt64()).c_str();
 								champ.tokensEarned = champObj["tokensEarned"].asInt();
 
 								champsMastery.emplace_back(champ);
 							}
-							//sort alphabetcally
-							std::sort(champsMinimal.begin(), champsMinimal.end(), [](const ChampMinimal& lhs, const ChampMinimal& rhs) {
-								return lhs.name < rhs.name;
-								});
-							added = true;
 						}
 					}
 				}
 
-				ImGui::Text("Champions owned: %d", iChampsOwned);
-				for (auto min : champsMinimal)
+				champsAll.clear();
+
+				for (auto minimal : champsMinimal)
 				{
-					if (!min.owned)
-						continue;
-
-					ImGui::Separator();
-					ImGui::Text("name: %s", min.name.c_str());
-					int64_t t = std::stoll(min.purchased);
-					t /= 1000;
-					char buffer[50];
-					strftime(buffer, 100, "%Y-%m-%d %H:%M:%S", localtime(&t));
-					ImGui::Text("purchased: %s", buffer);
-					ImGui::Text("id: %d", min.id);
-					for (auto man : champsMastery)
+					ChampAll champ;
+					champ.min = minimal;
+					for (auto mastery : champsMastery)
 					{
-						if (min.id == man.championId)
+						if (minimal.id == mastery.championId)
 						{
-							ImGui::Text("championLevel: %d", man.championLevel);
-							ImGui::Text("championPoints: %d", man.championPoints);
-							ImGui::Text("championPointsSinceLastLevel: %d", man.championPointsSinceLastLevel);
-							ImGui::Text("championPointsUntilNextLevel: %d", man.championPointsUntilNextLevel);
-							ImGui::Text("chestGranted: %d", man.chestGranted);
-							ImGui::Text("formattedChampionPoints: %s", man.formattedChampionPoints.c_str());
-							ImGui::Text("formattedMasteryGoal: %s", man.formattedMasteryGoal.c_str());
-							ImGui::Text("highestGrade: %s", man.highestGrade.c_str());
-							t = std::stoll(man.lastPlayTime);
-							t /= 1000;
-							strftime(buffer, 100, "%Y-%m-%d %H:%M:%S", localtime(&t));
-							ImGui::Text("lastPlayTime: %s", buffer);
-							ImGui::Text("playerId: %s", man.playerId.c_str());
-							ImGui::Text("tokensEarned: %d", man.tokensEarned);
-
-							break;
+							champ.mas = mastery;
 						}
 					}
+					champsAll.emplace_back(champ);
 				}
 			}
 
-			//ImGui::TextWrapped(req.c_str());
-			champsOpen = false;
+			if ((iLastSort != iSort) || bSortOnOpen)
+			{
+				bSortOnOpen = false;
+				iLastSort = iSort;
+				switch (iSort)
+				{
+					// alphabetically
+				case 0:
+					std::sort(champsAll.begin(), champsAll.end(), [](const ChampAll& lhs, const ChampAll& rhs) {
+						return lhs.min.name < rhs.min.name;
+						});
+					break;
+					// purchase date
+				case 1:
+					std::sort(champsAll.begin(), champsAll.end(), [](const ChampAll& lhs, const ChampAll& rhs) {
+						return std::stoll(lhs.min.purchased) < std::stoll(rhs.min.purchased);
+						});
+					break;
+					// mastery points
+				case 2:
+					std::sort(champsAll.begin(), champsAll.end(), [](const ChampAll& lhs, const ChampAll& rhs) {
+						return lhs.mas.championPoints > rhs.mas.championPoints;
+						});
+					break;
+				}
+			}
+
+			ImGui::Separator();
+			ImGui::Text("Champions owned: %d", iChampsOwned);
+			for (auto champ : champsAll)
+			{
+				if (!champ.min.owned)
+					continue;
+
+				ImGui::Separator();
+				ImGui::Text("name: %s", champ.min.name.c_str());
+				int64_t t = std::stoll(champ.min.purchased);
+				t /= 1000;
+				char buffer[50];
+				strftime(buffer, 100, "%Y-%m-%d %H:%M:%S", localtime(&t));
+				ImGui::Text("purchased: %s", buffer);
+				ImGui::Text("id: %d", champ.min.id);
+
+				if (champ.mas.lastPlayTime.empty())
+					continue;
+
+				ImGui::Text("championLevel: %d", champ.mas.championLevel);
+				ImGui::Text("championPoints: %d", champ.mas.championPoints);
+				ImGui::Text("championPointsSinceLastLevel: %d", champ.mas.championPointsSinceLastLevel);
+				ImGui::Text("championPointsUntilNextLevel: %d", champ.mas.championPointsUntilNextLevel);
+				ImGui::Text("chestGranted: %d", champ.mas.chestGranted);
+				ImGui::Text("formattedChampionPoints: %s", champ.mas.formattedChampionPoints.c_str());
+				ImGui::Text("formattedMasteryGoal: %s", champ.mas.formattedMasteryGoal.c_str());
+				ImGui::Text("highestGrade: %s", champ.mas.highestGrade.c_str());
+				t = std::stoll(champ.mas.lastPlayTime);
+				t /= 1000;
+				strftime(buffer, 100, "%Y-%m-%d %H:%M:%S", localtime(&t));
+				ImGui::Text("lastPlayTime: %s", buffer);
+				ImGui::Text("playerId: %s", champ.mas.playerId.c_str());
+				ImGui::Text("tokensEarned: %d", champ.mas.tokensEarned);
+			}
+
 			ImGui::EndTabItem();
 		}
 		else
-			champsOpen = true;
+			bOnOpen = true;
 	}
 };

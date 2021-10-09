@@ -33,7 +33,7 @@ struct ChampMastery
 {
 	int championId;
 	int championLevel;
-	int championPoints;
+	int championPoints = 0;
 	int championPointsSinceLastLevel;
 	int championPointsUntilNextLevel;
 	bool chestGranted;
@@ -45,8 +45,15 @@ struct ChampMastery
 	int tokensEarned;
 };
 
+struct ChampAll
+{
+	ChampMinimal min;
+	ChampMastery mas;
+};
+
 inline std::vector<ChampMinimal>champsMinimal;
 inline std::vector<ChampMastery>champsMastery;
+inline std::vector<ChampAll>champsAll;
 
 enum QueueID : const int
 {

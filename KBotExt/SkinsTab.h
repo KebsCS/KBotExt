@@ -16,6 +16,9 @@ public:
 			static std::string result;
 			static Json::Value root;
 
+			// todo improve performance
+			// and combobox to sort by name, date etc
+
 			if (skinsOpen)
 			{
 				skinsOpen = false;

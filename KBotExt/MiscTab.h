@@ -12,6 +12,70 @@
 class MiscTab
 {
 public:
+
+	static std::string LevenshteinDistance(std::vector<std::string>vec, std::string str2)
+	{
+		int max = 999;
+		std::string bestMatch;
+
+		for (std::string str1 : vec)
+		{
+			int l_string_length1 = str1.length();
+			int l_string_length2 = str2.length();
+			int d[50 + 1][50 + 1];
+
+			int i;
+			int j;
+			int l_cost;
+
+			for (i = 0; i <= l_string_length1; i++)
+			{
+				d[i][0] = i;
+			}
+			for (j = 0; j <= l_string_length2; j++)
+			{
+				d[0][j] = j;
+			}
+			for (i = 1; i <= l_string_length1; i++)
+			{
+				for (j = 1; j <= l_string_length2; j++)
+				{
+					if (str1[i - 1] == str2[j - 1])
+					{
+						l_cost = 0;
+					}
+					else
+					{
+						l_cost = 1;
+					}
+					d[i][j] = (std::min)(
+						d[i - 1][j] + 1,                  // delete
+						(std::min)(d[i][j - 1] + 1,         // insert
+							d[i - 1][j - 1] + l_cost)           // substitution
+						);
+					if ((i > 1) &&
+						(j > 1) &&
+						(str1[i - 1] == str2[j - 2]) &&
+						(str1[i - 2] == str2[j - 1])
+						)
+					{
+						d[i][j] = (std::min)(
+							d[i][j],
+							d[i - 2][j - 2] + l_cost   // transposition
+							);
+					}
+				}
+			}
+
+			if (d[l_string_length1][l_string_length2] <= max)
+			{
+				max = d[l_string_length1][l_string_length2];
+				bestMatch = str1;
+			}
+		}
+		return bestMatch;
+	}
+
 	static void Render()
 	{
 		if (ImGui::BeginTabItem("Misc"))
@@ -201,6 +265,9 @@ public:
 				ImGui::EndCombo();
 			}
 
+			if (ImGui::Button("Check email of the account"))
+				result = http->Request("GET", "https://127.0.0.1/lol-email-verification/v1/email", "", auth->leagueHeader, "", "", auth->leaguePort);
+
 			//if (ImGui::Button("Skip tutorial"))
 			//{
 			//	http->Request("POST", "https://127.0.0.1/telemetry/v1/events/new_player_experience", R"({"eventName":"hide_screen","plugin":"rcp-fe-lol-new-player-experience","screenName":"npe_tutorial_modules"})", auth->leagueHeader, "", "", auth->leaguePort);
@@ -218,8 +285,39 @@ public:
 			*/
 
 			ImGui::Separator();
-			if (ImGui::Button("Check email of the account"))
-				result = http->Request("GET", "https://127.0.0.1/lol-email-verification/v1/email", "", auth->leagueHeader, "", "", auth->leaguePort);
+
+			// Getting closest champion name with Levenshtein distance algorithm and getting it's id
+			ImGui::Text("Champion name to ID");
+			static std::vector<std::string>champNames;
+			if (!champSkins.empty() && champNames.empty())
+			{
+				for (auto champ : champSkins)
+					champNames.emplace_back(champ.name);
+			}
+
+			static char bufChampionName[50];
+			static size_t lastSize = 0;
+			static std::string closestChampion;
+			static std::string closestId;
+			ImGui::SetNextItemWidth(S.Window.width / 3);
+			ImGui::InputText("##inputChampionName", bufChampionName, IM_ARRAYSIZE(bufChampionName));
+
+			if (lastSize != strlen(bufChampionName))
+			{
+				lastSize = strlen(bufChampionName);
+				closestChampion = LevenshteinDistance(champNames, bufChampionName);
+
+				for (auto champ : champSkins)
+				{
+					if (closestChampion == champ.name)
+					{
+						closestId = std::to_string(champ.key);
+						break;
+					}
+				}
+			}
+			ImGui::SameLine();
+			ImGui::TextWrapped("%s ID: %s", closestChampion.c_str(), closestId.c_str());
 
 			static Json::StreamWriterBuilder wBuilder;
 			static std::string sResultJson;
