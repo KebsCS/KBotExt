@@ -317,6 +317,7 @@ public:
 			ImGui::SliderInt("Delay##sliderInstalockDelay", &S.gameTab.instalockDelay, 0, 10000, "%d ms");
 
 			ImGui::NextColumn();
+			// todo
 			bool test11;
 			ImGui::Checkbox("Dodge on champion ban", &test11);
 
@@ -335,6 +336,7 @@ public:
 				}
 			}
 
+			// todo
 			if (ImGui::CollapsingHeader("Backup pick"))
 			{
 				ImGui::Text("None");

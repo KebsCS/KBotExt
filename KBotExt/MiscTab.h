@@ -121,6 +121,10 @@ public:
 			if (ImGui::Button("Close client"))
 				result = http->Request("POST", "https://127.0.0.1/process-control/v1/process/quit", "", auth->leagueHeader, "", "", auth->leaguePort);
 
+			ImGui::SameLine();
+			if (ImGui::Button("Force close client"))
+				Misc::TaskKillLeague();
+
 			ImGui::Columns(1);
 
 			ImGui::Separator();

@@ -55,6 +55,20 @@ inline std::vector<ChampMinimal>champsMinimal;
 inline std::vector<ChampMastery>champsMastery;
 inline std::vector<ChampAll>champsAll;
 
+struct Skin
+{
+	std::string name;
+	std::string inventoryType;
+	int itemId;
+	std::string ownershipType;
+	bool isVintage;
+	std::string purchaseDate;
+	int qunatity;
+	std::string uuid;
+};
+
+inline std::vector<Skin>ownedSkins;
+
 enum QueueID : const int
 {
 	DraftPick = 400,

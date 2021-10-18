@@ -86,9 +86,8 @@ public:
 		return "0.0.0";
 	}
 
-	static std::string ClearLogs()
+	static void TaskKillLeague()
 	{
-		std::string result = "";
 		Misc::TerminateProcessByName("RiotClientServices.exe");
 		Misc::TerminateProcessByName("RiotClientCrashHandler.exe");
 		Misc::TerminateProcessByName("RiotClientUx.exe");
@@ -98,6 +97,13 @@ public:
 		Misc::TerminateProcessByName("LeagueCrashHandler.exe");
 		Misc::TerminateProcessByName("LeagueClientUx.exe");
 		Misc::TerminateProcessByName("LeagueClientUxRender.exe");
+	}
+
+	static std::string ClearLogs()
+	{
+		std::string result = "";
+
+		TaskKillLeague();
 
 		std::this_thread::sleep_for(std::chrono::seconds(2));
 

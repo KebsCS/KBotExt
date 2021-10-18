@@ -28,6 +28,8 @@ public:
 			ImGui::RadioButton("Purchase date", &iSort, 1);
 			ImGui::SameLine();
 			ImGui::RadioButton("Mastery points", &iSort, 2);
+			ImGui::SameLine();
+			ImGui::RadioButton("ID", &iSort, 3);
 
 			if (bOnOpen)
 			{
@@ -154,6 +156,12 @@ public:
 				case 2:
 					std::sort(champsAll.begin(), champsAll.end(), [](const ChampAll& lhs, const ChampAll& rhs) {
 						return lhs.mas.championPoints > rhs.mas.championPoints;
+						});
+					break;
+					// id
+				case 3:
+					std::sort(champsAll.begin(), champsAll.end(), [](const ChampAll& lhs, const ChampAll& rhs) {
+						return lhs.min.id < rhs.min.id;
 						});
 					break;
 				}
