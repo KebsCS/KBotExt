@@ -1,7 +1,5 @@
 #pragma once
 
-#include <filesystem>
-
 #include "Definitions.h"
 #include "Includes.h"
 #include "HTTP.h"
@@ -269,9 +267,6 @@ public:
 				ImGui::EndCombo();
 			}
 
-			if (ImGui::Button("Check email of the account"))
-				result = http->Request("GET", "https://127.0.0.1/lol-email-verification/v1/email", "", auth->leagueHeader, "", "", auth->leaguePort);
-
 			//if (ImGui::Button("Skip tutorial"))
 			//{
 			//	http->Request("POST", "https://127.0.0.1/telemetry/v1/events/new_player_experience", R"({"eventName":"hide_screen","plugin":"rcp-fe-lol-new-player-experience","screenName":"npe_tutorial_modules"})", auth->leagueHeader, "", "", auth->leaguePort);
@@ -289,6 +284,70 @@ public:
 			*/
 
 			ImGui::Separator();
+
+			static std::vector<std::pair<std::string, std::string>>itemsDisenchant = {
+	{"Champion shards","CHAMPION_RENTAL"}, {"Champion pernaments","CHAMPION"},
+	{"Skin shards","CHAMPION_SKIN_RENTAL"}, {"Skin pernaments", "CHAMPION_SKIN"},
+	{"Eternals","STATSTONE_SHARD"},{"Wards","WARDSKIN_RENTAL"}
+			};
+			static size_t itemIndexDisenchant = 0;
+			const char* comboDisenchant = itemsDisenchant[itemIndexDisenchant].first.c_str();
+
+			if (ImGui::Button("Disenchant all: "))
+			{
+				Json::Value root;
+				Json::CharReaderBuilder builder;
+				const std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
+				JSONCPP_STRING err;
+				std::string getLoot = http->Request("GET", "https://127.0.0.1/lol-loot/v1/player-loot-map", "", auth->leagueHeader, "", "", auth->leaguePort);
+
+				if (reader->parse(getLoot.c_str(), getLoot.c_str() + static_cast<int>(getLoot.length()), &root, &err))
+				{
+					if (MessageBoxA(0, "Are you sure?", 0, MB_OKCANCEL) == IDOK)
+					{
+						int i = 0;
+
+						for (std::string name : root.getMemberNames())
+						{
+							std::regex regexStr("^" + itemsDisenchant[itemIndexDisenchant].second + "_[\\d]+");
+
+							if (std::regex_match(name, regexStr))
+							{
+								std::string disenchantCase = itemsDisenchant[itemIndexDisenchant].second == "STATSTONE_SHARD" ? "DISENCHANT" : "disenchant";
+
+								std::string disenchantName = itemsDisenchant[itemIndexDisenchant].second;
+								if (itemsDisenchant[itemIndexDisenchant].second == "CHAMPION_SKIN_RENTAL")
+									disenchantName = "SKIN_RENTAL";
+
+								std::string disenchantUrl = std::format("https://127.0.0.1/lol-loot/v1/recipes/{0}_{1}/craft?repeat=1", disenchantName, disenchantCase);
+								std::string disenchantBody = std::format(R"(["{}"])", name).c_str();
+								http->Request("POST", disenchantUrl, disenchantBody, auth->leagueHeader, "", "", auth->leaguePort);
+								i++;
+							}
+						}
+						result = std::format("Disenchanted {0} {1}", std::to_string(i), itemsDisenchant[itemIndexDisenchant].first);
+					}
+				}
+				else
+					result = "Loot not found";
+			}
+
+			ImGui::SameLine();
+
+			ImGui::SetNextItemWidth(S.Window.width / 3);
+			if (ImGui::BeginCombo("##comboDisenchant", comboDisenchant, 0))
+			{
+				for (size_t n = 0; n < itemsDisenchant.size(); n++)
+				{
+					const bool is_selected = (itemIndexDisenchant == n);
+					if (ImGui::Selectable(itemsDisenchant[n].first.c_str(), is_selected))
+						itemIndexDisenchant = n;
+
+					if (is_selected)
+						ImGui::SetItemDefaultFocus();
+				}
+				ImGui::EndCombo();
+			}
 
 			// Getting closest champion name with Levenshtein distance algorithm and getting it's id
 			ImGui::Text("Champion name to ID");
@@ -322,6 +381,9 @@ public:
 			}
 			ImGui::SameLine();
 			ImGui::TextWrapped("%s ID: %s", closestChampion.c_str(), closestId.c_str());
+
+			if (ImGui::Button("Check email of the account"))
+				result = http->Request("GET", "https://127.0.0.1/lol-email-verification/v1/email", "", auth->leagueHeader, "", "", auth->leaguePort);
 
 			static Json::StreamWriterBuilder wBuilder;
 			static std::string sResultJson;

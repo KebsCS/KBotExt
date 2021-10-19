@@ -10,14 +10,26 @@ class SkinsTab
 public:
 	static void Render()
 	{
-		//todo add sorting
-
 		static bool bOnOpen = true;
+		static bool bSortOnOpen = false;
+
 		if (ImGui::BeginTabItem("Skins"))
 		{
+			ImGui::Text("Sort by: ");
+			ImGui::SameLine();
+
+			static int iSort = 0;
+			static short iLastSort = -1;
+			ImGui::RadioButton("Alphabetically", &iSort, 0);
+			ImGui::SameLine();
+			ImGui::RadioButton("Purchase date", &iSort, 1);
+			ImGui::SameLine();
+			ImGui::RadioButton("ID", &iSort, 2);
+
 			if (bOnOpen)
 			{
 				bOnOpen = false;
+				bSortOnOpen = true;
 				ownedSkins.clear();
 
 				static Json::Value root;
@@ -39,7 +51,14 @@ public:
 							skin.itemId = root[i]["itemId"].asInt();
 							skin.ownershipType = root[i]["ownershipType"].asString().c_str();
 							skin.isVintage = root[i]["payload"]["isVintage"].asBool();
-							skin.purchaseDate = root[i]["purchaseDate"].asString().c_str();
+
+							std::string purchase = root[i]["purchaseDate"].asString().c_str();
+							sscanf(purchase.c_str(), "%04d%02d%02dT%02d%02d%02d",
+								&skin.purchaseDate.tm_year, &skin.purchaseDate.tm_mon, &skin.purchaseDate.tm_mday,
+								&skin.purchaseDate.tm_hour, &skin.purchaseDate.tm_min, &skin.purchaseDate.tm_sec);
+							skin.purchaseDate.tm_year -= 1901;
+							skin.purchaseDate.tm_mon -= 1;
+
 							skin.qunatity = root[i]["quantity"].asInt();
 							skin.uuid = root[i]["uuid"].asString().c_str();
 
@@ -67,6 +86,34 @@ public:
 				}
 			}
 
+			if ((iLastSort != iSort) || bSortOnOpen)
+			{
+				bSortOnOpen = false;
+				iLastSort = iSort;
+				switch (iSort)
+				{
+					// alphabetically
+				case 0:
+					std::sort(ownedSkins.begin(), ownedSkins.end(), [](const Skin& lhs, const Skin& rhs) {
+						return lhs.name < rhs.name;
+						});
+					break;
+					// purchase date
+				case 1:
+					std::sort(ownedSkins.begin(), ownedSkins.end(), [](Skin& lhs, Skin& rhs) {
+						return mktime(&lhs.purchaseDate) < mktime(&rhs.purchaseDate);
+						});
+					break;
+					// id
+				case 2:
+					std::sort(ownedSkins.begin(), ownedSkins.end(), [](const Skin& lhs, const Skin& rhs) {
+						return lhs.itemId < rhs.itemId;
+						});
+					break;
+				}
+			}
+
+			ImGui::Separator();
 			ImGui::Text("Skins owned: %d", ownedSkins.size());
 
 			for (Skin skin : ownedSkins)
@@ -80,27 +127,10 @@ public:
 				ImGui::Text("itemId: %d", skin.itemId);
 				ImGui::Text("ownershipType: %s", skin.ownershipType.c_str());
 				ImGui::Text("isVintage: %d", skin.isVintage);
-				ImGui::Text("purchaseDate: %s", skin.purchaseDate.c_str());
 
-				/*std::string purchaseDateFormatted = root[i]["purchaseDate"].asString();
-				size_t fintTPos = purchaseDateFormatted.find("T");
-				size_t finddDotPos = purchaseDateFormatted.find(".");
-				size_t findMinusPos = purchaseDateFormatted.find("-");
-				if (findMinusPos == std::string::npos)
-				{
-					purchaseDateFormatted = purchaseDateFormatted.substr(0, finddDotPos);
-					purchaseDateFormatted.insert(4, "-");
-					purchaseDateFormatted.insert(7, "-");
-					purchaseDateFormatted.replace(fintTPos + 2, 1, " ");
-					purchaseDateFormatted.insert(fintTPos + 2 + 3, ":");
-					purchaseDateFormatted.insert(fintTPos + 2 + 3 + 3, ":");
-				}
-				else
-				{
-					purchaseDateFormatted = purchaseDateFormatted.substr(0, finddDotPos);
-					purchaseDateFormatted.replace(fintTPos, 1, " ");
-				}
-				ImGui::Text("purchaseDate: %s", purchaseDateFormatted.c_str());*/
+				char timeBuff[50];
+				strftime(timeBuff, sizeof(timeBuff), "%G-%m-%e %H:%M:%S", &skin.purchaseDate);
+				ImGui::Text("purchaseDate: %s", timeBuff);
 
 				ImGui::Text("quantity: %d", skin.qunatity);
 				ImGui::Text("uuid: %s", skin.uuid.c_str());

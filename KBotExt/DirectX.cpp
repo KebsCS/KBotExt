@@ -4,7 +4,6 @@
 #include "InfoTab.h"
 #include "LoginTab.h"
 #include "ProfileTab.h"
-#include "LootTab.h"
 #include "MiscTab.h"
 #include "CustomTab.h"
 #include "InvokeTab.h"
@@ -139,8 +138,6 @@ int Direct3D9Render::Render()
 			ChampsTab::Render();
 
 			SkinsTab::Render();
-
-			LootTab::Render();
 
 			MiscTab::Render();
 

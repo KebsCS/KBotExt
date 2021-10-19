@@ -90,6 +90,8 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <AdditionalIncludeDirectories>$(SolutionDir)\KBotExt;$(SolutionDir)\KBotExt\imgui;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -209,7 +211,6 @@
     <ClInclude Include="json\version.h" />
     <ClInclude Include="json\writer.h" />
     <ClInclude Include="LoginTab.h" />
-    <ClInclude Include="LootTab.h" />
     <ClInclude Include="Misc.h" />
     <ClInclude Include="MiscTab.h" />
     <ClInclude Include="NtQueryInfoProc.h" />

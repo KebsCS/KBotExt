@@ -62,7 +62,7 @@ struct Skin
 	int itemId;
 	std::string ownershipType;
 	bool isVintage;
-	std::string purchaseDate;
+	tm purchaseDate;
 	int qunatity;
 	std::string uuid;
 };

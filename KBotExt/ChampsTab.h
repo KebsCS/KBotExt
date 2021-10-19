@@ -14,7 +14,7 @@ public:
 	{
 		static bool bOnOpen = true;
 		static unsigned iChampsOwned = 0;
-		bool bSortOnOpen = false;
+		static bool bSortOnOpen = false;
 
 		if (ImGui::BeginTabItem("Champs"))
 		{
