@@ -351,7 +351,17 @@ public:
 
 			ImGui::Columns(1);
 
-			std::string chosenInstalock = "Instalock champ \t\tChosen: " + Misc::ChampIdToName(S.gameTab.instalockId) + "###AnimatedInstalock";
+			static bool isStillDownloading = true;
+			if (!champSkins.empty())
+				isStillDownloading = false;
+
+			static std::string chosenInstalock = "Instalock champ \t\tChosen: " + Misc::ChampIdToName(S.gameTab.instalockId) + "###AnimatedInstalock";
+			static int lastInstalockId = 0;
+			if ((lastInstalockId != S.gameTab.instalockId) && !isStillDownloading)
+			{
+				lastInstalockId = S.gameTab.instalockId;
+				chosenInstalock = "Instalock champ \t\tChosen: " + Misc::ChampIdToName(S.gameTab.instalockId) + "###AnimatedInstalock";
+			}
 			if (ImGui::CollapsingHeader(chosenInstalock.c_str()))
 			{
 				std::vector<std::pair<int, std::string>>instalockChamps = GetInstalockChamps();
@@ -365,7 +375,13 @@ public:
 				}
 			}
 
-			std::string chosenBackup = "Backup pick \t\t\tChosen: " + Misc::ChampIdToName(S.gameTab.backupId) + "###AnimatedBackup";
+			static std::string chosenBackup = "Backup pick \t\t\tChosen: " + Misc::ChampIdToName(S.gameTab.backupId) + "###AnimatedBackup";
+			static int lastBackupId = 0;
+			if ((lastBackupId != S.gameTab.backupId) && !isStillDownloading)
+			{
+				lastBackupId = S.gameTab.backupId;
+				chosenBackup = "Backup pick \t\t\tChosen: " + Misc::ChampIdToName(S.gameTab.backupId) + "###AnimatedBackup";
+			}
 			if (ImGui::CollapsingHeader(chosenBackup.c_str()))
 			{
 				ImGui::Text("None");
@@ -382,7 +398,13 @@ public:
 				}
 			}
 
-			std::string chosenAutoban = "Auto ban\t\t\t\tChosen: " + Misc::ChampIdToName(S.gameTab.autoBanId) + "###AnimatedAutoban";
+			static std::string chosenAutoban = "Auto ban\t\t\t\tChosen: " + Misc::ChampIdToName(S.gameTab.autoBanId) + "###AnimatedAutoban";
+			static int lastAutoban = 0;
+			if ((lastAutoban != S.gameTab.autoBanId) && !isStillDownloading)
+			{
+				lastAutoban = S.gameTab.autoBanId;
+				chosenAutoban = "Auto ban\t\t\t\tChosen: " + Misc::ChampIdToName(S.gameTab.autoBanId) + "###AnimatedAutoban";
+			}
 			if (ImGui::CollapsingHeader(chosenAutoban.c_str()))
 			{
 				if (champSkins.empty())
