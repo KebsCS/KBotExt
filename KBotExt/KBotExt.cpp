@@ -25,7 +25,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 {
 	LPWSTR* szArgList;
 	int argCount;
-	szArgList = CommandLineToArgvW(GetCommandLine(), &argCount);
+	szArgList = CommandLineToArgvW(GetCommandLineW(), &argCount);
 	if (argCount > 1)
 	{
 		std::string applicationName = utils->WstringToString(szArgList[1]);

@@ -100,7 +100,7 @@ public:
 					break;
 					// purchase date
 				case 1:
-					std::sort(ownedSkins.begin(), ownedSkins.end(), [](Skin& lhs, Skin& rhs) {
+					std::sort(ownedSkins.begin(), ownedSkins.end(), [](Skin lhs, Skin rhs) {
 						return mktime(&lhs.purchaseDate) < mktime(&rhs.purchaseDate);
 						});
 					break;
@@ -129,7 +129,7 @@ public:
 				ImGui::Text("isVintage: %d", skin.isVintage);
 
 				char timeBuff[50];
-				strftime(timeBuff, sizeof(timeBuff), "%G-%m-%e %H:%M:%S", &skin.purchaseDate);
+				strftime(timeBuff, sizeof(timeBuff), "%G-%m-%d %H:%M:%S", &skin.purchaseDate);
 				ImGui::Text("purchaseDate: %s", timeBuff);
 
 				ImGui::Text("quantity: %d", skin.qunatity);

@@ -225,14 +225,15 @@ public:
 
 			ImGui::Separator();
 
-			// todo invite everyone from friendlist to lobby button
-
 			ImGui::Columns(3, 0, false);
 			if (ImGui::Button("Start queue"))
 			{
 				result = http->Request("POST", "https://127.0.0.1/lol-lobby/v2/lobby/matchmaking/search", "", auth->leagueHeader, "", "", auth->leaguePort);
 			}
 			ImGui::NextColumn();
+
+			// if you press this during queue search you wont be able to start the queue again
+			// unless you reenter the lobby :)
 			if (ImGui::Button("Dodge"))
 			{
 				result = http->Request("POST", R"(https://127.0.0.1/lol-login/v1/session/invoke?destination=lcdsServiceProxy&method=call&args=["","teambuilder-draft","quitV2",""])", "", auth->leagueHeader, "", "", auth->leaguePort);
@@ -290,7 +291,34 @@ public:
 
 			ImGui::Separator();
 
+			ImGui::Columns(3, 0, false);
 			ImGui::Checkbox("Auto accept", &S.gameTab.autoAcceptEnabled);
+
+			ImGui::NextColumn();
+			if (ImGui::Button("Invite everyone to lobby"))
+			{
+				std::string getFriends = http->Request("GET", "https://127.0.0.1/lol-chat/v1/friends", "", auth->leagueHeader, "", "", auth->leaguePort);
+
+				Json::CharReaderBuilder builder;
+				const std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
+				JSONCPP_STRING err;
+				Json::Value root;
+				if (reader->parse(getFriends.c_str(), getFriends.c_str() + static_cast<int>(getFriends.length()), &root, &err))
+				{
+					if (root.isArray())
+					{
+						for (Json::Value::ArrayIndex i = 0; i < root.size(); ++i)
+						{
+							std::string friendSummId = root[i]["summonerId"].asString();
+							std::string inviteBody = "[{\"toSummonerId\":" + friendSummId + "}]";
+							http->Request("POST", "https://127.0.0.1/lol-lobby/v2/lobby/invitations", inviteBody,
+								auth->leagueHeader, "", "", auth->leaguePort);
+						}
+						result = "Invited friends to lobby";
+					}
+				}
+			}
+			ImGui::Columns(1);
 
 			ImGui::Columns(2, 0, false);
 
@@ -315,13 +343,16 @@ public:
 			ImGui::SliderInt("Delay##sliderInstalockDelay", &S.gameTab.instalockDelay, 0, 10000, "%d ms");
 
 			ImGui::NextColumn();
-			// todo
-			bool test11;
-			ImGui::Checkbox("Dodge on champion ban", &test11);
+
+			ImGui::Checkbox("Dodge on champion ban", &S.gameTab.dodgeOnBan);
+
+			ImGui::SameLine();
+			Misc::HelpMarker("Ignores backup pick");
 
 			ImGui::Columns(1);
 
-			if (ImGui::CollapsingHeader("Instalock champ"))
+			std::string chosenInstalock = "Instalock champ \t\tChosen: " + Misc::ChampIdToName(S.gameTab.instalockId) + "###AnimatedInstalock";
+			if (ImGui::CollapsingHeader(chosenInstalock.c_str()))
 			{
 				std::vector<std::pair<int, std::string>>instalockChamps = GetInstalockChamps();
 				for (auto champ : instalockChamps)
@@ -334,12 +365,12 @@ public:
 				}
 			}
 
-			// todo
-			if (ImGui::CollapsingHeader("Backup pick"))
+			std::string chosenBackup = "Backup pick \t\t\tChosen: " + Misc::ChampIdToName(S.gameTab.backupId) + "###AnimatedBackup";
+			if (ImGui::CollapsingHeader(chosenBackup.c_str()))
 			{
 				ImGui::Text("None");
 				ImGui::SameLine();
-				//ImGui::RadioButton("##noneBackupPick", &S.gameTab.backupId, 0);
+				ImGui::RadioButton("##noneBackupPick", &S.gameTab.backupId, 0);
 				std::vector<std::pair<int, std::string>>instalockChamps = GetInstalockChamps();
 				for (auto champ : instalockChamps)
 				{
@@ -347,13 +378,12 @@ public:
 					sprintf_s(bufchamp, "##Select %s", champ.second.c_str());
 					ImGui::Text("%s", champ.second.c_str());
 					ImGui::SameLine();
-					//ImGui::RadioButton(bufchamp, &S.gameTab.backupId, champ.first);
+					ImGui::RadioButton(bufchamp, &S.gameTab.backupId, champ.first);
 				}
 			}
 
-			// todo: backup pick or dodge
-
-			if (ImGui::CollapsingHeader("Auto ban"))
+			std::string chosenAutoban = "Auto ban\t\t\t\tChosen: " + Misc::ChampIdToName(S.gameTab.autoBanId) + "###AnimatedAutoban";
+			if (ImGui::CollapsingHeader(chosenAutoban.c_str()))
 			{
 				if (champSkins.empty())
 				{
@@ -470,13 +500,22 @@ public:
 		std::string getChat = http->Request("GET", "https://127.0.0.1/lol-chat/v1/conversations", "", auth->leagueHeader, "", "", auth->leaguePort);
 		if (reader->parse(getChat.c_str(), getChat.c_str() + static_cast<int>(getChat.length()), &root, &err))
 		{
-			std::string lobbyID = root[0]["id"].asString();
-			std::string request = "https://127.0.0.1/lol-chat/v1/conversations/" + lobbyID + "/messages";
-			std::string error = "errorCode";
-			while (error.find("errorCode") != std::string::npos)
+			if (root.isArray())
 			{
-				error = http->Request("POST", request, R"({"type":"chat", "body":")" + std::string(S.gameTab.instantMessage) + R"("})", auth->leagueHeader, "", "", auth->leaguePort);
-				std::this_thread::sleep_for(std::chrono::milliseconds(1));
+				for (Json::Value::ArrayIndex i = 0; i < root.size(); i++)
+				{
+					if (root[i]["type"].asString() != "championSelect")
+						continue;
+					std::string lobbyID = root[i]["id"].asString();
+					std::string request = "https://127.0.0.1/lol-chat/v1/conversations/" + lobbyID + "/messages";
+					std::string error = "errorCode";
+					while (error.find("errorCode") != std::string::npos)
+					{
+						error = http->Request("POST", request, R"({"type":"chat", "body":")" + std::string(S.gameTab.instantMessage) + R"("})", auth->leagueHeader, "", "", auth->leaguePort);
+						std::this_thread::sleep_for(std::chrono::milliseconds(1));
+					}
+					break;
+				}
 			}
 		}
 	}
@@ -489,7 +528,7 @@ public:
 			{
 				if (::FindWindowA("RCLIENT", "League of Legends"))
 				{
-					if (S.gameTab.autoAcceptEnabled || S.gameTab.autoBanId || (S.gameTab.instalockEnabled && S.gameTab.instalockId))
+					if (S.gameTab.autoAcceptEnabled || S.gameTab.autoBanId || (S.gameTab.dodgeOnBan && S.gameTab.instalockEnabled) || (S.gameTab.instalockEnabled && S.gameTab.instalockId))
 					{
 						Json::Value rootSearch;
 						Json::Value rootChampSelect;
@@ -502,6 +541,7 @@ public:
 						{
 							static bool foundCell = false;
 							static bool sendMessage = true;
+							static int useBackupId = 0;
 							std::string searchState = rootSearch["searchState"].asString();
 							if (searchState == "Found")
 							{
@@ -510,15 +550,43 @@ public:
 								{
 									foundCell = false;
 									sendMessage = true;
+									useBackupId = 0;
 									if (S.gameTab.autoAcceptEnabled)
 									{
 										http->Request("POST", "https://127.0.0.1/lol-matchmaking/v1/ready-check/accept", "", auth->leagueHeader, "", "", auth->leaguePort);
 									}
+									std::this_thread::sleep_for(std::chrono::milliseconds(100));
 								}
 								else
 								{
 									if (reader->parse(getChampSelect.c_str(), getChampSelect.c_str() + static_cast<int>(getChampSelect.length()), &rootChampSelect, &err))
 									{
+										//if (S.gameTab.dodgeOnBan && S.gameTab.instalockId && S.gameTab.instalockEnabled)
+										//{
+										//	// empty on draft? look within actions
+										//	auto myTeamBans = rootChampSelect["bans"]["myTeamBans"];
+										//	if (myTeamBans.isArray())
+										//	{
+										//		for (Json::Value::ArrayIndex i = 0; i < myTeamBans.size(); i++)
+										//		{
+										//			if (myTeamBans[i].asInt() == S.gameTab.instalockId)
+										//			{
+										//				http->Request("POST", R"(https://127.0.0.1/lol-login/v1/session/invoke?destination=lcdsServiceProxy&method=call&args=["","teambuilder-draft","quitV2",""])", "", auth->leagueHeader, "", "", auth->leaguePort);
+										//			}
+										//		}
+										//	}
+										//	auto theirTeamBans = rootChampSelect["bans"]["theirTeamBans"];
+										//	if (theirTeamBans.isArray())
+										//	{
+										//		for (Json::Value::ArrayIndex i = 0; i < theirTeamBans.size(); i++)
+										//		{
+										//			if (theirTeamBans[i].asInt() == S.gameTab.instalockId)
+										//			{
+										//				http->Request("POST", R"(https://127.0.0.1/lol-login/v1/session/invoke?destination=lcdsServiceProxy&method=call&args=["","teambuilder-draft","quitV2",""])", "", auth->leagueHeader, "", "", auth->leaguePort);
+										//			}
+										//		}
+										//	}
+										//}
 										if (sendMessage && !S.gameTab.instantMessage.empty())
 										{
 											sendMessage = false;
@@ -564,21 +632,26 @@ public:
 																if (actions[i]["actorCellId"].asInt() == cellId)
 																{
 																	std::string actionType = actions[i]["type"].asString();
-																	if (actionType == "pick" && S.gameTab.instalockId)
+																	if (actionType == "pick" && S.gameTab.instalockId && S.gameTab.instalockEnabled)
 																	{
 																		// if havent picked yet
 																		if (actions[i]["completed"].asBool() == false)
 																		{
 																			std::this_thread::sleep_for(std::chrono::milliseconds(S.gameTab.instalockDelay));
+
+																			int currentPick = S.gameTab.instalockId;
+																			if (useBackupId)
+																				currentPick = useBackupId;
+
 																			http->Request("PATCH", "https://127.0.0.1/lol-champ-select/v1/session/actions/" + actions[i]["id"].asString(),
-																				R"({"completed":true,"championId":)" + std::to_string(S.gameTab.instalockId) + "}", auth->leagueHeader, "", "", auth->leaguePort);
+																				R"({"completed":true,"championId":)" + std::to_string(currentPick) + "}", auth->leagueHeader, "", "", auth->leaguePort);
 																		}
-																		else
-																		{
-																			// we picked already, theres nothing to do so sleep
-																			std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-																			break;
-																		}
+																		//else
+																		//{
+																		//	// we picked already, theres nothing to do so sleep
+																		//	std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+																		//	break;
+																		//}
 																	}
 																	else if (actionType == "ban" && S.gameTab.autoBanId)
 																	{
@@ -588,9 +661,26 @@ public:
 																				R"({"completed":true,"championId":)" + std::to_string(S.gameTab.autoBanId) + "}", auth->leagueHeader, "", "", auth->leaguePort);
 																		}
 																	}
-																	else break;
+																	//else break;
 																}
-																else continue;
+																// if dodge on ban enabled or backup pick
+																if ((S.gameTab.dodgeOnBan || S.gameTab.backupId) && S.gameTab.instalockEnabled && S.gameTab.instalockId)
+																{
+																	if (actions[i]["type"].asString() == "ban" && actions[i]["completed"].asBool() == true)
+																	{
+																		if (actions[i]["championId"].asInt() == S.gameTab.instalockId)
+																		{
+																			if (S.gameTab.dodgeOnBan)
+																			{
+																				http->Request("POST", R"(https://127.0.0.1/lol-login/v1/session/invoke?destination=lcdsServiceProxy&method=call&args=["","teambuilder-draft","quitV2",""])", "", auth->leagueHeader, "", "", auth->leaguePort);
+																			}
+																			else if (S.gameTab.backupId)
+																			{
+																				useBackupId = S.gameTab.backupId;
+																			}
+																		}
+																	}
+																}
 															}
 														}
 													}
@@ -607,11 +697,17 @@ public:
 							else
 							{
 								foundCell = false;
+								sendMessage = true;
+								useBackupId = 0;
 								std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 							}
 						}
 					}
 				}
+			}
+			else
+			{
+				std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 			}
 
 			std::this_thread::sleep_for(std::chrono::milliseconds(1));

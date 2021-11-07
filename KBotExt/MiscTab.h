@@ -334,7 +334,7 @@ public:
 
 			ImGui::SameLine();
 
-			ImGui::SetNextItemWidth(S.Window.width / 3);
+			ImGui::SetNextItemWidth(static_cast<float>(S.Window.width / 3));
 			if (ImGui::BeginCombo("##comboDisenchant", comboDisenchant, 0))
 			{
 				for (size_t n = 0; n < itemsDisenchant.size(); n++)
@@ -362,10 +362,15 @@ public:
 			static size_t lastSize = 0;
 			static std::string closestChampion;
 			static std::string closestId;
-			ImGui::SetNextItemWidth(S.Window.width / 3);
+			ImGui::SetNextItemWidth(static_cast<float>(S.Window.width / 3));
 			ImGui::InputText("##inputChampionName", bufChampionName, IM_ARRAYSIZE(bufChampionName));
-
-			if (lastSize != strlen(bufChampionName))
+			if (strlen(bufChampionName) < 1)
+			{
+				closestChampion = "";
+				closestId = "";
+				lastSize = 0;
+			}
+			else if (lastSize != strlen(bufChampionName))
 			{
 				lastSize = strlen(bufChampionName);
 				closestChampion = LevenshteinDistance(champNames, bufChampionName);

@@ -65,6 +65,8 @@ struct Settings
 		std::string instantMessage;
 		int instantMessageDelay = 0;
 		int autoBanId = 0;
+		bool dodgeOnBan = false;
+		int backupId = 0;
 	}gameTab;
 };
 extern Settings S;
@@ -115,6 +117,8 @@ public:
 				root["gameTab"]["instantMessage"] = S.gameTab.instantMessage;
 				root["gameTab"]["instantMessageDelay"] = S.gameTab.instantMessageDelay;
 				root["gameTab"]["autoBanId"] = S.gameTab.autoBanId;
+				root["gameTab"]["dodgeOnBan"] = S.gameTab.dodgeOnBan;
+				root["gameTab"]["backupId"] = S.gameTab.backupId;
 
 				if (S.bAddFont)
 				{
@@ -183,6 +187,8 @@ public:
 				if (auto t = root["gameTab"]["instantMessage"]; !t.empty()) S.gameTab.instantMessage = t.asString();
 				if (auto t = root["gameTab"]["instantMessageDelay"]; !t.empty()) S.gameTab.instantMessageDelay = t.asInt();
 				if (auto t = root["gameTab"]["autoBanId"]; !t.empty()) S.gameTab.autoBanId = t.asInt();
+				if (auto t = root["gameTab"]["dodgeOnBan"]; !t.empty()) S.gameTab.dodgeOnBan = t.asBool();
+				if (auto t = root["gameTab"]["backupId"]; !t.empty()) S.gameTab.backupId = t.asInt();
 
 				if (root["fonts"].isArray() && !root["fonts"].empty())
 				{

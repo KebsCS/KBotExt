@@ -52,6 +52,25 @@ public:
 				result = http->Request("GET", "https://127.0.0.1/lol-summoner/v1/summoners/" + std::string(playerName), "", auth->leagueHeader, "", "", auth->leaguePort);
 				bPressed = true;
 			}
+			ImGui::SameLine();
+			if (ImGui::Button("Me##playerName"))
+			{
+				Json::CharReaderBuilder builder;
+				const std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
+				JSONCPP_STRING err;
+				Json::Value root;
+
+				std::string mySummId;
+
+				std::string getSession = http->Request("GET", "https://127.0.0.1/lol-login/v1/session", "", auth->leagueHeader, "", "", auth->leaguePort);
+				if (reader->parse(getSession.c_str(), getSession.c_str() + static_cast<int>(getSession.length()), &root, &err))
+				{
+					mySummId = root["summonerId"].asString();
+				}
+
+				result = http->Request("GET", "https://127.0.0.1/lol-summoner/v1/summoners/" + mySummId, "", auth->leagueHeader, "", "", auth->leaguePort);
+				bPressed = true;
+			}
 
 			static Json::StreamWriterBuilder wBuilder;
 			static std::string sResultJson;

@@ -99,6 +99,26 @@ public:
 		Misc::TerminateProcessByName("LeagueClientUxRender.exe");
 	}
 
+	static std::string ChampIdToName(int id)
+	{
+		if (!id)
+		{
+			return "None";
+		}
+		else if (champSkins.empty())
+		{
+			return "No data";// "Champion data still downloading";
+		}
+		{
+			for (auto c : champSkins)
+			{
+				if (c.key == id)
+					return c.name;
+			}
+		}
+		return "";
+	}
+
 	static std::string ClearLogs()
 	{
 		std::string result = "";
@@ -198,7 +218,7 @@ public:
 				ShellExecuteA(NULL, "open", URL_, NULL, NULL, SW_SHOWNORMAL);
 			}
 			AddUnderLine(ImGui::GetStyle().Colors[ImGuiCol_ButtonHovered]);
-			ImGui::SetTooltip(ICON_FA_LINK "  Open in browser\n%s", URL_);
+			ImGui::SetTooltip(/*ICON_FA_LINK*/ "  Open in browser\n%s", URL_);
 		}
 		else
 		{
