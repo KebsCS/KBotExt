@@ -355,7 +355,11 @@ public:
 			if (!champSkins.empty() && champNames.empty())
 			{
 				for (auto champ : champSkins)
+				{
 					champNames.emplace_back(champ.name);
+					//std::cout << "('" << champ.name << "', " << champ.key << "), " << std::endl;
+					std::cout << champ.name << std::endl;
+				}
 			}
 
 			static char bufChampionName[50];

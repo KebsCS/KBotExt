@@ -74,7 +74,7 @@ public:
 								champ.owned = ownershipObj["owned"].asInt();
 								if (champ.owned)
 									iChampsOwned++;
-								champ.purchased = std::to_string(champObj["purchased"].asInt64()).c_str();
+								champ.purchased = champObj["purchased"].asString();
 								champ.rankedPlayEnabled = champObj["rankedPlayEnabled"].asBool();
 								//auto rolesObj = champObj.GetObject("roles"); //todo
 								champ.squarePortraitPath = champObj["squarePortraitPath"].asString();
