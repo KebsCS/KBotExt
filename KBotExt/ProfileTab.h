@@ -182,6 +182,14 @@ public:
 
 			ImGui::Separator();
 
+			ImGui::Text("Challenge badges:");
+			if (ImGui::Button("Empty"))
+			{
+				http->Request("POST", "https://127.0.0.1/lol-challenges/v1/update-player-preferences/", R"({"challengeIds": []})", auth->leagueHeader, "", "", auth->leaguePort);
+			}
+
+			ImGui::Separator();
+
 			static int iconID;
 			ImGui::Text("Icon:");
 			ImGui::InputInt("##inputIcon:", &iconID, 1, 100);
