@@ -74,7 +74,10 @@ public:
 								champ.owned = ownershipObj["owned"].asInt();
 								if (champ.owned)
 									iChampsOwned++;
-								champ.purchased = champObj["purchased"].asString();
+								if (champ.freeToPlay && !champ.owned)
+									champ.purchased = "0";
+								else
+									champ.purchased = champObj["purchased"].asString();
 								champ.rankedPlayEnabled = champObj["rankedPlayEnabled"].asBool();
 								//auto rolesObj = champObj.GetObject("roles"); //todo
 								champ.squarePortraitPath = champObj["squarePortraitPath"].asString();
