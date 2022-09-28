@@ -1,11 +1,15 @@
 #pragma once
 
 #include <string>
+
 #include "base64.h"
 
 class Auth
 {
 public:
+	Auth() = default;
+	~Auth() = default;
+
 	int riotPort = 0;
 	std::string riotToken;
 	std::string riotHeader;
@@ -14,19 +18,21 @@ public:
 	std::string leagueToken;
 	std::string leagueHeader;
 
-	Base64 base64;
-
-	// returns 1 when successfully got port and token
+	// returns true on success
 	bool GetRiotClientInfo();
 
 	void MakeRiotHeader();
 
-	// returns 1 when successfully got port and token
+	// returns true on success
 	bool GetLeagueClientInfo();
 
 	void MakeLeagueHeader();
 private:
-	std::wstring GetProcessCommandLine(std::string sProcessName);
+	Base64 base64;
+
+	int GetPort(std::string cmdLine);
+	std::string GetToken(std::string cmdLine);
+	std::wstring GetProcessCommandLine(std::wstring processName);
 };
 
 extern Auth* auth;

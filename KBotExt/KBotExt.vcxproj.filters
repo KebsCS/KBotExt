@@ -98,9 +98,6 @@
     <ClInclude Include="Auth.h">
       <Filter>Auth</Filter>
     </ClInclude>
-    <ClInclude Include="NtQueryInfoProc.h">
-      <Filter>Auth</Filter>
-    </ClInclude>
     <ClInclude Include="imgui\imconfig.h">
       <Filter>imgui</Filter>
     </ClInclude>

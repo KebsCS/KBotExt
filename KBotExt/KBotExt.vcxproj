@@ -213,7 +213,6 @@
     <ClInclude Include="LoginTab.h" />
     <ClInclude Include="Misc.h" />
     <ClInclude Include="MiscTab.h" />
-    <ClInclude Include="NtQueryInfoProc.h" />
     <ClInclude Include="ProfileTab.h" />
     <ClInclude Include="Settings.h" />
     <ClInclude Include="SettingsTab.h" />

@@ -1,40 +1,50 @@
+#include <Windows.h>
+#include <tlhelp32.h>
+#include <string>
+#include <regex>
+
 #include "Auth.h"
 #include "Utils.h"
-#include "NtQueryInfoProc.h"
+
+int Auth::GetPort(std::string cmdLine)
+{
+	std::regex regexStr("--app-port=(\\d*)");
+	std::smatch m;
+	if (std::regex_search(cmdLine, m, regexStr))
+		return std::stoi(m[1].str());
+
+	return 0;
+}
+
+std::string Auth::GetToken(std::string cmdLine)
+{
+	std::regex regexStr("--remoting-auth-token=([\\w-]*)");
+	std::smatch m;
+	if (std::regex_search(cmdLine, m, regexStr))
+	{
+		std::string token = "riot:" + m[1].str();
+		char* tokenArray = &token[0];
+		return base64.Encode(reinterpret_cast<unsigned char*>(tokenArray), static_cast<unsigned>(token.size())).c_str();
+	}
+
+	return "";
+}
 
 bool Auth::GetRiotClientInfo()
 {
-	std::string sAuth = utils->WstringToString(GetProcessCommandLine("RiotClientUx.exe"));
-	if (sAuth.empty())
-	{
-		//MessageBoxA(0, "Client not found", 0, 0);
-		return 0;
-	}
+	std::string cmdLine = utils->WstringToString(GetProcessCommandLine(L"RiotClientUx.exe"));
+	if (cmdLine.empty())
+		return false;
 
-	std::string appPort = "--app-port=";
-	size_t nPos = sAuth.find(appPort);
-	if (nPos != std::string::npos)
-		riotPort = std::stoi(sAuth.substr(nPos + appPort.size(), 5)); // port is always 5 numbers long
+	riotPort = GetPort(cmdLine);
+	riotToken = GetToken(cmdLine);
 
-	std::string remotingAuth = "--remoting-auth-token=";
-	nPos = sAuth.find(remotingAuth) + strlen(remotingAuth.c_str());
-	if (nPos != std::string::npos)
-	{
-		std::string token = "riot:" + sAuth.substr(nPos, 22); // token is always 22 chars long
-		unsigned char m_Test[50];
-		strncpy((char*)m_Test, token.c_str(), sizeof(m_Test));
-		riotToken = base64.Encode(m_Test, token.size()).c_str();
-	}
-	else
-	{
-		MessageBoxA(0, "Couldn't connect to client", 0, 0);
-
-		return 0;
-	}
+	if (riotPort == 0 || riotToken == "")
+		return false;
 
 	MakeRiotHeader();
 
-	return 1;
+	return true;
 }
 
 void Auth::MakeRiotHeader()
@@ -47,46 +57,32 @@ void Auth::MakeRiotHeader()
 		"Access-Control-Allow-Origin: 127.0.0.1" + "\r\n" +
 		"Content-Type: application/json" + "\r\n" +
 		"Origin: https://127.0.0.1:" + std::to_string(riotPort) + "\r\n" +
-		"User-Agent: Mozilla/5.0 (Windows NT 6.2; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) RiotClient/34.0.2 (CEF 74) Safari/537.36" + "\r\n" +
+		"Sec-Fetch-Dest: empty" + "\r\n" +
+		"Sec-Fetch-Mode: cors" + "\r\n" +
+		"Sec-Fetch-Site: same-origin" + "\r\n" +
+		"Sec-Fetch-User: ?F" + "\r\n" +
+		"User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) RiotClient/59.0.1 (CEF 74) Safari/537.36" + "\r\n" +
+		"sec-ch-ua: Chromium" + "\r\n" +
 		"Referer: https://127.0.0.1:" + std::to_string(riotPort) + "/index.html" + "\r\n" +
 		"Accept-Encoding: gzip, deflate, br" + "\r\n" +
 		"Accept-Language: en-US,en;q=0.9";
 }
 
-bool  Auth::GetLeagueClientInfo()
+bool Auth::GetLeagueClientInfo()
 {
-	// Get client port and auth code from it's command line
-	std::string sAuth = utils->WstringToString(GetProcessCommandLine("LeagueClientUx.exe"));
-	if (sAuth.empty())
-	{
-		//MessageBoxA(0, "Client not found", 0, 0);
-		return 0;
-	}
+	std::string cmdLine = utils->WstringToString(GetProcessCommandLine(L"LeagueClientUx.exe"));
+	if (cmdLine.empty())
+		return false;
 
-	std::string appPort = "\"--app-port=";
-	size_t nPos = sAuth.find(appPort);
-	if (nPos != std::string::npos)
-		leaguePort = std::stoi(sAuth.substr(nPos + appPort.size(), 5));
+	leaguePort = GetPort(cmdLine);
+	leagueToken = GetToken(cmdLine);
 
-	std::string remotingAuth = "--remoting-auth-token=";
-	nPos = sAuth.find(remotingAuth) + strlen(remotingAuth.c_str());
-	if (nPos != std::string::npos)
-	{
-		std::string token = "riot:" + sAuth.substr(nPos, 22);
-		unsigned char m_Test[50];
-		strncpy((char*)m_Test, token.c_str(), sizeof(m_Test));
-		leagueToken = base64.Encode(m_Test, token.size()).c_str();
-	}
-	else
-	{
-		MessageBoxA(0, "Couldn't connect to client", 0, 0);
-
-		return 0;
-	}
+	if (leaguePort == 0 || leagueToken == "")
+		return false;
 
 	MakeLeagueHeader();
 
-	return 1;
+	return true;
 }
 
 void Auth::MakeLeagueHeader()
@@ -97,72 +93,123 @@ void Auth::MakeLeagueHeader()
 		"Accept: application/json" + "\r\n" +
 		"Content-Type: application/json" + "\r\n" +
 		"Origin: https://127.0.0.1:" + std::to_string(leaguePort) + "\r\n" +
-		"User-Agent: Mozilla/5.0 (Windows NT 6.2; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) LeagueOfLegendsClient/11.13.382.1241 (CEF 74) Safari/537.36" + "\r\n" +
+		"User-Agent: Mozilla/5.0 (Windows NT 6.2; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) LeagueOfLegendsClient/12.18.469.7517 (CEF 91) Safari/537.36" + "\r\n" +
 		"X-Riot-Source: rcp-fe-lol-social" + "\r\n" +
+		"sec-ch-ua: \"Chromium\";v=\"91\"" + "\r\n" +
+		"sec-ch-ua-mobile: ?0" + "\r\n" +
+		"Sec-Fetch-Site: same-origin" + "\r\n" +
+		"Sec-Fetch-Mode: cors" + "\r\n" +
+		"Sec-Fetch-Dest: empty" + "\r\n" +
 		"Referer: https://127.0.0.1:" + std::to_string(leaguePort) + "/index.html" + "\r\n" +
 		"Accept-Encoding: gzip, deflate, br" + "\r\n" +
 		"Accept-Language: en-US,en;q=0.9";
 }
 
-std::wstring Auth::GetProcessCommandLine(std::string sProcessName)
+std::wstring Auth::GetProcessCommandLine(std::wstring processName)
 {
-	std::wstring wstrResult;
-	HANDLE Handle;
-	DWORD ProcessID = 0;
+	typedef NTSTATUS(__stdcall* tNtQueryInformationProcess)
+		(
+			HANDLE ProcessHandle,
+			ULONG ProcessInformationClass,
+			PVOID ProcessInformation,
+			ULONG ProcessInformationLength,
+			PULONG ReturnLength
+			);
+
+	typedef struct _PROCESS_BASIC_INFORMATION {
+		LONG ExitStatus;
+		PVOID PebBaseAddress;
+		ULONG_PTR AffinityMask;
+		LONG BasePriority;
+		HANDLE UniqueProcessId;
+		HANDLE InheritedFromUniqueProcessId;
+	} PROCESS_BASIC_INFORMATION;
+
+	typedef struct _UNICODE_STRING
+	{
+		USHORT Length;
+		USHORT MaximumLength;
+		PWSTR Buffer;
+	} UNICODE_STRING, * PUNICODE_STRING;
+	typedef const UNICODE_STRING* PCUNICODE_STRING;
+
+	std::wstring result;
+	HANDLE processHandle;
 	HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, NULL);
 	if (snapshot != INVALID_HANDLE_VALUE)
 	{
-		PROCESSENTRY32 entry;
-		entry.dwSize = sizeof(PROCESSENTRY32);
-		if (Process32First(snapshot, &entry))
+		PROCESSENTRY32W entry;
+		entry.dwSize = sizeof(PROCESSENTRY32W);
+		if (Process32FirstW(snapshot, &entry))
 		{
 			do
 			{
-				char temp[260];
-				sprintf(temp, "%ws", entry.szExeFile);
-				if (!stricmp(temp, sProcessName.c_str()))
+				if (std::wstring(entry.szExeFile) == processName)
 				{
-					ProcessID = entry.th32ProcessID;
-					Handle = OpenProcess(PROCESS_ALL_ACCESS, 0, entry.th32ProcessID);
+					processHandle = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, 0, entry.th32ProcessID);
 
 					PROCESS_BASIC_INFORMATION pbi;
-					PEB peb = { 0 };
+					ZeroMemory(&pbi, sizeof(pbi));
+
 					tNtQueryInformationProcess NtQueryInformationProcess =
 						(tNtQueryInformationProcess)GetProcAddress(GetModuleHandleA("ntdll.dll"), "NtQueryInformationProcess");
-					NTSTATUS status = NtQueryInformationProcess(Handle, ProcessBasicInformation, &pbi, sizeof(pbi), 0);
-
-					if (NT_SUCCESS(status))
+					if (NtQueryInformationProcess(processHandle, 0, &pbi, sizeof(pbi), 0) != 0)
 					{
-						ReadProcessMemory(Handle, pbi.PebBaseAddress, &peb, sizeof(peb), 0);
+						MessageBoxA(0, "NtQueryInformationProcess failed", 0, 0);
+						CloseHandle(processHandle);
+						return {};
 					}
-					PRTL_USER_PROCESS_PARAMETERS pRtlProcParam = peb.ProcessParameters;
-					PRTL_USER_PROCESS_PARAMETERS pRtlProcParamCopy =
-						(PRTL_USER_PROCESS_PARAMETERS)malloc(sizeof(RTL_USER_PROCESS_PARAMETERS));
 
-					bool result = ReadProcessMemory(Handle,
-						pRtlProcParam,
-						pRtlProcParamCopy,
-						sizeof(RTL_USER_PROCESS_PARAMETERS),
-						NULL);
-					PWSTR wBuffer = pRtlProcParamCopy->CommandLine.Buffer;
-					USHORT len = pRtlProcParamCopy->CommandLine.Length;
-					PWSTR wBufferCopy = (PWSTR)malloc(len);
-					result = ReadProcessMemory(Handle,
-						wBuffer,
-						wBufferCopy,
-						len,
-						NULL);
+#ifndef _WIN64
+					DWORD ProcessParametersOffset = 0x10;
+					DWORD CommandLineOffset = 0x40;
+#else
+					DWORD ProcessParametersOffset = 0x20;
+					DWORD CommandLineOffset = 0x70;
+#endif
 
-					wstrResult = std::wstring(wBufferCopy);
+					DWORD pebSize = ProcessParametersOffset + 8; // size until ProcessParameters
+					PBYTE peb = (PBYTE)malloc(pebSize);
+					ZeroMemory(peb, pebSize);
+					if (!ReadProcessMemory(processHandle, pbi.PebBaseAddress, peb, pebSize, NULL))
+					{
+						MessageBoxA(0, "PEB ReadProcessMemory failed", 0, 0);
+						CloseHandle(processHandle);
+						return {};
+					}
 
-					CloseHandle(Handle);
+					DWORD processParametersSize = CommandLineOffset + 16;
+					PBYTE processParameters = (PBYTE)malloc(processParametersSize);
+					ZeroMemory(processParameters, processParametersSize);
+					PBYTE* parameters = (PBYTE*)*(LPVOID*)(peb + ProcessParametersOffset);
+					if (!ReadProcessMemory(processHandle, parameters, processParameters, processParametersSize, NULL))
+					{
+						MessageBoxA(0, "processParameters ReadProcessMemory failed", 0, 0);
+						CloseHandle(processHandle);
+						return {};
+					}
+
+					UNICODE_STRING* pCommandLine = (UNICODE_STRING*)(processParameters + CommandLineOffset);
+					PWSTR commandLineBuffer = pCommandLine->Buffer;
+					USHORT commandLineLen = pCommandLine->MaximumLength;
+					PWSTR commandLineCopy = (PWSTR)malloc(commandLineLen);
+					if (!ReadProcessMemory(processHandle, commandLineBuffer, commandLineCopy, commandLineLen, NULL))
+					{
+						MessageBoxA(0, "pCommandLine ReadProcessMemory failed", 0, 0);
+						CloseHandle(processHandle);
+						return {};
+					}
+
+					result = std::wstring(commandLineCopy);
+
+					CloseHandle(processHandle);
 					break;
 				}
-			} while (Process32Next(snapshot, &entry));
+			} while (Process32NextW(snapshot, &entry));
 		}
 	}
 	CloseHandle(snapshot);
-	return wstrResult;
+	return result;
 }
 
 Auth* auth = new Auth();
