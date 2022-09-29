@@ -239,7 +239,7 @@ public:
 				result = http->Request("POST", R"(https://127.0.0.1/lol-login/v1/session/invoke?destination=lcdsServiceProxy&method=call&args=["","teambuilder-draft","quitV2",""])", "", auth->leagueHeader, "", "", auth->leaguePort);
 			}
 			ImGui::SameLine();
-			Misc::HelpMarker("Dodges lobby instantly, you still lose LP, but you don't have to restart the client");
+			ImGui::HelpMarker("Dodges lobby instantly, you still lose LP, but you don't have to restart the client");
 			ImGui::NextColumn();
 			if (ImGui::Button("Multi OP.GG"))
 			{
@@ -257,7 +257,7 @@ public:
 					std::string regionLocale = http->Request("GET", "https://127.0.0.1/riotclient/get_region_locale", "", auth->leagueHeader, "", "", auth->leaguePort);
 					if (reader->parse(regionLocale.c_str(), regionLocale.c_str() + static_cast<int>(regionLocale.length()), &rootLocale, &err))
 					{
-						std::wstring region = utils->StringToWstring(rootLocale["webRegion"].asString());
+						std::wstring region = Utils::StringToWstring(rootLocale["webRegion"].asString());
 						if (reader->parse(champSelect.c_str(), champSelect.c_str() + static_cast<int>(champSelect.length()), &rootCSelect, &err))
 						{
 							std::wstring url = L"https://" + region + L".op.gg/multi/query=";
@@ -272,13 +272,13 @@ public:
 										std::string summoner = http->Request("GET", "https://127.0.0.1/lol-summoner/v1/summoners/" + summId, "", auth->leagueHeader, "", "", auth->leaguePort);
 										if (reader->parse(summoner.c_str(), summoner.c_str() + static_cast<int>(summoner.length()), &rootSummoner, &err))
 										{
-											std::wstring summName = utils->StringToWstring(rootSummoner["internalName"].asString());
+											std::wstring summName = Utils::StringToWstring(rootSummoner["internalName"].asString());
 											url += summName + L",";
 										}
 									}
 								}
 								ShellExecuteW(0, 0, url.c_str(), 0, 0, SW_SHOW);
-								result = utils->WstringToString(url);
+								result = Utils::WstringToString(url);
 							}
 						}
 					}
@@ -347,7 +347,7 @@ public:
 			ImGui::Checkbox("Dodge on champion ban", &S.gameTab.dodgeOnBan);
 
 			ImGui::SameLine();
-			Misc::HelpMarker("Ignores backup pick");
+			ImGui::HelpMarker("Ignores backup pick");
 
 			ImGui::Columns(1);
 

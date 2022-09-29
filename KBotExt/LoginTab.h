@@ -209,7 +209,7 @@ public:
 			}
 
 			ImGui::SameLine();
-			Misc::HelpMarker("This part is only, if you want to save your login and pass to config file and login with 1 click. You don't have to do that, you can just log in the usual way in client and launch the tool anytime you want");
+			ImGui::HelpMarker("This part is only, if you want to save your login and pass to config file and login with 1 click. You don't have to do that, you can just log in the usual way in client and launch the tool anytime you want");
 
 			ImGui::Separator();
 

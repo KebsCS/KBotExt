@@ -11,9 +11,8 @@
 
 struct Settings
 {
-	Settings()
-	{};
-	std::string settingsFile = "config.JSON";
+	Settings() {};
+	const std::string settingsFile = "config.JSON";
 
 	bool autoRename = false;
 	std::string leaguePath = "C:/Riot Games/League of Legends/";

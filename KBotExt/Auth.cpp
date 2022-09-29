@@ -32,7 +32,7 @@ std::string Auth::GetToken(std::string cmdLine)
 
 bool Auth::GetRiotClientInfo()
 {
-	std::string cmdLine = utils->WstringToString(GetProcessCommandLine(L"RiotClientUx.exe"));
+	std::string cmdLine = Utils::WstringToString(GetProcessCommandLine(L"RiotClientUx.exe"));
 	if (cmdLine.empty())
 		return false;
 
@@ -70,7 +70,7 @@ void Auth::MakeRiotHeader()
 
 bool Auth::GetLeagueClientInfo()
 {
-	std::string cmdLine = utils->WstringToString(GetProcessCommandLine(L"LeagueClientUx.exe"));
+	std::string cmdLine = Utils::WstringToString(GetProcessCommandLine(L"LeagueClientUx.exe"));
 	if (cmdLine.empty())
 		return false;
 
@@ -157,6 +157,7 @@ std::wstring Auth::GetProcessCommandLine(std::wstring processName)
 					{
 						MessageBoxA(0, "NtQueryInformationProcess failed", 0, 0);
 						CloseHandle(processHandle);
+						CloseHandle(snapshot);
 						return {};
 					}
 
@@ -175,6 +176,7 @@ std::wstring Auth::GetProcessCommandLine(std::wstring processName)
 					{
 						MessageBoxA(0, "PEB ReadProcessMemory failed", 0, 0);
 						CloseHandle(processHandle);
+						CloseHandle(snapshot);
 						return {};
 					}
 
@@ -186,6 +188,7 @@ std::wstring Auth::GetProcessCommandLine(std::wstring processName)
 					{
 						MessageBoxA(0, "processParameters ReadProcessMemory failed", 0, 0);
 						CloseHandle(processHandle);
+						CloseHandle(snapshot);
 						return {};
 					}
 
@@ -197,6 +200,7 @@ std::wstring Auth::GetProcessCommandLine(std::wstring processName)
 					{
 						MessageBoxA(0, "pCommandLine ReadProcessMemory failed", 0, 0);
 						CloseHandle(processHandle);
+						CloseHandle(snapshot);
 						return {};
 					}
 

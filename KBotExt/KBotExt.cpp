@@ -11,8 +11,6 @@
 
 Settings S;
 
-#pragma warning(disable : 4996)
-
 Direct3D9Render Direct3D9;
 
 LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
@@ -28,11 +26,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	szArgList = CommandLineToArgvW(GetCommandLineW(), &argCount);
 	if (argCount > 1)
 	{
-		std::string applicationName = utils->WstringToString(szArgList[1]);
+		std::string applicationName = Utils::WstringToString(szArgList[1]);
 		std::string cmdLine;
 		for (int i = 2; i < argCount; i++)
 		{
-			cmdLine += "\"" + utils->WstringToString(szArgList[i]) + "\" ";
+			cmdLine += "\"" + Utils::WstringToString(szArgList[i]) + "\" ";
 		}
 
 		cmdLine.replace(cmdLine.find("\"--no-proxy-server\""), strlen("\"--no-proxy-server\""), "");
@@ -79,13 +77,13 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 		bool oldDebugger = S.debugger;
 
-		std::string sClassName = utils->RandomString(RandomInt(5, 10));
+		std::string sClassName = Utils::RandomString(RandomInt(5, 10));
 		LPCSTR lpszOverlayClassName = sClassName.c_str();
 		//Register window class information
 		WNDCLASSEXA wc = { sizeof(WNDCLASSEXA), CS_CLASSDC, WndProc, 0L, 0L, GetModuleHandle(NULL), NULL, NULL, NULL, NULL, sClassName.c_str(), NULL };
 
 		if (S.autoRename)
-			utils->RenameExe();
+			Utils::RenameExe();
 
 		::RegisterClassExA(&wc);
 

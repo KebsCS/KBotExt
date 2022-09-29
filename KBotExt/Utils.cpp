@@ -3,6 +3,7 @@
 #include <sstream>
 #include <filesystem>
 #include <array>
+#include <cwctype>
 //URLDownloadToFileA
 #include <urlmon.h>
 #pragma comment(lib, "urlmon.lib")
@@ -12,28 +13,30 @@
 
 std::string Utils::ToLower(std::string str)
 {
-	std::transform(str.begin(), str.end(), str.begin(), (int(*)(int)) std::tolower);
+	std::transform(str.begin(), str.end(), str.begin(),
+		[](unsigned char c) {return static_cast<char>(std::tolower(c)); });
 	return str;
 }
 
-std::wstring Utils::ToLower(std::wstring str)
+std::wstring Utils::ToLower(std::wstring wstr)
 {
-	std::transform(str.begin(), str.end(), str.begin(), (int(*)(int)) std::tolower);
-	return str;
+	std::transform(wstr.begin(), wstr.end(), wstr.begin(), std::towlower);
+	return wstr;
 }
 
 std::string Utils::ToUpper(std::string str)
 {
-	std::transform(str.begin(), str.end(), str.begin(), (int(*)(int)) std::toupper);
+	std::transform(str.begin(), str.end(), str.begin(),
+		[](unsigned char c) {return static_cast<char>(std::toupper(c)); });
 	return str;
 }
 
-bool Utils::StringContains(std::string strA, std::string strB, bool ignore_case)
+bool Utils::StringContains(std::string strA, std::string strB, bool ignoreCase)
 {
 	if (strA.empty() || strB.empty())
 		return true;
 
-	if (ignore_case)
+	if (ignoreCase)
 	{
 		strA = ToLower(strA);
 		strB = ToLower(strB);
@@ -45,18 +48,18 @@ bool Utils::StringContains(std::string strA, std::string strB, bool ignore_case)
 	return false;
 }
 
-bool Utils::StringContains(std::wstring strA, std::wstring strB, bool ignore_case)
+bool Utils::StringContains(std::wstring wstrA, std::wstring wstrB, bool ignoreCase)
 {
-	if (strA.empty() || strB.empty())
+	if (wstrA.empty() || wstrB.empty())
 		return true;
 
-	if (ignore_case)
+	if (ignoreCase)
 	{
-		strA = ToLower(strA);
-		strB = ToLower(strB);
+		wstrA = ToLower(wstrA);
+		wstrB = ToLower(wstrB);
 	}
 
-	if (strA.find(strB) != std::wstring::npos)
+	if (wstrA.find(wstrB) != std::wstring::npos)
 		return true;
 
 	return false;
@@ -65,18 +68,7 @@ bool Utils::StringContains(std::wstring strA, std::wstring strB, bool ignore_cas
 std::string Utils::WstringToString(std::wstring wstr)
 {
 	std::wstring_convert<std::codecvt_utf8<wchar_t>, wchar_t> converter;
-
-	try
-	{
-		return converter.to_bytes(wstr);
-	}
-	catch (std::range_error)
-	{
-		/*std::stringstream s;
-		s << wstr.c_str();
-		return s.str();*/
-		return "range_error";
-	}
+	return converter.to_bytes(wstr);
 }
 
 std::wstring Utils::StringToWstring(std::string str)
@@ -95,41 +87,48 @@ std::wstring Utils::StringToWstring(std::string str)
 	}
 }
 
-std::string Utils::RandomString(int size)
+std::vector<std::string> Utils::StringSplit(std::string str, std::string separator)
+{
+	size_t pos = 0;
+	std::string token;
+	std::vector<std::string> vec;
+	while ((pos = str.find(separator)) != std::string::npos)
+	{
+		token = str.substr(0, pos);
+		vec.emplace_back(token);
+		str.erase(0, pos + separator.length());
+	}
+	vec.emplace_back(str);
+	return vec;
+}
+
+std::string Utils::RandomString(size_t size)
 {
 	std::string str = "";
 
-	for (int i = 0; i < size; i++)
+	for (size_t i = 0; i < size; i++)
 		str += RandomInt(0, 1) ? RandomInt(48, 57) : RandomInt(97, 122);
 
 	return str;
-}
-
-std::string Utils::FormatString(const char* c, const char* args...)
-{
-	char buff[200];
-	sprintf_s(buff, c, args);
-
-	return std::string(buff);
 }
 
 void Utils::CopyToClipboard(std::string text)
 {
 	if (!::OpenClipboard(NULL))
 		return;
-	const int wbuf_length = ::MultiByteToWideChar(CP_UTF8, 0, text.c_str(), -1, NULL, 0);
-	HGLOBAL wbuf_handle = ::GlobalAlloc(GMEM_MOVEABLE, (SIZE_T)wbuf_length * sizeof(WCHAR));
-	if (wbuf_handle == NULL)
+	const int wbufLen = ::MultiByteToWideChar(CP_UTF8, 0, text.c_str(), -1, NULL, 0);
+	HGLOBAL wbufHandle = ::GlobalAlloc(GMEM_MOVEABLE, (SIZE_T)wbufLen * sizeof(WCHAR));
+	if (wbufHandle == NULL)
 	{
 		::CloseClipboard();
 		return;
 	}
-	WCHAR* wbuf_global = (WCHAR*)::GlobalLock(wbuf_handle);
-	::MultiByteToWideChar(CP_UTF8, 0, text.c_str(), -1, wbuf_global, wbuf_length);
-	::GlobalUnlock(wbuf_handle);
+	WCHAR* wbufGlobal = (WCHAR*)::GlobalLock(wbufHandle);
+	::MultiByteToWideChar(CP_UTF8, 0, text.c_str(), -1, wbufGlobal, wbufLen);
+	::GlobalUnlock(wbufHandle);
 	::EmptyClipboard();
-	if (::SetClipboardData(CF_UNICODETEXT, wbuf_handle) == NULL)
-		::GlobalFree(wbuf_handle);
+	if (::SetClipboardData(CF_UNICODETEXT, wbufHandle) == NULL)
+		::GlobalFree(wbufHandle);
 	::CloseClipboard();
 }
 
@@ -183,7 +182,7 @@ std::string Utils::Exec(const char* cmd)
 	if (!pipe) {
 		throw std::runtime_error("popen() failed!");
 	}
-	while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
+	while (fgets(buffer.data(), static_cast<int>(buffer.size()), pipe.get()) != nullptr) {
 		result += buffer.data();
 	}
 	return result;
@@ -196,22 +195,20 @@ bool Utils::RenameExe()
 	std::string path = std::string(szExeFileName);
 	std::string exe = path.substr(path.find_last_of("\\") + 1, path.size());
 	std::string newname;
-	newname = utils->RandomString(RandomInt(5, 10));
+	newname = Utils::RandomString(RandomInt(5, 10));
 	newname += ".exe";
 	if (!rename(exe.c_str(), newname.c_str()))
 		return true;
 	else return false;
 }
 
-bool Utils::HideFile(std::string path)
+bool Utils::HideFile(std::string file)
 {
-	int attr = GetFileAttributesA(path.c_str());
+	int attr = GetFileAttributesA(file.c_str());
 	if ((attr & FILE_ATTRIBUTE_HIDDEN) == 0)
 	{
-		SetFileAttributesA(path.c_str(), attr | FILE_ATTRIBUTE_HIDDEN);
+		SetFileAttributesA(file.c_str(), attr | FILE_ATTRIBUTE_HIDDEN);
 		return true;
 	}
 	return false;
 }
-
-Utils* utils = new Utils();

@@ -75,11 +75,11 @@ public:
 
 			ImGui::Checkbox("Auto-rename", &S.autoRename);
 			ImGui::SameLine();
-			Misc::HelpMarker("Automatically renames the program on launch");
+			ImGui::HelpMarker("Automatically renames the program on launch");
 
 			ImGui::Checkbox("Stream Proof", &S.streamProof);
 			ImGui::SameLine();
-			Misc::HelpMarker("Hides the program in recordings and screenshots");
+			ImGui::HelpMarker("Hides the program in recordings and screenshots");
 
 			ImGui::Checkbox("Register debugger IFEO", &S.debugger);
 			ImGui::SameLine();
@@ -109,7 +109,7 @@ public:
 
 			ImGui::Text("Font:");
 			ImGui::SameLine();
-			Misc::HelpMarker("This is the program's font, not League's");
+			ImGui::HelpMarker("This is the program's font, not League's");
 
 			ShowFontSelector("##fontSelector");
 
@@ -151,7 +151,7 @@ public:
 
 			ImGui::Separator();
 			ImGui::Text("GitHub repository:");
-			Misc::TextURL("Click me!", "https://github.com/KebsCS/KBotExt");
+			ImGui::TextURL("Click me!", "https://github.com/KebsCS/KBotExt");
 
 			ImGui::TextWrapped(result.c_str());
 

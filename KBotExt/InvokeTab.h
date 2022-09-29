@@ -47,7 +47,7 @@ public:
 
 			if (ImGui::Button("Copy to clipboard##invokeTab"))
 			{
-				utils->CopyToClipboard(result);
+				Utils::CopyToClipboard(result);
 			}
 
 			static Json::StreamWriterBuilder wBuilder;

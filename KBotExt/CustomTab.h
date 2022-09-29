@@ -90,7 +90,7 @@ public:
 			ImGui::SameLine();
 			if (ImGui::Button("Copy to clipboard##customTab"))
 			{
-				utils->CopyToClipboard(result);
+				Utils::CopyToClipboard(result);
 			}
 
 			static Json::StreamWriterBuilder wBuilder;

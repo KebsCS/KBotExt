@@ -1,54 +1,40 @@
 #pragma once
 
-#include <chrono>
-
 class Utils
 {
-private:
-
 public:
 
-	Utils()
-	{
-	}
-
+	Utils() = default;
 	~Utils() = default;
 
-	//converts whole string to lowercase
-	std::string ToLower(std::string str);
-	std::wstring ToLower(std::wstring str);
+	static std::string ToLower(std::string str);
+	static std::wstring ToLower(std::wstring wstr);
 
-	//converts whole string to uppercase
-	std::string ToUpper(std::string str);
+	static std::string ToUpper(std::string str);
 
 	//check if strA contains strB
-	bool StringContains(std::string strA, std::string strB, bool ignore_case = false);
-	bool StringContains(std::wstring strA, std::wstring strB, bool ignore_case = false);
+	static bool StringContains(std::string strA, std::string strB, bool ignoreCase = false);
+	static bool StringContains(std::wstring strA, std::wstring strB, bool ignoreCase = false);
 
-	//string to wstring
-	std::wstring StringToWstring(std::string str);
+	static std::wstring StringToWstring(std::string str);
+	static std::string WstringToString(std::wstring wstr);
 
-	std::string WstringToString(std::wstring wstr);
+	static std::vector<std::string> StringSplit(std::string str, std::string separator);
 
-	std::string RandomString(int size);
+	static std::string RandomString(size_t size);
 
-	std::string FormatString(const char* c, const char* args...);
+	static void CopyToClipboard(std::string text);
 
-	void CopyToClipboard(std::string text);
+	static bool DownloadFile(std::string fileName, std::string directory = "Data", std::string url = "https://raw.githubusercontent.com/y3541599/test/main/");
 
-	bool DownloadFile(std::string fileName, std::string directory = "Data", std::string url = "https://raw.githubusercontent.com/y3541599/test/main/");
+	static bool ContainsOnlyASCII(std::string buff);
 
-	bool ContainsOnlyASCII(std::string buff);
+	static std::string Utf8Encode(const std::wstring& wstr);
 
-	std::string Utf8Encode(const std::wstring& wstr);
+	static std::string Exec(const char* cmd);
 
-	std::string Exec(const char* cmd);
-
-	// renames program to random string
-	bool RenameExe();
+	static bool RenameExe();
 
 	// adds the "Hidden" attribute to a file
-	bool HideFile(std::string path);
+	static bool HideFile(std::string file);
 };
-
-extern Utils* utils;

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <string>
 
 #define RandomInt(min, max) (rand() % (max - min + 1) + min)
 

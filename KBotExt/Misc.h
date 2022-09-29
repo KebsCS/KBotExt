@@ -9,11 +9,11 @@
 #include "HTTP.h"
 #include "Settings.h"
 
-#define ICON_FA_LINK "\xef\x83\x81"	// U+f0c1
-
 class Misc
 {
 public:
+
+	static inline std::string programVersion = "1.4.0";
 
 	static void LaunchLegacyClient()
 	{
@@ -61,12 +61,19 @@ public:
 		Json::Value root;
 		if (reader->parse(getLatest.c_str(), getLatest.c_str() + static_cast<int>(getLatest.length()), &root, &err))
 		{
-			std::string latestName = root["tag_name"].asString();
-			if (latestName != "1.4.0")
+			std::string latestTag = root["tag_name"].asString();
+
+			std::vector<std::string>latestNameSplit = Utils::StringSplit(latestTag, ".");
+			std::vector<std::string>programVersionplit = Utils::StringSplit(Misc::programVersion, ".");
+
+			for (size_t i = 0; i < 2; i++)
 			{
-				if (MessageBoxA(0, "Open download website?", "New version available", MB_YESNO | MB_SETFOREGROUND) == IDYES)
+				if (latestNameSplit[i] != programVersionplit[i])
 				{
-					ShellExecute(0, 0, L"https://github.com/KebsCS/KBotExt/releases/latest", 0, 0, SW_SHOW);
+					if (MessageBoxA(0, "Open download website?", "New major version available", MB_YESNO | MB_SETFOREGROUND) == IDYES)
+					{
+						ShellExecuteW(0, 0, L"https://github.com/KebsCS/KBotExt/releases/latest", 0, 0, SW_SHOW);
+					}
 				}
 			}
 		}
@@ -88,15 +95,15 @@ public:
 
 	static void TaskKillLeague()
 	{
-		Misc::TerminateProcessByName("RiotClientServices.exe");
-		Misc::TerminateProcessByName("RiotClientCrashHandler.exe");
-		Misc::TerminateProcessByName("RiotClientUx.exe");
-		Misc::TerminateProcessByName("RiotClientUxRender.exe");
+		Misc::TerminateProcessByName(L"RiotClientServices.exe");
+		Misc::TerminateProcessByName(L"RiotClientCrashHandler.exe");
+		Misc::TerminateProcessByName(L"RiotClientUx.exe");
+		Misc::TerminateProcessByName(L"RiotClientUxRender.exe");
 
-		Misc::TerminateProcessByName("LeagueClient.exe");
-		Misc::TerminateProcessByName("LeagueCrashHandler.exe");
-		Misc::TerminateProcessByName("LeagueClientUx.exe");
-		Misc::TerminateProcessByName("LeagueClientUxRender.exe");
+		Misc::TerminateProcessByName(L"LeagueClient.exe");
+		Misc::TerminateProcessByName(L"LeagueCrashHandler.exe");
+		Misc::TerminateProcessByName(L"LeagueClientUx.exe");
+		Misc::TerminateProcessByName(L"LeagueClientUxRender.exe");
 	}
 
 	static std::string ChampIdToName(int id)
@@ -165,16 +172,46 @@ public:
 			result += local + " - " + errorCode.message() + "\n";
 		}
 
-		int k = 0;
+		int counter = 0;
 		for (const auto& file : std::filesystem::directory_iterator(std::filesystem::temp_directory_path()))
 		{
 			std::filesystem::remove_all(file, errorCode);
-			k++;
+			counter++;
 		}
-		result += "Deleted " + std::to_string(k) + " files in temp directory\n";
+		result += "Deleted " + std::to_string(counter) + " files in temp directory\n";
 		return result;
 	}
 
+	// returns true on success
+	static bool TerminateProcessByName(std::wstring processName)
+	{
+		HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, NULL);
+		if (snapshot != INVALID_HANDLE_VALUE)
+		{
+			PROCESSENTRY32W entry;
+			entry.dwSize = sizeof(PROCESSENTRY32W);
+			if (Process32FirstW(snapshot, &entry))
+			{
+				do
+				{
+					if (std::wstring(entry.szExeFile) == processName)
+					{
+						HANDLE process = OpenProcess(PROCESS_TERMINATE, false, entry.th32ProcessID);
+						bool terminate = TerminateProcess(process, 0);
+						CloseHandle(snapshot);
+						CloseHandle(process);
+						return terminate;
+					}
+				} while (Process32NextW(snapshot, &entry));
+			}
+		}
+		CloseHandle(snapshot);
+		return false;
+	}
+};
+
+namespace ImGui
+{
 	// Helper to display a little (?) mark which shows a tooltip when hovered.
 	// In your own code you may want to display an actual icon if you are using a merged icon fonts (see docs/FONTS.md)
 	static void HelpMarker(const char* desc)
@@ -197,61 +234,33 @@ public:
 		ImGui::PopStyleVar();
 	}
 
-	static void AddUnderLine(ImColor col_)
+	static void AddUnderLine(ImColor col)
 	{
 		ImVec2 min = ImGui::GetItemRectMin();
 		ImVec2 max = ImGui::GetItemRectMax();
 		min.y = max.y;
-		ImGui::GetWindowDrawList()->AddLine(min, max, col_, 1.0f);
+		ImGui::GetWindowDrawList()->AddLine(min, max, col, 1.0f);
 	}
 
-	static void TextURL(const char* name_, const char* URL_, uint8_t SameLineBefore_ = 1, uint8_t SameLineAfter_ = 1)
+	static void TextURL(const char* name, const char* url, uint8_t sameLineBefore = 1, uint8_t sameLineAfter = 1)
 	{
-		if (1 == SameLineBefore_) { ImGui::SameLine(0.0f, ImGui::GetStyle().ItemInnerSpacing.x); }
+		if (1 == sameLineBefore) { ImGui::SameLine(0.0f, ImGui::GetStyle().ItemInnerSpacing.x); }
 		ImGui::PushStyleColor(ImGuiCol_Text, ImGui::GetStyle().Colors[ImGuiCol_ButtonHovered]);
-		ImGui::Text(name_);
+		ImGui::Text(name);
 		ImGui::PopStyleColor();
 		if (ImGui::IsItemHovered())
 		{
 			if (ImGui::IsMouseClicked(0))
 			{
-				ShellExecuteA(NULL, "open", URL_, NULL, NULL, SW_SHOWNORMAL);
+				ShellExecuteA(NULL, "open", url, NULL, NULL, SW_SHOWNORMAL);
 			}
 			AddUnderLine(ImGui::GetStyle().Colors[ImGuiCol_ButtonHovered]);
-			ImGui::SetTooltip(/*ICON_FA_LINK*/ "  Open in browser\n%s", URL_);
+			ImGui::SetTooltip("  Open in browser\n%s", url);
 		}
 		else
 		{
 			AddUnderLine(ImGui::GetStyle().Colors[ImGuiCol_Button]);
 		}
-		if (1 == SameLineAfter_) { ImGui::SameLine(0.0f, ImGui::GetStyle().ItemInnerSpacing.x); }
+		if (1 == sameLineAfter) { ImGui::SameLine(0.0f, ImGui::GetStyle().ItemInnerSpacing.x); }
 	}
-	// If the function succeeds, the return value is nonzero.
-	static bool TerminateProcessByName(std::string sProcessName)
-	{
-		HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, NULL);
-		if (snapshot != INVALID_HANDLE_VALUE)
-		{
-			PROCESSENTRY32 entry;
-			entry.dwSize = sizeof(PROCESSENTRY32);
-			if (Process32First(snapshot, &entry))
-			{
-				do
-				{
-					char temp[260];
-					sprintf(temp, "%ws", entry.szExeFile);
-					if (!stricmp(temp, sProcessName.c_str()))
-					{
-						HANDLE process = OpenProcess(PROCESS_TERMINATE, false, entry.th32ProcessID);
-						bool terminate = TerminateProcess(process, 0);
-						CloseHandle(snapshot);
-						CloseHandle(process);
-						return terminate;
-					}
-				} while (Process32Next(snapshot, &entry));
-			}
-		}
-		CloseHandle(snapshot);
-		return false;
-	}
-};
+}

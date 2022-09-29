@@ -145,7 +145,7 @@ public:
 
 			if (ImGui::Button("Copy to clipboard##infoTab"))
 			{
-				utils->CopyToClipboard(sResultJson);
+				Utils::CopyToClipboard(sResultJson);
 			}
 
 			ImGui::EndTabItem();
