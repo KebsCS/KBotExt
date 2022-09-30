@@ -176,7 +176,7 @@
     <ClInclude Include="SettingsTab.h">
       <Filter>Tabs</Filter>
     </ClInclude>
-    <ClInclude Include="Settings.h">
+    <ClInclude Include="Config.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="MiscTab.h">

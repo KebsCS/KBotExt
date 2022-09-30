@@ -7,7 +7,7 @@
 
 #include "Auth.h"
 #include "HTTP.h"
-#include "Settings.h"
+#include "Config.h"
 
 class Misc
 {
@@ -117,7 +117,7 @@ public:
 			return "No data";// "Champion data still downloading";
 		}
 		{
-			for (auto c : champSkins)
+			for (const auto& c : champSkins)
 			{
 				if (c.key == id)
 					return c.name;

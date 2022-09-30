@@ -7,7 +7,7 @@
 #include "DirectX.h"
 #include "Auth.h"
 #include "Utils.h"
-#include "Settings.h"
+#include "Config.h"
 
 Settings S;
 
@@ -36,7 +36,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		cmdLine.replace(cmdLine.find("\"--no-proxy-server\""), strlen("\"--no-proxy-server\""), "");
 
 		AllocConsole();
-		freopen("CONOUT$", "w", stdout);
+		FILE* f;
+		freopen_s(&f, "CONOUT$", "w", stdout);
 
 		STARTUPINFOA startupInfo;
 		memset(&startupInfo, 0, sizeof(STARTUPINFOA));
@@ -55,6 +56,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		{
 			CloseHandle(processInformation.hProcess);
 			CloseHandle(processInformation.hThread);
+			fclose(f);
+			FreeConsole();
 			return 0;
 		}
 
@@ -65,6 +68,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		CloseHandle(processInformation.hProcess);
 		CloseHandle(processInformation.hThread);
 		std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+		fclose(f);
+		FreeConsole();
 	}
 	else
 	{
@@ -73,7 +78,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 		bool oldStreamProof = S.streamProof;
 
-		CSettings::Load();
+		Config::Load();
 
 		bool oldDebugger = S.debugger;
 
@@ -112,7 +117,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 #ifndef NDEBUG
 		AllocConsole();
-		freopen("CONOUT$", "w", stdout);
+		FILE* f;
+		freopen_s(&f, "CONOUT$", "w", stdout);
 #endif
 
 		if (auth->GetLeagueClientInfo())
@@ -245,12 +251,17 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			std::this_thread::sleep_for(std::chrono::milliseconds(1));
 		}
 
-		CSettings::Save();
+		Config::Save();
 
 		// Cleanup
 		ImGui_ImplDX11_Shutdown();
 		ImGui_ImplWin32_Shutdown();
 		ImGui::DestroyContext();
+
+#ifndef NDEBUG
+		fclose(f);
+		FreeConsole();
+#endif
 
 		//Exit
 		Direct3D9.Shutdown();
@@ -283,7 +294,7 @@ LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			{
 				S.Window.height = rect.bottom - rect.top;
 				S.Window.width = rect.right - rect.left;
-				CSettings::Save();
+				Config::Save();
 			}
 		}
 		return 0;

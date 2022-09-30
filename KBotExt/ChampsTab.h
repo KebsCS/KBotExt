@@ -122,11 +122,11 @@ public:
 
 				champsAll.clear();
 
-				for (auto minimal : champsMinimal)
+				for (const auto& minimal : champsMinimal)
 				{
 					ChampAll champ;
 					champ.min = minimal;
-					for (auto mastery : champsMastery)
+					for (const auto& mastery : champsMastery)
 					{
 						if (minimal.id == mastery.championId)
 						{
@@ -172,7 +172,7 @@ public:
 
 			ImGui::Separator();
 			ImGui::Text("Champions owned: %d", iChampsOwned);
-			for (auto champ : champsAll)
+			for (const auto& champ : champsAll)
 			{
 				if (!champ.min.owned)
 					continue;

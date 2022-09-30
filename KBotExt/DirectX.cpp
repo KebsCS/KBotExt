@@ -23,7 +23,7 @@ void GetAllChampionSkins(std::string patch)
 	Json::Value root;
 	if (reader->parse(result.c_str(), result.c_str() + static_cast<int>(result.length()), &root, &err))
 	{
-		for (std::string name : root["data"].getMemberNames())
+		for (const std::string& name : root["data"].getMemberNames())
 		{
 			std::string result2 = http->Request("GET", "http://ddragon.leagueoflegends.com/cdn/" + patch + "/data/en_US/champion/" + name + ".json");
 			Json::Value root2;
@@ -232,7 +232,7 @@ void Direct3D9Render::MenuInit()
 
 	io.Fonts->AddFontDefault();
 
-	for (std::string font : S.vFonts)
+	for (const std::string& font : S.vFonts)
 	{
 		io.Fonts->AddFontFromFileTTF(font.c_str(), 13.0f, NULL, ranges);
 	}

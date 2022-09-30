@@ -365,7 +365,7 @@ public:
 			if (ImGui::CollapsingHeader(chosenInstalock.c_str()))
 			{
 				std::vector<std::pair<int, std::string>>instalockChamps = GetInstalockChamps();
-				for (auto champ : instalockChamps)
+				for (const auto& champ : instalockChamps)
 				{
 					char bufchamp[128];
 					sprintf_s(bufchamp, "##Select %s", champ.second.c_str());
@@ -388,7 +388,7 @@ public:
 				ImGui::SameLine();
 				ImGui::RadioButton("##noneBackupPick", &S.gameTab.backupId, 0);
 				std::vector<std::pair<int, std::string>>instalockChamps = GetInstalockChamps();
-				for (auto champ : instalockChamps)
+				for (const auto& champ : instalockChamps)
 				{
 					char bufchamp[128];
 					sprintf_s(bufchamp, "##Select %s", champ.second.c_str());
@@ -416,7 +416,7 @@ public:
 					ImGui::Text("None");
 					ImGui::SameLine();
 					ImGui::RadioButton("##nonechamp", &S.gameTab.autoBanId, 0);
-					for (auto c : champSkins)
+					for (const auto& c : champSkins)
 					{
 						char bufchamp[128];
 						sprintf_s(bufchamp, "##Select %s", c.name.c_str());

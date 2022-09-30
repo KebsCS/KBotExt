@@ -65,9 +65,9 @@ public:
 							if (!champSkins.empty())
 							{
 								bool found = false;
-								for (auto champ : champSkins)
+								for (const auto& champ : champSkins)
 								{
-									for (auto s : champ.skins)
+									for (const auto& s : champ.skins)
 									{
 										if (skin.itemId == std::stoi(s.first))
 										{
@@ -116,7 +116,7 @@ public:
 			ImGui::Separator();
 			ImGui::Text("Skins owned: %d", ownedSkins.size());
 
-			for (Skin skin : ownedSkins)
+			for (const Skin& skin : ownedSkins)
 			{
 				ImGui::Separator();
 				if (!skin.name.empty())

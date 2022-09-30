@@ -233,11 +233,11 @@ public:
 				}
 				else
 				{
-					for (auto c : champSkins)
+					for (const auto& c : champSkins)
 					{
 						if (ImGui::TreeNode(c.name.c_str()))
 						{
-							for (auto s : c.skins)
+							for (const auto& s : c.skins)
 							{
 								if (ImGui::Button(s.second.c_str()))
 								{

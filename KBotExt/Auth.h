@@ -13,10 +13,14 @@ public:
 	int riotPort = 0;
 	std::string riotToken;
 	std::string riotHeader;
+	std::string riotVersion;
+	std::wstring riotPath;
 
 	int leaguePort = 0;
 	std::string leagueToken;
 	std::string leagueHeader;
+	std::string leagueVersion;
+	std::wstring leaguePath;
 
 	// returns true on success
 	bool GetRiotClientInfo();
@@ -32,7 +36,11 @@ private:
 
 	int GetPort(std::string cmdLine);
 	std::string GetToken(std::string cmdLine);
-	std::wstring GetProcessCommandLine(std::wstring processName);
+
+	DWORD GetProcessId(std::wstring processName);
+	std::wstring GetProcessCommandLine(DWORD processId);
+	std::wstring GetProcessPath(DWORD processId);
+	std::string GetFileVersion(std::wstring file);
 };
 
 extern Auth* auth;

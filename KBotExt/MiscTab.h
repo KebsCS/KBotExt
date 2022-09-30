@@ -5,7 +5,7 @@
 #include "HTTP.h"
 #include "Auth.h"
 #include "Misc.h"
-#include "Settings.h"
+#include "Config.h"
 
 class MiscTab
 {
@@ -16,7 +16,7 @@ public:
 		int max = 999;
 		std::string bestMatch;
 
-		for (std::string str1 : vec)
+		for (const std::string& str1 : vec)
 		{
 			int l_string_length1 = str1.length();
 			int l_string_length2 = str2.length();
@@ -307,7 +307,7 @@ public:
 					{
 						int i = 0;
 
-						for (std::string name : root.getMemberNames())
+						for (const std::string& name : root.getMemberNames())
 						{
 							std::regex regexStr("^" + itemsDisenchant[itemIndexDisenchant].second + "_[\\d]+");
 
@@ -354,7 +354,7 @@ public:
 			static std::vector<std::string>champNames;
 			if (!champSkins.empty() && champNames.empty())
 			{
-				for (auto champ : champSkins)
+				for (const auto& champ : champSkins)
 				{
 					champNames.emplace_back(champ.name);
 					//std::cout << "('" << champ.name << "', " << champ.key << "), " << std::endl;
@@ -379,7 +379,7 @@ public:
 				lastSize = strlen(bufChampionName);
 				closestChampion = LevenshteinDistance(champNames, bufChampionName);
 
-				for (auto champ : champSkins)
+				for (const auto& champ : champSkins)
 				{
 					if (closestChampion == champ.name)
 					{

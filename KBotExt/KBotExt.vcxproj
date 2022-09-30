@@ -214,7 +214,7 @@
     <ClInclude Include="Misc.h" />
     <ClInclude Include="MiscTab.h" />
     <ClInclude Include="ProfileTab.h" />
-    <ClInclude Include="Settings.h" />
+    <ClInclude Include="Config.h" />
     <ClInclude Include="SettingsTab.h" />
     <ClInclude Include="SkinsTab.h" />
     <ClInclude Include="Utils.h" />
