@@ -458,7 +458,7 @@ public:
 
 			ImGui::Separator();
 			ImGui::Text("Champs:");
-			if (ImGui::Button("Refund last purchased champions"))
+			if (ImGui::Button("Refund last purchased champion"))
 			{
 				Json::CharReaderBuilder builder;
 				const std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
