@@ -684,10 +684,12 @@ public:
 																		//	break;
 																		//}
 																	}
-																	else if (actionType == "ban" && S.gameTab.autoBanId)
+																	else if (actionType == "ban" && S.gameTab.autoBanId && S.gameTab.autoBanEnabled)
 																	{
 																		if (actions[i]["completed"].asBool() == false)
 																		{
+																			std::this_thread::sleep_for(std::chrono::milliseconds(S.gameTab.autoBanDelay));
+
 																			http->Request("PATCH", "https://127.0.0.1/lol-champ-select/v1/session/actions/" + actions[i]["id"].asString(),
 																				R"({"completed":true,"championId":)" + std::to_string(S.gameTab.autoBanId) + "}", auth->leagueHeader, "", "", auth->leaguePort);
 																		}
