@@ -55,6 +55,8 @@ struct Settings
 
 	struct
 	{
+		int firstRole = 0;
+		int secondRole = 0;
 		bool autoAcceptEnabled = false;
 		bool instalockEnabled = false;
 		int instalockId = 0;
@@ -108,6 +110,8 @@ public:
 				root["invokeTab"]["destination"] = S.invokeTab.destination;
 				root["invokeTab"]["method"] = S.invokeTab.method;
 				root["invokeTab"]["args"] = S.invokeTab.args;
+				root["gameTab"]["firstRole"] = S.gameTab.firstRole;
+				root["gameTab"]["secondRole"] = S.gameTab.secondRole;
 				root["gameTab"]["autoAcceptEnabled"] = S.gameTab.autoAcceptEnabled;
 				root["gameTab"]["instalockEnabled"] = S.gameTab.instalockEnabled;
 				root["gameTab"]["instalockDelay"] = S.gameTab.instalockDelay;
@@ -170,6 +174,8 @@ public:
 				if (auto t = root["invokeTab"]["destination"]; !t.empty()) S.invokeTab.destination = t.asString();
 				if (auto t = root["invokeTab"]["method"]; !t.empty()) S.invokeTab.method = t.asString();
 				if (auto t = root["invokeTab"]["args"]; !t.empty()) S.invokeTab.args = t.asString();
+				if (auto t = root["gameTab"]["firstRole"]; !t.empty()) S.gameTab.firstRole = t.asInt();
+				if (auto t = root["gameTab"]["secondRole"]; !t.empty()) S.gameTab.secondRole = t.asInt();
 				if (auto t = root["gameTab"]["autoAcceptEnabled"]; !t.empty()) S.gameTab.autoAcceptEnabled = t.asBool();
 				if (auto t = root["gameTab"]["instalockEnabled"]; !t.empty()) S.gameTab.instalockEnabled = t.asBool();
 				if (auto t = root["gameTab"]["instalockDelay"]; !t.empty()) S.gameTab.instalockDelay = t.asInt();

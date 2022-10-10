@@ -81,6 +81,73 @@ public:
 
 			ImGui::Separator();
 
+			ImGui::Text("Roles:");
+			ImGui::SameLine();
+			ImGui::HelpMarker("Auto pick roles for Draft, Solo/Duo and Flex queues");
+
+			ImGui::Columns(3, 0, false);
+
+			std::vector<std::string>first_position = { "UNSELECTED", "TOP","JUNGLE","MIDDLE","BOTTOM","UTILITY","FILL" };
+			static int first_indexPosition = 0; // Here we store our selection data as an index.
+			if (first_indexPosition != S.gameTab.firstRole)
+			{
+				first_indexPosition = S.gameTab.firstRole;
+			}
+			const char* first_labelPosition = first_position[first_indexPosition].c_str();
+
+			if (ImGui::BeginCombo("##comboFirstPosition", first_labelPosition, 0))
+			{
+				for (int n = 0; n < first_position.size(); n++)
+				{
+					const bool is_selected = (S.gameTab.firstRole == n);
+					if (ImGui::Selectable(first_position[n].c_str(), is_selected))
+						S.gameTab.firstRole = n;
+
+					if (is_selected)
+						ImGui::SetItemDefaultFocus();
+				}
+				ImGui::EndCombo();
+			}
+			ImGui::SameLine();
+			ImGui::Text("Primary");
+
+			ImGui::NextColumn();
+
+			std::vector<std::string>second_position = { "UNSELECTED", "TOP","JUNGLE","MIDDLE","BOTTOM","UTILITY","FILL" };
+			static int second_indexPosition = 0; // Here we store our selection data as an index.
+			if (second_indexPosition != S.gameTab.secondRole)
+			{
+				second_indexPosition = S.gameTab.secondRole;
+			}
+			const char* second_labelPosition = second_position[second_indexPosition].c_str();
+
+			if (ImGui::BeginCombo("##comboSecondPosition", second_labelPosition, 0))
+			{
+				for (int n = 0; n < second_position.size(); n++)
+				{
+					const bool is_selected = (S.gameTab.secondRole == n);
+					if (ImGui::Selectable(second_position[n].c_str(), is_selected))
+						S.gameTab.secondRole = n;
+
+					if (is_selected)
+						ImGui::SetItemDefaultFocus();
+				}
+				ImGui::EndCombo();
+			}
+			ImGui::SameLine();
+			ImGui::Text("Secondary");
+
+			ImGui::NextColumn();
+
+			if (ImGui::Button("Pick roles"))
+			{
+				result = http->Request("PUT", "https://127.0.0.1/lol-lobby/v1/lobby/members/localMember/position-preferences", "{\"firstPreference\":\"" + first_position[first_indexPosition] + "\",\"secondPreference\":\"" + second_position[second_indexPosition] + "\"}", auth->leagueHeader, "", "", auth->leaguePort);
+			}
+			ImGui::SameLine();
+			ImGui::HelpMarker("If you are already in a lobby you can use this button to pick the roles, or start a new lobby with the buttons above");
+
+			ImGui::Separator();
+
 			ImGui::Columns(4, 0, false);
 
 			if (ImGui::Button("Tutorial 1"))
@@ -207,7 +274,15 @@ public:
 					body = custom;
 					custom = "";
 				}
-				result = http->Request("POST", "https://127.0.0.1/lol-lobby/v2/lobby", body, auth->leagueHeader, "", "", auth->leaguePort);
+				if (gameID == DraftPick || gameID == SoloDuo || gameID == Flex)
+				{
+					result = http->Request("POST", "https://127.0.0.1/lol-lobby/v2/lobby", body, auth->leagueHeader, "", "", auth->leaguePort);
+					http->Request("PUT", "https://127.0.0.1/lol-lobby/v1/lobby/members/localMember/position-preferences", "{\"firstPreference\":\"" + first_position[first_indexPosition] + "\",\"secondPreference\":\"" + second_position[second_indexPosition] + "\"}", auth->leagueHeader, "", "", auth->leaguePort);
+				}
+				else
+				{
+					result = http->Request("POST", "https://127.0.0.1/lol-lobby/v2/lobby", body, auth->leagueHeader, "", "", auth->leaguePort);
+				}
 
 				/*	{
 						for (int i = 0; i < 10001; i++)
