@@ -456,6 +456,41 @@ public:
 			ImGui::SameLine();
 			Misc::HelpMarker("Works only when you don't have enough RP for boost");*/
 
+			ImGui::Separator();
+			ImGui::Text("Champs:");
+			if (ImGui::Button("Refund last purchased champions"))
+			{
+				Json::CharReaderBuilder builder;
+				const std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
+				JSONCPP_STRING err;
+				Json::Value rootLocale;
+				Json::Value rootSession;
+				Json::Value rootPurchaseHistory;
+
+				std::string regionLocale = http->Request("GET", "https://127.0.0.1/riotclient/get_region_locale", "", auth->leagueHeader, "", "", auth->leaguePort);
+				if (reader->parse(regionLocale.c_str(), regionLocale.c_str() + static_cast<int>(regionLocale.length()), &rootLocale, &err))
+				{
+					std::string region = Utils::WstringToString(Utils::StringToWstring(rootLocale["webRegion"].asString()));
+					std::string session = http->Request("GET", "https://127.0.0.1/lol-login/v1/session", "", auth->leagueHeader, "", "", auth->leaguePort);
+					if (reader->parse(session.c_str(), session.c_str() + static_cast<int>(session.length()), &rootSession, &err))
+					{
+						std::string accountId = rootSession["accountId"].asString();
+						std::string idToken = rootSession["idToken"].asString();
+						std::string authorizationHeader = "Authorization: Bearer " + idToken + "\r\n" +
+							"Accept: application/json" + "\r\n" +
+							"Content-Type: application/json" + "\r\n";
+						std::string purchaseHistory = http->Request("GET", "https://" + region + ".store.leagueoflegends.com/storefront/v3/history/purchase", "", authorizationHeader, "", "");
+						if (reader->parse(purchaseHistory.c_str(), purchaseHistory.c_str() + static_cast<int>(purchaseHistory.length()), &rootPurchaseHistory, &err))
+						{
+							std::string transactionId = rootPurchaseHistory["transactions"][0]["transactionId"].asString();
+							result = http->Request("POST", "https://" + region + ".store.leagueoflegends.com/storefront/v3/refund", "{\"accountId\":" + accountId + ",\"transactionId\":\"" + transactionId + "\",\"inventoryType\":\"CHAMPION\",\"language\":\"EN_US\"}", authorizationHeader, "", "");
+						}
+					}
+				}
+			}
+			ImGui::SameLine();
+			ImGui::HelpMarker("Buy a champion, pick it during a game and click this button before the game ends, no refund token will be used to refund it");
+
 			static Json::StreamWriterBuilder wBuilder;
 			static std::string sResultJson;
 			static char* cResultJson;
