@@ -61,6 +61,8 @@ struct Settings
 		int instalockDelay = 0;
 		std::string instantMessage;
 		int instantMessageDelay = 0;
+		int instantMessageTimes = 1;
+		int instantMessageDelayTimes = 0;
 		int autoBanId = 0;
 		bool dodgeOnBan = false;
 		int backupId = 0;
@@ -114,6 +116,8 @@ public:
 				root["gameTab"]["instalockId"] = S.gameTab.instalockId;
 				root["gameTab"]["instantMessage"] = S.gameTab.instantMessage;
 				root["gameTab"]["instantMessageDelay"] = S.gameTab.instantMessageDelay;
+				root["gameTab"]["instantMessageTimes"] = S.gameTab.instantMessageTimes;
+				root["gameTab"]["instantMessageDelayTimes"] = S.gameTab.instantMessageDelayTimes;
 				root["gameTab"]["autoBanId"] = S.gameTab.autoBanId;
 				root["gameTab"]["dodgeOnBan"] = S.gameTab.dodgeOnBan;
 				root["gameTab"]["backupId"] = S.gameTab.backupId;
@@ -176,6 +180,8 @@ public:
 				if (auto t = root["gameTab"]["instalockId"]; !t.empty()) S.gameTab.instalockId = t.asInt();
 				if (auto t = root["gameTab"]["instantMessage"]; !t.empty()) S.gameTab.instantMessage = t.asString();
 				if (auto t = root["gameTab"]["instantMessageDelay"]; !t.empty()) S.gameTab.instantMessageDelay = t.asInt();
+				if (auto t = root["gameTab"]["instantMessageTimes"]; !t.empty()) S.gameTab.instantMessageTimes = t.asInt();
+				if (auto t = root["gameTab"]["instantMessageDelayTimes"]; !t.empty()) S.gameTab.instantMessageDelayTimes = t.asInt();
 				if (auto t = root["gameTab"]["autoBanId"]; !t.empty()) S.gameTab.autoBanId = t.asInt();
 				if (auto t = root["gameTab"]["dodgeOnBan"]; !t.empty()) S.gameTab.dodgeOnBan = t.asBool();
 				if (auto t = root["gameTab"]["backupId"]; !t.empty()) S.gameTab.backupId = t.asInt();
