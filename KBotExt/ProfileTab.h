@@ -189,6 +189,20 @@ public:
 			}
 
 			ImGui::Separator();
+			static int masteryLvl;
+			ImGui::Text("Mastery:");
+			ImGui::InputInt("##inputmasteryLvl:", &masteryLvl, 1, 100);
+			ImGui::SameLine();
+			if (ImGui::Button("Submit##submitmasteryLvl"))
+			{
+				std::string result = http->Request("PUT", "https://127.0.0.1/lol-chat/v1/me", "{\"lol\":{\"masteryScore\":\""+std::to_string(masteryLvl)+"\"}}", auth->leagueHeader, "", "", auth->leaguePort);
+				if (result.find("errorCode") != std::string::npos)
+				{
+					MessageBoxA(0, result.c_str(), 0, 0);
+				}
+			}
+
+			ImGui::Separator();
 
 			static int iconID;
 			ImGui::Text("Icon:");
