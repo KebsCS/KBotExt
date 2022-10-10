@@ -398,6 +398,15 @@ public:
 				}
 			}
 
+			ImGui::Columns(2, 0, false);
+
+			ImGui::Checkbox("Auto ban", &S.gameTab.autoBanEnabled);
+			ImGui::NextColumn();
+
+			ImGui::SliderInt("Delay##sliderautoBanDelay", &S.gameTab.autoBanDelay, 0, 10000, "%d ms");
+
+			ImGui::Columns(1);
+
 			static std::string chosenAutoban = "Auto ban\t\t\t\tChosen: " + Misc::ChampIdToName(S.gameTab.autoBanId) + "###AnimatedAutoban";
 			static int lastAutoban = 0;
 			if ((lastAutoban != S.gameTab.autoBanId) && !isStillDownloading)
