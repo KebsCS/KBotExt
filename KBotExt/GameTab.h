@@ -335,6 +335,16 @@ public:
 
 			ImGui::Columns(1);
 
+			ImGui::Columns(2, 0, false);
+
+			ImGui::SliderInt("Time(s)##sliderInstantMessageTimes", &S.gameTab.instantMessageTimes, 1, 10, "%d");
+
+			ImGui::NextColumn();
+
+			ImGui::SliderInt("Delay between msgs##sliderInstantMessageDelayTimes", &S.gameTab.instantMessageDelayTimes, 0, 10000, "%d ms");
+
+			ImGui::Columns(1);
+
 			ImGui::Columns(3, 0, false);
 
 			ImGui::Checkbox("Instalock", &S.gameTab.instalockEnabled);
@@ -578,6 +588,14 @@ public:
 					while (error.find("errorCode") != std::string::npos)
 					{
 						error = http->Request("POST", request, R"({"type":"chat", "body":")" + std::string(S.gameTab.instantMessage) + R"("})", auth->leagueHeader, "", "", auth->leaguePort);
+						if (S.gameTab.instantMessageTimes > 1)
+						{
+							for (int time = 0; time < S.gameTab.instantMessageTimes - 1; time++)
+							{
+								std::this_thread::sleep_for(std::chrono::milliseconds(S.gameTab.instantMessageDelayTimes));
+								error = http->Request("POST", request, R"({"type":"chat", "body":")" + std::string(S.gameTab.instantMessage) + R"("})", auth->leagueHeader, "", "", auth->leaguePort);
+							}
+						}
 						std::this_thread::sleep_for(std::chrono::milliseconds(1));
 					}
 					break;
