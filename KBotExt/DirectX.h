@@ -23,7 +23,6 @@ class Direct3D9Render
 private:
 
 	std::string gamePatch;
-	void AutoAccept();
 public:
 	bool closedClient = false;
 

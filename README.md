@@ -13,11 +13,15 @@
 * Launch multiple clients
 * Language changer
 * Start any lobby/game 
-* The fastest instalock and auto accept
+* Custom bots difficulty
+* The fastest instalock, auto accept, instant message and auto ban
 * Automatically pick a secondary, or dodge if your champion is banned
+* Dodge lobbies without closing the client
 * Mass invite all friends to lobby
 * Open multi op.gg with all players in a champion select
-* Set custom icon/background/status/rank visible for everyone
+* Play any champion/skin for free
+* Set custom icon/background/status/rank/mastery visible for everyone
+* Set empty challenge badges (tokens)
 * Info of any player using his nickname or id
 * List of champions/skins with all info and ability to sort them
 * Force close the client instantly
@@ -25,12 +29,12 @@
 * Accept or delete all friend requests
 * Disenchant any loot you want with 1 click
 * Champion name to id lookup
-* Check the email linked to account you're logged on
 * Send any custom request or invoke
 * Stream proof
 * IFEO debugger for using HTTP debuggers
 * Automatically saves your preferences
 * Customizable font and window size
 * 1 click login with automated client open
+* (Partially patched) Check the email linked to account you're logged on
 * (Patched) Free skin and free champion (Riot Girl Tristana)
-* (Patched) ARAM boost
+* (Patched) Free ARAM boost

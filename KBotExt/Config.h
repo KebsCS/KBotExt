@@ -23,8 +23,8 @@ struct Settings
 
 	struct
 	{
-		int width = 700;
-		int height = 500;
+		int width = 730;
+		int height = 530;
 		bool resize = false;
 	}Window;
 

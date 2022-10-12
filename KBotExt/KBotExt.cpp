@@ -17,18 +17,16 @@ LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 HWND hwnd;
 
-//float processTimeMs = 0;
-
-int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
+int WINAPI wWinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/, LPWSTR lpCmdLine, int /*nCmdShow*/)
 {
 	LPWSTR* szArgList;
 	int argCount;
-	szArgList = CommandLineToArgvW(GetCommandLineW(), &argCount);
+	szArgList = CommandLineToArgvW(lpCmdLine, &argCount);
 	if (argCount > 1)
 	{
-		std::string applicationName = Utils::WstringToString(szArgList[1]);
+		std::string applicationName = Utils::WstringToString(szArgList[0]);
 		std::string cmdLine;
-		for (int i = 2; i < argCount; i++)
+		for (int i = 1; i < argCount; i++)
 		{
 			cmdLine += "\"" + Utils::WstringToString(szArgList[i]) + "\" ";
 		}
@@ -131,7 +129,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			auth->GetRiotClientInfo();
 		}
 
-		std::cout << lpCmdLine << std::endl;
+		std::wcout << lpCmdLine << std::endl;
 
 		bool closedNow = false;
 		bool done = false;

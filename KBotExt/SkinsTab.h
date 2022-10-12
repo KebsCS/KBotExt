@@ -53,9 +53,18 @@ public:
 							skin.isVintage = root[i]["payload"]["isVintage"].asBool();
 
 							std::string purchase = root[i]["purchaseDate"].asString().c_str();
-							sscanf(purchase.c_str(), "%04d%02d%02dT%02d%02d%02d",
-								&skin.purchaseDate.tm_year, &skin.purchaseDate.tm_mon, &skin.purchaseDate.tm_mday,
-								&skin.purchaseDate.tm_hour, &skin.purchaseDate.tm_min, &skin.purchaseDate.tm_sec);
+							if (purchase.find("-") == std::string::npos && purchase.find(":") == std::string::npos)
+							{
+								sscanf(purchase.c_str(), "%04d%02d%02dT%02d%02d%02d",
+									&skin.purchaseDate.tm_year, &skin.purchaseDate.tm_mon, &skin.purchaseDate.tm_mday,
+									&skin.purchaseDate.tm_hour, &skin.purchaseDate.tm_min, &skin.purchaseDate.tm_sec);
+							}
+							else
+							{
+								sscanf(purchase.c_str(), "%04d-%02d-%02dT%02d:%02d:%02d",
+									&skin.purchaseDate.tm_year, &skin.purchaseDate.tm_mon, &skin.purchaseDate.tm_mday,
+									&skin.purchaseDate.tm_hour, &skin.purchaseDate.tm_min, &skin.purchaseDate.tm_sec);
+							}
 							skin.purchaseDate.tm_year -= 1901;
 							skin.purchaseDate.tm_mon -= 1;
 

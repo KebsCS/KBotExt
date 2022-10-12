@@ -124,6 +124,8 @@ public:
 
 				for (const auto& minimal : champsMinimal)
 				{
+					if (!minimal.owned)
+						continue;
 					ChampAll champ;
 					champ.min = minimal;
 					for (const auto& mastery : champsMastery)

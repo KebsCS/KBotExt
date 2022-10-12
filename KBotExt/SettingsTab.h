@@ -141,8 +141,8 @@ public:
 
 			if (ImGui::Button("Reset window size"))
 			{
-				S.Window.width = 700;
-				S.Window.height = 500;
+				S.Window.width = 730;
+				S.Window.height = 530;
 				S.Window.resize = true;
 				Config::Save();
 			}

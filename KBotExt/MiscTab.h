@@ -285,6 +285,19 @@ public:
 
 			ImGui::Separator();
 
+			static int minimapScale = 100;
+			ImGui::Text("In-game minimap scale: ");
+			ImGui::SameLine();
+			ImGui::SliderInt("##sliderMinimapScale", &minimapScale, 0, 350, "%d");
+			ImGui::SameLine();
+			if (ImGui::Button("Submit##submitMinimapScale"))
+			{
+				result = http->Request("PATCH", "https://127.0.0.1/lol-game-settings/v1/game-settings",
+					std::format("{{\"HUD\":{{\"MinimapScale\":{:.2f}}}}}", minimapScale / 33.33f), auth->leagueHeader, "", "", auth->leaguePort);
+			}
+
+			ImGui::Separator();
+
 			static std::vector<std::pair<std::string, std::string>>itemsDisenchant = {
 	{"Champion shards","CHAMPION_RENTAL"}, {"Champion pernaments","CHAMPION"},
 	{"Skin shards","CHAMPION_SKIN_RENTAL"}, {"Skin pernaments", "CHAMPION_SKIN"},

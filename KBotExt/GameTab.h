@@ -17,6 +17,12 @@ public:
 		{
 			static std::string result;
 			static std::string custom;
+
+			static std::vector<std::string>firstPosition = { "UNSELECTED", "TOP", "JUNGLE", "MIDDLE", "BOTTOM", "UTILITY", "FILL" };
+			static int indexFirstPosition = 0;
+			static std::vector<std::string>secondPosition = { "UNSELECTED", "TOP", "JUNGLE", "MIDDLE", "BOTTOM", "UTILITY", "FILL" };
+			static int indexSecondPosition = 0;
+
 			static int gameID = 0;
 
 			ImGui::Text("Games:");
@@ -78,73 +84,6 @@ public:
 				gameID = Clash;
 
 			ImGui::Columns(1);
-
-			ImGui::Separator();
-
-			ImGui::Text("Roles:");
-			ImGui::SameLine();
-			ImGui::HelpMarker("Auto pick roles for Draft, Solo/Duo and Flex queues");
-
-			ImGui::Columns(3, 0, false);
-
-			std::vector<std::string>first_position = { "UNSELECTED", "TOP","JUNGLE","MIDDLE","BOTTOM","UTILITY","FILL" };
-			static int first_indexPosition = 0; // Here we store our selection data as an index.
-			if (first_indexPosition != S.gameTab.firstRole)
-			{
-				first_indexPosition = S.gameTab.firstRole;
-			}
-			const char* first_labelPosition = first_position[first_indexPosition].c_str();
-
-			if (ImGui::BeginCombo("##comboFirstPosition", first_labelPosition, 0))
-			{
-				for (int n = 0; n < first_position.size(); n++)
-				{
-					const bool is_selected = (S.gameTab.firstRole == n);
-					if (ImGui::Selectable(first_position[n].c_str(), is_selected))
-						S.gameTab.firstRole = n;
-
-					if (is_selected)
-						ImGui::SetItemDefaultFocus();
-				}
-				ImGui::EndCombo();
-			}
-			ImGui::SameLine();
-			ImGui::Text("Primary");
-
-			ImGui::NextColumn();
-
-			std::vector<std::string>second_position = { "UNSELECTED", "TOP","JUNGLE","MIDDLE","BOTTOM","UTILITY","FILL" };
-			static int second_indexPosition = 0; // Here we store our selection data as an index.
-			if (second_indexPosition != S.gameTab.secondRole)
-			{
-				second_indexPosition = S.gameTab.secondRole;
-			}
-			const char* second_labelPosition = second_position[second_indexPosition].c_str();
-
-			if (ImGui::BeginCombo("##comboSecondPosition", second_labelPosition, 0))
-			{
-				for (int n = 0; n < second_position.size(); n++)
-				{
-					const bool is_selected = (S.gameTab.secondRole == n);
-					if (ImGui::Selectable(second_position[n].c_str(), is_selected))
-						S.gameTab.secondRole = n;
-
-					if (is_selected)
-						ImGui::SetItemDefaultFocus();
-				}
-				ImGui::EndCombo();
-			}
-			ImGui::SameLine();
-			ImGui::Text("Secondary");
-
-			ImGui::NextColumn();
-
-			if (ImGui::Button("Pick roles"))
-			{
-				result = http->Request("PUT", "https://127.0.0.1/lol-lobby/v1/lobby/members/localMember/position-preferences", "{\"firstPreference\":\"" + first_position[first_indexPosition] + "\",\"secondPreference\":\"" + second_position[second_indexPosition] + "\"}", auth->leagueHeader, "", "", auth->leaguePort);
-			}
-			ImGui::SameLine();
-			ImGui::HelpMarker("If you are already in a lobby you can use this button to pick the roles, or start a new lobby with the buttons above");
 
 			ImGui::Separator();
 
@@ -277,7 +216,8 @@ public:
 				if (gameID == DraftPick || gameID == SoloDuo || gameID == Flex)
 				{
 					result = http->Request("POST", "https://127.0.0.1/lol-lobby/v2/lobby", body, auth->leagueHeader, "", "", auth->leaguePort);
-					http->Request("PUT", "https://127.0.0.1/lol-lobby/v1/lobby/members/localMember/position-preferences", "{\"firstPreference\":\"" + first_position[first_indexPosition] + "\",\"secondPreference\":\"" + second_position[second_indexPosition] + "\"}", auth->leagueHeader, "", "", auth->leaguePort);
+					http->Request("PUT", "https://127.0.0.1/lol-lobby/v1/lobby/members/localMember/position-preferences",
+						"{\"firstPreference\":\"" + firstPosition[indexFirstPosition] + "\",\"secondPreference\":\"" + secondPosition[indexSecondPosition] + "\"}", auth->leagueHeader, "", "", auth->leaguePort);
 				}
 				else
 				{
@@ -297,6 +237,68 @@ public:
 
 				gameID = 0;
 			}
+
+			ImGui::Separator();
+
+			ImGui::Columns(3, 0, false);
+
+			if (indexFirstPosition != S.gameTab.firstRole)
+			{
+				indexFirstPosition = S.gameTab.firstRole;
+			}
+			const char* labelFirstPosition = firstPosition[indexFirstPosition].c_str();
+
+			if (ImGui::BeginCombo("##comboFirstPosition", labelFirstPosition, 0))
+			{
+				for (size_t n = 0; n < firstPosition.size(); n++)
+				{
+					const bool isSelected = (S.gameTab.firstRole == n);
+					if (ImGui::Selectable(firstPosition[n].c_str(), isSelected))
+						S.gameTab.firstRole = n;
+
+					if (isSelected)
+						ImGui::SetItemDefaultFocus();
+				}
+				ImGui::EndCombo();
+			}
+			ImGui::SameLine();
+			ImGui::Text("Primary");
+
+			ImGui::NextColumn();
+
+			if (indexSecondPosition != S.gameTab.secondRole)
+			{
+				indexSecondPosition = S.gameTab.secondRole;
+			}
+			const char* second_labelPosition = secondPosition[indexSecondPosition].c_str();
+
+			if (ImGui::BeginCombo("##comboSecondPosition", second_labelPosition, 0))
+			{
+				for (size_t n = 0; n < secondPosition.size(); n++)
+				{
+					const bool isSelected = (S.gameTab.secondRole == n);
+					if (ImGui::Selectable(secondPosition[n].c_str(), isSelected))
+						S.gameTab.secondRole = n;
+
+					if (isSelected)
+						ImGui::SetItemDefaultFocus();
+				}
+				ImGui::EndCombo();
+			}
+			ImGui::SameLine();
+			ImGui::Text("Secondary");
+
+			ImGui::NextColumn();
+
+			if (ImGui::Button("Pick roles"))
+			{
+				result = http->Request("PUT", "https://127.0.0.1/lol-lobby/v1/lobby/members/localMember/position-preferences",
+					"{\"firstPreference\":\"" + firstPosition[indexFirstPosition] + "\",\"secondPreference\":\"" + secondPosition[indexSecondPosition] + "\"}", auth->leagueHeader, "", "", auth->leaguePort);
+			}
+			ImGui::SameLine();
+			ImGui::HelpMarker("If you are already in a lobby you can use this button to pick the roles, or start a new lobby with the buttons above");
+
+			ImGui::Columns(1);
 
 			ImGui::Separator();
 
@@ -393,6 +395,42 @@ public:
 					}
 				}
 			}
+
+			ImGui::NextColumn();
+
+			if (ImGui::Button("Refund last purchase"))
+			{
+				Json::CharReaderBuilder builder;
+				const std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
+				JSONCPP_STRING err;
+				Json::Value rootLocale;
+				Json::Value rootSession;
+				Json::Value rootPurchaseHistory;
+
+				std::string regionLocale = http->Request("GET", "https://127.0.0.1/riotclient/get_region_locale", "", auth->leagueHeader, "", "", auth->leaguePort);
+				if (reader->parse(regionLocale.c_str(), regionLocale.c_str() + static_cast<int>(regionLocale.length()), &rootLocale, &err))
+				{
+					std::string region = Utils::WstringToString(Utils::StringToWstring(rootLocale["webRegion"].asString()));
+					std::string session = http->Request("GET", "https://127.0.0.1/lol-login/v1/session", "", auth->leagueHeader, "", "", auth->leaguePort);
+					if (reader->parse(session.c_str(), session.c_str() + static_cast<int>(session.length()), &rootSession, &err))
+					{
+						std::string accountId = rootSession["accountId"].asString();
+						std::string idToken = rootSession["idToken"].asString();
+						std::string authorizationHeader = "Authorization: Bearer " + idToken + "\r\n" +
+							"Accept: application/json" + "\r\n" +
+							"Content-Type: application/json" + "\r\n";
+						std::string purchaseHistory = http->Request("GET", "https://" + region + ".store.leagueoflegends.com/storefront/v3/history/purchase", "", authorizationHeader, "", "");
+						if (reader->parse(purchaseHistory.c_str(), purchaseHistory.c_str() + static_cast<int>(purchaseHistory.length()), &rootPurchaseHistory, &err))
+						{
+							std::string transactionId = rootPurchaseHistory["transactions"][0]["transactionId"].asString();
+							result = http->Request("POST", "https://" + region + ".store.leagueoflegends.com/storefront/v3/refund", "{\"accountId\":" + accountId + ",\"transactionId\":\"" + transactionId + "\",\"inventoryType\":\"CHAMPION\",\"language\":\"EN_US\"}", authorizationHeader, "", "");
+						}
+					}
+				}
+			}
+			ImGui::SameLine();
+			ImGui::HelpMarker("Buy a champion, pick it during a game and click this button before the game ends, no refund token will be used to refund it");
+
 			ImGui::Columns(1);
 
 			ImGui::Columns(2, 0, false);
@@ -549,41 +587,6 @@ public:
 			}
 			ImGui::SameLine();
 			Misc::HelpMarker("Works only when you don't have enough RP for boost");*/
-
-			ImGui::Separator();
-			ImGui::Text("Champs:");
-			if (ImGui::Button("Refund last purchased champion"))
-			{
-				Json::CharReaderBuilder builder;
-				const std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
-				JSONCPP_STRING err;
-				Json::Value rootLocale;
-				Json::Value rootSession;
-				Json::Value rootPurchaseHistory;
-
-				std::string regionLocale = http->Request("GET", "https://127.0.0.1/riotclient/get_region_locale", "", auth->leagueHeader, "", "", auth->leaguePort);
-				if (reader->parse(regionLocale.c_str(), regionLocale.c_str() + static_cast<int>(regionLocale.length()), &rootLocale, &err))
-				{
-					std::string region = Utils::WstringToString(Utils::StringToWstring(rootLocale["webRegion"].asString()));
-					std::string session = http->Request("GET", "https://127.0.0.1/lol-login/v1/session", "", auth->leagueHeader, "", "", auth->leaguePort);
-					if (reader->parse(session.c_str(), session.c_str() + static_cast<int>(session.length()), &rootSession, &err))
-					{
-						std::string accountId = rootSession["accountId"].asString();
-						std::string idToken = rootSession["idToken"].asString();
-						std::string authorizationHeader = "Authorization: Bearer " + idToken + "\r\n" +
-							"Accept: application/json" + "\r\n" +
-							"Content-Type: application/json" + "\r\n";
-						std::string purchaseHistory = http->Request("GET", "https://" + region + ".store.leagueoflegends.com/storefront/v3/history/purchase", "", authorizationHeader, "", "");
-						if (reader->parse(purchaseHistory.c_str(), purchaseHistory.c_str() + static_cast<int>(purchaseHistory.length()), &rootPurchaseHistory, &err))
-						{
-							std::string transactionId = rootPurchaseHistory["transactions"][0]["transactionId"].asString();
-							result = http->Request("POST", "https://" + region + ".store.leagueoflegends.com/storefront/v3/refund", "{\"accountId\":" + accountId + ",\"transactionId\":\"" + transactionId + "\",\"inventoryType\":\"CHAMPION\",\"language\":\"EN_US\"}", authorizationHeader, "", "");
-						}
-					}
-				}
-			}
-			ImGui::SameLine();
-			ImGui::HelpMarker("Buy a champion, pick it during a game and click this button before the game ends, no refund token will be used to refund it");
 
 			static Json::StreamWriterBuilder wBuilder;
 			static std::string sResultJson;

@@ -91,7 +91,11 @@ public:
 			ImGui::RadioButton("Flex 5v5", &queue, 1); ImGui::SameLine();
 			ImGui::RadioButton("Flex 3v3", &queue, 2); ImGui::SameLine();
 			ImGui::RadioButton("TFT", &queue, 3); ImGui::SameLine();
-			ImGui::RadioButton("()", &queue, 4);
+			ImGui::RadioButton("Hyper Roll", &queue, 4); ImGui::SameLine();
+			ImGui::RadioButton("Double Up", &queue, 5); ImGui::SameLine();
+			ImGui::RadioButton("()", &queue, 6);
+
+			ImGui::Columns(2, 0, false);
 
 			if (ImGui::Button("Submit##submitRank"))
 			{
@@ -111,6 +115,12 @@ public:
 					body += "RANKED_TFT";
 					break;
 				case 4:
+					body += "RANKED_TFT_TURBO";
+					break;
+				case 5:
+					body += "RANKED_TFT_DOUBLE_UP";
+					break;
+				case 6:
 					body += "";
 					break;
 				}
@@ -180,22 +190,23 @@ public:
 				http->Request("PUT", "https://127.0.0.1/lol-chat/v1/me", R"({"lol":{"rankedLeagueQueue":"","rankedLeagueTier":"","rankedLeagueDivision":""}})", auth->leagueHeader, "", "", auth->leaguePort);
 			}
 
-			ImGui::Separator();
+			ImGui::NextColumn();
 
-			ImGui::Text("Challenge badges:");
-			if (ImGui::Button("Empty"))
+			if (ImGui::Button("Empty challenge badges"))
 			{
 				http->Request("POST", "https://127.0.0.1/lol-challenges/v1/update-player-preferences/", R"({"challengeIds": []})", auth->leagueHeader, "", "", auth->leaguePort);
 			}
 
+			ImGui::Columns(1);
+
 			ImGui::Separator();
 			static int masteryLvl;
 			ImGui::Text("Mastery:");
-			ImGui::InputInt("##inputmasteryLvl:", &masteryLvl, 1, 100);
+			ImGui::InputInt("##inputMasteryLvl:", &masteryLvl, 1, 100);
 			ImGui::SameLine();
-			if (ImGui::Button("Submit##submitmasteryLvl"))
+			if (ImGui::Button("Submit##submitMasteryLvl"))
 			{
-				std::string result = http->Request("PUT", "https://127.0.0.1/lol-chat/v1/me", "{\"lol\":{\"masteryScore\":\""+std::to_string(masteryLvl)+"\"}}", auth->leagueHeader, "", "", auth->leaguePort);
+				std::string result = http->Request("PUT", "https://127.0.0.1/lol-chat/v1/me", "{\"lol\":{\"masteryScore\":\"" + std::to_string(masteryLvl) + "\"}}", auth->leagueHeader, "", "", auth->leaguePort);
 				if (result.find("errorCode") != std::string::npos)
 				{
 					MessageBoxA(0, result.c_str(), 0, 0);
