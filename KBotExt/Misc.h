@@ -64,11 +64,11 @@ public:
 			std::string latestTag = root["tag_name"].asString();
 
 			std::vector<std::string>latestNameSplit = Utils::StringSplit(latestTag, ".");
-			std::vector<std::string>programVersionplit = Utils::StringSplit(Misc::programVersion, ".");
+			std::vector<std::string>programVersionSplit = Utils::StringSplit(Misc::programVersion, ".");
 
 			for (size_t i = 0; i < 2; i++)
 			{
-				if (latestNameSplit[i] != programVersionplit[i])
+				if (latestNameSplit[i] != programVersionSplit[i])
 				{
 					if (MessageBoxA(0, "Open download website?", "New major version available", MB_YESNO | MB_SETFOREGROUND) == IDYES)
 					{
