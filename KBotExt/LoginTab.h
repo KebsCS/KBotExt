@@ -42,7 +42,7 @@ private:
 				return "Launching client...";
 			}
 			else
-				return "Invadlid client path, change it in Settings tab";
+				return "Invalid client path, change it in Settings tab";
 		}
 
 		// refresh session
@@ -101,7 +101,7 @@ public:
 			{
 				if (!std::filesystem::exists(S.leaguePath))
 				{
-					result = "Invadlid path, change it in Settings tab";
+					result = "Invalid path, change it in Settings tab";
 				}
 				else
 				{
@@ -140,7 +140,7 @@ public:
 			{
 				if (!std::filesystem::exists(S.leaguePath))
 				{
-					result = "Invadlid path, change it in Settings tab";
+					result = "Invalid path, change it in Settings tab";
 				}
 				else
 				{

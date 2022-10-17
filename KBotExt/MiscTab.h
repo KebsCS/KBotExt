@@ -86,7 +86,7 @@ public:
 			{
 				if (!std::filesystem::exists(S.leaguePath))
 				{
-					result = "Invadlid path, change it in Settings tab";
+					result = "Invalid path, change it in Settings tab";
 				}
 				else
 					ShellExecuteA(NULL, NULL, std::format("{}LeagueClient.exe", S.leaguePath).c_str(), "--allow-multiple-clients", NULL, SW_SHOWNORMAL);
@@ -108,7 +108,7 @@ public:
 			{
 				if (!std::filesystem::exists(S.leaguePath))
 				{
-					result = "Invadlid path, change it in Settings tab";
+					result = "Invalid path, change it in Settings tab";
 				}
 				else
 				{
