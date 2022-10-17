@@ -410,7 +410,7 @@ public:
 				std::string regionLocale = http->Request("GET", "https://127.0.0.1/riotclient/get_region_locale", "", auth->leagueHeader, "", "", auth->leaguePort);
 				if (reader->parse(regionLocale.c_str(), regionLocale.c_str() + static_cast<int>(regionLocale.length()), &rootLocale, &err))
 				{
-					std::string region = Utils::WstringToString(Utils::StringToWstring(rootLocale["webRegion"].asString()));
+					std::string region = Utils::ToLower(rootLocale["region"].asString());
 					std::string session = http->Request("GET", "https://127.0.0.1/lol-login/v1/session", "", auth->leagueHeader, "", "", auth->leaguePort);
 					if (reader->parse(session.c_str(), session.c_str() + static_cast<int>(session.length()), &rootSession, &err))
 					{
