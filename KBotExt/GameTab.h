@@ -403,28 +403,24 @@ public:
 				Json::CharReaderBuilder builder;
 				const std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
 				JSONCPP_STRING err;
-				Json::Value rootLocale;
 				Json::Value rootSession;
 				Json::Value rootPurchaseHistory;
 
-				std::string regionLocale = http->Request("GET", "https://127.0.0.1/riotclient/get_region_locale", "", auth->leagueHeader, "", "", auth->leaguePort);
-				if (reader->parse(regionLocale.c_str(), regionLocale.c_str() + static_cast<int>(regionLocale.length()), &rootLocale, &err))
+				std::string storeUrl = http->Request("GET", "https://127.0.0.1/lol-store/v1/getStoreUrl", "", auth->leagueHeader, "", "", auth->leaguePort);
+				storeUrl = storeUrl.erase(0, 1).erase(storeUrl.size() - 1);
+				std::string session = http->Request("GET", "https://127.0.0.1/lol-login/v1/session", "", auth->leagueHeader, "", "", auth->leaguePort);
+				if (reader->parse(session.c_str(), session.c_str() + static_cast<int>(session.length()), &rootSession, &err))
 				{
-					std::string region = Utils::WstringToString(Utils::StringToWstring(rootLocale["webRegion"].asString()));
-					std::string session = http->Request("GET", "https://127.0.0.1/lol-login/v1/session", "", auth->leagueHeader, "", "", auth->leaguePort);
-					if (reader->parse(session.c_str(), session.c_str() + static_cast<int>(session.length()), &rootSession, &err))
+					std::string accountId = rootSession["accountId"].asString();
+					std::string idToken = rootSession["idToken"].asString();
+					std::string authorizationHeader = "Authorization: Bearer " + idToken + "\r\n" +
+						"Accept: application/json" + "\r\n" +
+						"Content-Type: application/json" + "\r\n";
+					std::string purchaseHistory = http->Request("GET", storeUrl+"/storefront/v3/history/purchase", "", authorizationHeader, "", "");
+					if (reader->parse(purchaseHistory.c_str(), purchaseHistory.c_str() + static_cast<int>(purchaseHistory.length()), &rootPurchaseHistory, &err))
 					{
-						std::string accountId = rootSession["accountId"].asString();
-						std::string idToken = rootSession["idToken"].asString();
-						std::string authorizationHeader = "Authorization: Bearer " + idToken + "\r\n" +
-							"Accept: application/json" + "\r\n" +
-							"Content-Type: application/json" + "\r\n";
-						std::string purchaseHistory = http->Request("GET", "https://" + region + ".store.leagueoflegends.com/storefront/v3/history/purchase", "", authorizationHeader, "", "");
-						if (reader->parse(purchaseHistory.c_str(), purchaseHistory.c_str() + static_cast<int>(purchaseHistory.length()), &rootPurchaseHistory, &err))
-						{
-							std::string transactionId = rootPurchaseHistory["transactions"][0]["transactionId"].asString();
-							result = http->Request("POST", "https://" + region + ".store.leagueoflegends.com/storefront/v3/refund", "{\"accountId\":" + accountId + ",\"transactionId\":\"" + transactionId + "\",\"inventoryType\":\"CHAMPION\",\"language\":\"EN_US\"}", authorizationHeader, "", "");
-						}
+						std::string transactionId = rootPurchaseHistory["transactions"][0]["transactionId"].asString();
+						result = http->Request("POST", storeUrl+"/storefront/v3/refund", "{\"accountId\":" + accountId + ",\"transactionId\":\"" + transactionId + "\",\"inventoryType\":\"CHAMPION\",\"language\":\"EN_US\"}", authorizationHeader, "", "");
 					}
 				}
 			}
