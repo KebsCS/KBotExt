@@ -2,8 +2,7 @@
 
 #include "Definitions.h"
 #include "Includes.h"
-#include "HTTP.h"
-#include "Auth.h"
+#include "LCU.h"
 #include "Misc.h"
 #include "Config.h"
 
@@ -76,9 +75,48 @@ public:
 
 	static void Render()
 	{
+		static bool onOpen = true;
 		if (ImGui::BeginTabItem("Misc"))
 		{
 			static std::string result;
+
+			// Get processes every 5 seconds
+			static auto timeBefore = std::chrono::high_resolution_clock::now();
+			std::chrono::duration<float, std::milli> timeDuration = std::chrono::high_resolution_clock::now() - timeBefore;
+			if (timeDuration.count() > 5000 || onOpen)
+			{
+				timeBefore = std::chrono::high_resolution_clock::now();
+				LCU::GetLeagueProcesses();
+			}
+
+			ImGui::Text("Selected process: ");
+			ImGui::SameLine();
+
+			std::string comboProcesses = "";
+			if (LCU::IsProcessGood())
+			{
+				comboProcesses = std::to_string(LCU::leagueProcesses[LCU::indexLeagueProcesses].first)
+					+ " : " + LCU::leagueProcesses[LCU::indexLeagueProcesses].second;
+			}
+			ImGui::SetNextItemWidth(static_cast<float>(S.Window.width / 3));
+			if (ImGui::BeginCombo("##comboProcesses", comboProcesses.c_str(), 0))
+			{
+				for (size_t n = 0; n < LCU::leagueProcesses.size(); n++)
+				{
+					const bool is_selected = (LCU::indexLeagueProcesses == n);
+					if (ImGui::Selectable((std::to_string(LCU::leagueProcesses[n].first) + " : " + LCU::leagueProcesses[n].second).c_str(), is_selected))
+					{
+						LCU::indexLeagueProcesses = n;
+						LCU::SetLeagueClientInfo();
+					}
+
+					if (is_selected)
+						ImGui::SetItemDefaultFocus();
+				}
+				ImGui::EndCombo();
+			}
+
+			ImGui::Separator();
 
 			ImGui::Columns(2, 0, false);
 
@@ -94,10 +132,10 @@ public:
 
 			if (ImGui::Button("Restart UX"))
 			{
-				result = http->Request("POST", "https://127.0.0.1/riotclient/kill-and-restart-ux", "", auth->leagueHeader, "", "", auth->leaguePort);
+				result = LCU::Request("POST", "https://127.0.0.1/riotclient/kill-and-restart-ux", "");
 				if (result.find("failed") != std::string::npos)
 				{
-					if (auth->GetLeagueClientInfo())
+					if (LCU::SetLeagueClientInfo())
 						result = "Rehooked to new league client";
 				}
 			}
@@ -117,7 +155,7 @@ public:
 			}
 
 			if (ImGui::Button("Close client"))
-				result = http->Request("POST", "https://127.0.0.1/process-control/v1/process/quit", "", auth->leagueHeader, "", "", auth->leaguePort);
+				result = LCU::Request("POST", "https://127.0.0.1/process-control/v1/process/quit", "");
 
 			ImGui::SameLine();
 			if (ImGui::Button("Force close client"))
@@ -133,7 +171,7 @@ public:
 			{
 				if (MessageBoxA(0, "Are you sure?", 0, MB_OKCANCEL) == IDOK)
 				{
-					std::string getFriends = http->Request("GET", "https://127.0.0.1/lol-chat/v1/friend-requests", "", auth->leagueHeader, "", "", auth->leaguePort);
+					std::string getFriends = LCU::Request("GET", "https://127.0.0.1/lol-chat/v1/friend-requests");
 
 					Json::CharReaderBuilder builder;
 					const std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
@@ -150,7 +188,7 @@ public:
 							for (Json::Value::ArrayIndex i = 0; i < root.size(); i++)
 							{
 								std::string req = "https://127.0.0.1/lol-chat/v1/friend-requests/" + root[i]["pid"].asString();
-								http->Request("PUT", req, R"({"direction":"both"})", auth->leagueHeader, "", "", auth->leaguePort);
+								LCU::Request("PUT", req, R"({"direction":"both"})");
 							}
 							result = "Accepted " + std::to_string(root.size()) + " friend requests";
 						}
@@ -164,7 +202,7 @@ public:
 			{
 				if (MessageBoxA(0, "Are you sure?", 0, MB_OKCANCEL) == IDOK)
 				{
-					std::string getFriends = http->Request("GET", "https://127.0.0.1/lol-chat/v1/friend-requests", "", auth->leagueHeader, "", "", auth->leaguePort);
+					std::string getFriends = LCU::Request("GET", "https://127.0.0.1/lol-chat/v1/friend-requests");
 
 					Json::CharReaderBuilder builder;
 					const std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
@@ -181,7 +219,7 @@ public:
 							for (Json::Value::ArrayIndex i = 0; i < root.size(); i++)
 							{
 								std::string req = "https://127.0.0.1/lol-chat/v1/friend-requests/" + root[i]["pid"].asString();
-								http->Request("DELETE", req, "", auth->leagueHeader, "", "", auth->leaguePort);
+								LCU::Request("DELETE", req, "");
 							}
 							result = "Deleted " + std::to_string(root.size()) + " friend requests";
 						}
@@ -201,7 +239,7 @@ public:
 			{
 				if (MessageBoxA(0, "Are you sure?", 0, MB_OKCANCEL) == IDOK)
 				{
-					std::string getFriends = http->Request("GET", "https://127.0.0.1/lol-chat/v1/friends", "", auth->leagueHeader, "", "", auth->leaguePort);
+					std::string getFriends = LCU::Request("GET", "https://127.0.0.1/lol-chat/v1/friends");
 
 					Json::CharReaderBuilder builder;
 					const std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
@@ -221,7 +259,7 @@ public:
 								if (root[i]["groupId"].asUInt() == item_current_idx)
 								{
 									std::string req = "https://127.0.0.1/lol-chat/v1/friends/" + root[i]["pid"].asString();
-									http->Request("DELETE", req, "", auth->leagueHeader, "", "", auth->leaguePort);
+									LCU::Request("DELETE", req, "");
 									iDeleted++;
 								}
 							}
@@ -236,7 +274,7 @@ public:
 			ImGui::SetNextItemWidth(100);
 			if (ImGui::BeginCombo("##comboGroups", combo_label, 0))
 			{
-				std::string getGroups = http->Request("GET", "https://127.0.0.1/lol-chat/v1/friend-groups", "", auth->leagueHeader, "", "", auth->leaguePort);
+				std::string getGroups = LCU::Request("GET", "https://127.0.0.1/lol-chat/v1/friend-groups");
 				Json::CharReaderBuilder builder;
 				const std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
 				JSONCPP_STRING err;
@@ -288,12 +326,13 @@ public:
 			static int minimapScale = 100;
 			ImGui::Text("In-game minimap scale: ");
 			ImGui::SameLine();
+			ImGui::SetNextItemWidth(static_cast<float>(S.Window.width / 3));
 			ImGui::SliderInt("##sliderMinimapScale", &minimapScale, 0, 350, "%d");
 			ImGui::SameLine();
 			if (ImGui::Button("Submit##submitMinimapScale"))
 			{
-				result = http->Request("PATCH", "https://127.0.0.1/lol-game-settings/v1/game-settings",
-					std::format("{{\"HUD\":{{\"MinimapScale\":{:.2f}}}}}", minimapScale / 33.33f), auth->leagueHeader, "", "", auth->leaguePort);
+				result = LCU::Request("PATCH", "https://127.0.0.1/lol-game-settings/v1/game-settings",
+					std::format("{{\"HUD\":{{\"MinimapScale\":{:.2f}}}}}", minimapScale / 33.33f));
 			}
 
 			ImGui::Separator();
@@ -312,7 +351,7 @@ public:
 				Json::CharReaderBuilder builder;
 				const std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
 				JSONCPP_STRING err;
-				std::string getLoot = http->Request("GET", "https://127.0.0.1/lol-loot/v1/player-loot-map", "", auth->leagueHeader, "", "", auth->leaguePort);
+				std::string getLoot = LCU::Request("GET", "https://127.0.0.1/lol-loot/v1/player-loot-map", "");
 
 				if (reader->parse(getLoot.c_str(), getLoot.c_str() + static_cast<int>(getLoot.length()), &root, &err))
 				{
@@ -334,7 +373,7 @@ public:
 
 								std::string disenchantUrl = std::format("https://127.0.0.1/lol-loot/v1/recipes/{0}_{1}/craft?repeat=1", disenchantName, disenchantCase);
 								std::string disenchantBody = std::format(R"(["{}"])", name).c_str();
-								http->Request("POST", disenchantUrl, disenchantBody, auth->leagueHeader, "", "", auth->leaguePort);
+								LCU::Request("POST", disenchantUrl, disenchantBody);
 								i++;
 							}
 						}
@@ -405,7 +444,7 @@ public:
 			ImGui::TextWrapped("%s ID: %s", closestChampion.c_str(), closestId.c_str());
 
 			if (ImGui::Button("Check email of the account"))
-				result = http->Request("GET", "https://127.0.0.1/lol-email-verification/v1/email", "", auth->leagueHeader, "", "", auth->leaguePort);
+				result = LCU::Request("GET", "https://127.0.0.1/lol-email-verification/v1/email");
 
 			static Json::StreamWriterBuilder wBuilder;
 			static std::string sResultJson;
@@ -429,10 +468,17 @@ public:
 			if (!sResultJson.empty())
 			{
 				cResultJson = &sResultJson[0];
-				ImGui::InputTextMultiline("##miscResult", cResultJson, sResultJson.size() + 1, ImVec2(600, 200));
+				ImGui::InputTextMultiline("##miscResult", cResultJson, sResultJson.size() + 1, ImVec2(600, 185));
 			}
 
+			if (onOpen)
+				onOpen = false;
+
 			ImGui::EndTabItem();
+		}
+		else
+		{
+			onOpen = true;
 		}
 	}
 };

@@ -2,8 +2,7 @@
 
 #include "Definitions.h"
 #include "Includes.h"
-#include "HTTP.h"
-#include "Auth.h"
+#include "LCU.h"
 
 class SkinsTab
 {
@@ -37,7 +36,7 @@ public:
 				static const std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
 				static JSONCPP_STRING err;
 
-				std::string getSkins = http->Request("GET", "https://127.0.0.1/lol-inventory/v2/inventory/CHAMPION_SKIN", "", auth->leagueHeader, "", "", auth->leaguePort);
+				std::string getSkins = LCU::Request("GET", "https://127.0.0.1/lol-inventory/v2/inventory/CHAMPION_SKIN");
 
 				if (reader->parse(getSkins.c_str(), getSkins.c_str() + static_cast<int>(getSkins.length()), &root, &err))
 				{

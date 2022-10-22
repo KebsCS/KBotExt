@@ -2,8 +2,7 @@
 
 #include "Definitions.h"
 #include "Includes.h"
-#include "HTTP.h"
-#include "Auth.h"
+#include "LCU.h"
 
 class ProfileTab
 {
@@ -29,7 +28,7 @@ public:
 						body.insert(nPos, "\\n");
 					}
 				}
-				std::string result = http->Request("PUT", "https://127.0.0.1/lol-chat/v1/me", body, auth->leagueHeader, "", "", auth->leaguePort);
+				std::string result = LCU::Request("PUT", "https://127.0.0.1/lol-chat/v1/me", body);
 				if (result.find("errorCode") != std::string::npos)
 					MessageBoxA(0, result.c_str(), 0, 0);
 			}
@@ -62,7 +61,7 @@ public:
 					break;
 				}
 				body += "\"}";
-				http->Request("PUT", "https://127.0.0.1/lol-chat/v1/me", body, auth->leagueHeader, "", "", auth->leaguePort);
+				LCU::Request("PUT", "https://127.0.0.1/lol-chat/v1/me", body);
 			}
 
 			ImGui::Separator();
@@ -181,20 +180,20 @@ public:
 
 				body += R"("}})";
 
-				http->Request("PUT", "https://127.0.0.1/lol-chat/v1/me", body, auth->leagueHeader, "", "", auth->leaguePort);
+				LCU::Request("PUT", "https://127.0.0.1/lol-chat/v1/me", body);
 			}
 
 			ImGui::SameLine();
 			if (ImGui::Button("Empty##emptyRank"))
 			{
-				http->Request("PUT", "https://127.0.0.1/lol-chat/v1/me", R"({"lol":{"rankedLeagueQueue":"","rankedLeagueTier":"","rankedLeagueDivision":""}})", auth->leagueHeader, "", "", auth->leaguePort);
+				LCU::Request("PUT", "https://127.0.0.1/lol-chat/v1/me", R"({"lol":{"rankedLeagueQueue":"","rankedLeagueTier":"","rankedLeagueDivision":""}})");
 			}
 
 			ImGui::NextColumn();
 
 			if (ImGui::Button("Empty challenge badges"))
 			{
-				http->Request("POST", "https://127.0.0.1/lol-challenges/v1/update-player-preferences/", R"({"challengeIds": []})", auth->leagueHeader, "", "", auth->leaguePort);
+				LCU::Request("POST", "https://127.0.0.1/lol-challenges/v1/update-player-preferences/", R"({"challengeIds": []})");
 			}
 
 			ImGui::Columns(1);
@@ -206,7 +205,7 @@ public:
 			ImGui::SameLine();
 			if (ImGui::Button("Submit##submitMasteryLvl"))
 			{
-				std::string result = http->Request("PUT", "https://127.0.0.1/lol-chat/v1/me", "{\"lol\":{\"masteryScore\":\"" + std::to_string(masteryLvl) + "\"}}", auth->leagueHeader, "", "", auth->leaguePort);
+				std::string result = LCU::Request("PUT", "https://127.0.0.1/lol-chat/v1/me", "{\"lol\":{\"masteryScore\":\"" + std::to_string(masteryLvl) + "\"}}");
 				if (result.find("errorCode") != std::string::npos)
 				{
 					MessageBoxA(0, result.c_str(), 0, 0);
@@ -222,7 +221,7 @@ public:
 			if (ImGui::Button("Submit##submitIcon"))
 			{
 				std::string body = R"({"profileIconId":)" + std::to_string(iconID) + "}";
-				std::string result = http->Request("PUT", "https://127.0.0.1/lol-summoner/v1/current-summoner/icon", body, auth->leagueHeader, "", "", auth->leaguePort);
+				std::string result = LCU::Request("PUT", "https://127.0.0.1/lol-summoner/v1/current-summoner/icon", body);
 				if (result.find("errorCode") != std::string::npos)
 				{
 					MessageBoxA(0, result.c_str(), 0, 0);
@@ -232,7 +231,7 @@ public:
 			if (ImGui::Button("Submit 2##submitIcon2"))
 			{
 				std::string body = R"({"icon":)" + std::to_string(iconID) + "}";
-				std::string result = http->Request("PUT", "https://127.0.0.1/lol-chat/v1/me/", body, auth->leagueHeader, "", "", auth->leaguePort);
+				std::string result = LCU::Request("PUT", "https://127.0.0.1/lol-chat/v1/me/", body);
 				if (result.find("errorCode") != std::string::npos)
 				{
 					MessageBoxA(0, result.c_str(), 0, 0);
@@ -247,7 +246,7 @@ public:
 			if (ImGui::Button("Submit##submitBackground"))
 			{
 				std::string body = R"({"key":"backgroundSkinId","value":)" + std::to_string(backgroundID) + "}";
-				std::string result = http->Request("POST", "https://127.0.0.1/lol-summoner/v1/current-summoner/summoner-profile/", body, auth->leagueHeader, "", "", auth->leaguePort);
+				std::string result = LCU::Request("POST", "https://127.0.0.1/lol-summoner/v1/current-summoner/summoner-profile/", body);
 			}
 
 			if (ImGui::CollapsingHeader("Backgrounds"))
@@ -267,7 +266,7 @@ public:
 								if (ImGui::Button(s.second.c_str()))
 								{
 									std::string body = R"({"key":"backgroundSkinId","value":)" + s.first + "}";
-									std::string result = http->Request("POST", "https://127.0.0.1/lol-summoner/v1/current-summoner/summoner-profile/", body, auth->leagueHeader, "", "", auth->leaguePort);
+									std::string result = LCU::Request("POST", "https://127.0.0.1/lol-summoner/v1/current-summoner/summoner-profile/", body);
 								}
 							}
 							ImGui::TreePop();

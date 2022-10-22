@@ -4,9 +4,8 @@
 #include <thread>
 #include <filesystem>
 #include <tlhelp32.h>
-
-#include "Auth.h"
 #include "HTTP.h"
+#include "LCU.h"
 #include "Config.h"
 
 class Misc
@@ -41,7 +40,7 @@ public:
 
 		if (::FindWindowA("RCLIENT", "League of Legends"))
 		{
-			http->Request("POST", "https://127.0.0.1/process-control/v1/process/quit", "", auth->leagueHeader, "", "", auth->leaguePort);
+			LCU::Request("POST", "https://127.0.0.1/process-control/v1/process/quit");
 
 			// wait for client to close (maybe theres a better method of doing that)
 			std::this_thread::sleep_for(std::chrono::milliseconds(4500));
@@ -53,7 +52,7 @@ public:
 
 	static void CheckVersion()
 	{
-		std::string getLatest = http->Request("GET", "https://api.github.com/repos/KebsCS/KBotExt/releases/latest");
+		std::string getLatest = HTTP::Request("GET", "https://api.github.com/repos/KebsCS/KBotExt/releases/latest");
 
 		Json::CharReaderBuilder builder;
 		const std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
@@ -81,7 +80,7 @@ public:
 
 	static std::string GetCurrentPatch()
 	{
-		std::string result = http->Request("GET", "https://ddragon.leagueoflegends.com/api/versions.json");
+		std::string result = HTTP::Request("GET", "https://ddragon.leagueoflegends.com/api/versions.json");
 		Json::CharReaderBuilder builder;
 		const std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
 		JSONCPP_STRING err;
@@ -186,6 +185,7 @@ public:
 	static bool TerminateProcessByName(std::wstring processName)
 	{
 		HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, NULL);
+		bool result = false;
 		if (snapshot != INVALID_HANDLE_VALUE)
 		{
 			PROCESSENTRY32W entry;
@@ -198,15 +198,14 @@ public:
 					{
 						HANDLE process = OpenProcess(PROCESS_TERMINATE, false, entry.th32ProcessID);
 						bool terminate = TerminateProcess(process, 0);
-						CloseHandle(snapshot);
 						CloseHandle(process);
-						return terminate;
+						result = terminate;
 					}
 				} while (Process32NextW(snapshot, &entry));
 			}
 		}
 		CloseHandle(snapshot);
-		return false;
+		return result;
 	}
 };
 

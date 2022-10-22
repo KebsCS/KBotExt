@@ -2,8 +2,7 @@
 
 #include "Definitions.h"
 #include "Includes.h"
-#include "HTTP.h"
-#include "Auth.h"
+#include "LCU.h"
 
 class CustomTab
 {
@@ -39,8 +38,8 @@ public:
 			S.customTab.urlText = urlText;
 			S.customTab.requestText = requestText;
 
-			static std::string customHeader = auth->leagueHeader;
-			static int customPort = auth->leaguePort;
+			static std::string customHeader = LCU::league.header;
+			static int customPort = LCU::league.port;
 
 			static bool bCustom = false;
 			if (ImGui::CollapsingHeader("Custom Port/Header"))
@@ -64,8 +63,8 @@ public:
 			else
 			{
 				bCustom = false;
-				customHeader = auth->leagueHeader;
-				customPort = auth->leaguePort;
+				customHeader = LCU::league.header;
+				customPort = LCU::league.port;
 			}
 
 			static std::string result;
@@ -84,7 +83,7 @@ public:
 						sURL.insert(0, "https://127.0.0.1");
 					}
 				}
-				result = http->Request(method, sURL, requestText, customHeader, "", "", customPort);
+				result = HTTP::Request(method, sURL, requestText, customHeader, "", "", customPort);
 			}
 			ImGui::Text("Result:");
 			ImGui::SameLine();

@@ -9,10 +9,10 @@ class HTTP
 {
 private:
 
-	std::string sHttps = "https://";
-	std::string sHttp = "http://";
+	static inline std::string sHttps = "https://";
+	static inline std::string sHttp = "http://";
 
-	std::string GetHost(std::string url)
+	static std::string GetHost(std::string url)
 	{
 		bool Ishttps;
 		url.find(sHttps) == std::string::npos ? Ishttps = false : Ishttps = true;
@@ -27,7 +27,7 @@ private:
 		return host;
 	}
 
-	std::string GetURLPage(std::string url)
+	static std::string GetURLPage(std::string url)
 	{
 		bool Ishttps;
 		url.find(sHttps) == std::string::npos ? Ishttps = false : Ishttps = true;
@@ -41,13 +41,13 @@ private:
 
 public:
 
-	std::string Request(std::string method, std::string url, std::string requestData = "", std::string header = "",
+	static std::string Request(std::string method, std::string url, std::string requestData = "", std::string header = "",
 		std::string cookies = "", std::string returnCookies = "", int port = -1)
 	{
 		return RequestWithCookies(method, url, requestData, header, cookies, returnCookies, port);
 	}
 
-	std::string RequestWithCookies(std::string method, std::string url, std::string requestData, std::string header,
+	static std::string RequestWithCookies(std::string method, std::string url, std::string requestData, std::string header,
 		std::string cookies, std::string& returnCookies, int port = -1)
 	{
 		if (header.find(("User-Agent:")) == std::string::npos)header.append(("User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36 Edge/16.16299\r\n"));
@@ -178,7 +178,7 @@ public:
 		return ResultData;
 	}
 
-	std::string GetLocalCookies(std::string host)
+	static std::string GetLocalCookies(std::string host)
 	{
 		char* TmpCookies = nullptr;
 		DWORD CookiesLen = 4097;
@@ -191,7 +191,3 @@ public:
 		return Cookies;
 	}
 };
-
-extern HTTP* http;
-
-HTTP* http = new HTTP();

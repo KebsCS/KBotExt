@@ -2,9 +2,8 @@
 
 #include "Definitions.h"
 #include "Includes.h"
-#include "HTTP.h"
 #include "Utils.h"
-#include "Auth.h"
+#include "LCU.h"
 #include "Misc.h"
 #include "Config.h"
 

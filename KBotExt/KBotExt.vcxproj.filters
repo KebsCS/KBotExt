@@ -10,9 +10,6 @@
     <Filter Include="Tabs">
       <UniqueIdentifier>{7d0b8c55-703b-4c67-b79b-56f9c8dbbf02}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Auth">
-      <UniqueIdentifier>{888bd346-de16-4def-9ccf-4c21e22c708b}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files">
       <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
       <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
@@ -24,6 +21,9 @@
     <Filter Include="Header Files">
       <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
       <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="League">
+      <UniqueIdentifier>{888bd346-de16-4def-9ccf-4c21e22c708b}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -37,7 +37,7 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Auth.cpp">
-      <Filter>Auth</Filter>
+      <Filter>League</Filter>
     </ClCompile>
     <ClCompile Include="imgui\imgui.cpp">
       <Filter>imgui</Filter>
@@ -66,6 +66,9 @@
     <ClCompile Include="json\json_writer.cpp">
       <Filter>json</Filter>
     </ClCompile>
+    <ClCompile Include="LCU.cpp">
+      <Filter>League</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="HTTP.h">
@@ -93,10 +96,10 @@
       <Filter>Tabs</Filter>
     </ClInclude>
     <ClInclude Include="base64.h">
-      <Filter>Auth</Filter>
+      <Filter>League</Filter>
     </ClInclude>
     <ClInclude Include="Auth.h">
-      <Filter>Auth</Filter>
+      <Filter>League</Filter>
     </ClInclude>
     <ClInclude Include="imgui\imconfig.h">
       <Filter>imgui</Filter>
@@ -181,6 +184,9 @@
     </ClInclude>
     <ClInclude Include="MiscTab.h">
       <Filter>Tabs</Filter>
+    </ClInclude>
+    <ClInclude Include="LCU.h">
+      <Filter>League</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

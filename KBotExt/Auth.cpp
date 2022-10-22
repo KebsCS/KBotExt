@@ -9,7 +9,25 @@
 #include "Auth.h"
 #include "Utils.h"
 
-int Auth::GetPort(std::string cmdLine)
+ClientInfo Auth::GetClientInfo(const DWORD& pid)
+{
+	if (!pid)
+		return {};
+
+	std::string cmdLine = Utils::WstringToString(GetProcessCommandLine(pid));
+	if (cmdLine.empty())
+		return {};
+
+	ClientInfo info;
+	info.port = GetPort(cmdLine);
+	info.token = GetToken(cmdLine);
+	info.path = GetProcessPath(pid);
+	info.version = GetFileVersion(info.path);
+
+	return info;
+}
+
+int Auth::GetPort(const std::string& cmdLine)
 {
 	std::regex regexStr("--app-port=(\\d*)");
 	std::smatch m;
@@ -19,7 +37,7 @@ int Auth::GetPort(std::string cmdLine)
 	return 0;
 }
 
-std::string Auth::GetToken(std::string cmdLine)
+std::string Auth::GetToken(const std::string& cmdLine)
 {
 	std::regex regexStr("--remoting-auth-token=([\\w-]*)");
 	std::smatch m;
@@ -33,94 +51,48 @@ std::string Auth::GetToken(std::string cmdLine)
 	return "";
 }
 
-bool Auth::GetRiotClientInfo()
+std::string Auth::MakeLeagueHeader(const ClientInfo& info)
 {
-	DWORD pid = GetProcessId(L"RiotClientUx.exe");
-	if (!pid)
-		return false;
-
-	std::string cmdLine = Utils::WstringToString(GetProcessCommandLine(pid));
-	if (cmdLine.empty())
-		return false;
-
-	riotPort = GetPort(cmdLine);
-	riotToken = GetToken(cmdLine);
-	riotPath = GetProcessPath(pid);
-	riotVersion = GetFileVersion(riotPath);
-
-	if (riotPort == 0 || riotToken == "")
-		return false;
-
-	MakeRiotHeader();
-
-	return true;
-}
-
-void Auth::MakeRiotHeader()
-{
-	riotHeader = "Host: 127.0.0.1:" + std::to_string(riotPort) + "\r\n" +
+	return "Host: 127.0.0.1:" + std::to_string(info.port) + "\r\n" +
 		"Connection: keep-alive" + "\r\n" +
-		"Authorization: Basic " + riotToken + "\r\n" +
-		"Accept: application/json" + "\r\n" +
-		"Access-Control-Allow-Credentials: true" + "\r\n" +
-		"Access-Control-Allow-Origin: 127.0.0.1" + "\r\n" +
-		"Content-Type: application/json" + "\r\n" +
-		"Origin: https://127.0.0.1:" + std::to_string(riotPort) + "\r\n" +
-		"Sec-Fetch-Dest: empty" + "\r\n" +
-		"Sec-Fetch-Mode: cors" + "\r\n" +
-		"Sec-Fetch-Site: same-origin" + "\r\n" +
-		"Sec-Fetch-User: ?F" + "\r\n" +
-		"User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) RiotClient/" + riotVersion + " (CEF 74) Safari/537.36" + "\r\n" +
-		"sec-ch-ua: Chromium" + "\r\n" +
-		"Referer: https://127.0.0.1:" + std::to_string(riotPort) + "/index.html" + "\r\n" +
-		"Accept-Encoding: gzip, deflate, br" + "\r\n" +
-		"Accept-Language: en-US,en;q=0.9";
-}
-
-bool Auth::GetLeagueClientInfo()
-{
-	DWORD pid = GetProcessId(L"LeagueClientUx.exe");
-	if (!pid)
-		return false;
-
-	std::string cmdLine = Utils::WstringToString(GetProcessCommandLine(pid));
-	if (cmdLine.empty())
-		return false;
-
-	leaguePort = GetPort(cmdLine);
-	leagueToken = GetToken(cmdLine);
-	leaguePath = GetProcessPath(pid);
-	leagueVersion = GetFileVersion(leaguePath);
-
-	if (leaguePort == 0 || leagueToken == "")
-		return false;
-
-	MakeLeagueHeader();
-
-	return true;
-}
-
-void Auth::MakeLeagueHeader()
-{
-	leagueHeader = "Host: 127.0.0.1:" + std::to_string(leaguePort) + "\r\n" +
-		"Connection: keep-alive" + "\r\n" +
-		"Authorization: Basic " + leagueToken + "\r\n" +
+		"Authorization: Basic " + info.token + "\r\n" +
 		"Accept: application/json" + "\r\n" +
 		"Content-Type: application/json" + "\r\n" +
-		"Origin: https://127.0.0.1:" + std::to_string(leaguePort) + "\r\n" +
-		"User-Agent: Mozilla/5.0 (Windows NT 6.2; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) LeagueOfLegendsClient/" + leagueVersion + " (CEF 91) Safari/537.36" + "\r\n" +
+		"Origin: https://127.0.0.1:" + std::to_string(info.port) + "\r\n" +
+		"User-Agent: Mozilla/5.0 (Windows NT 6.2; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) LeagueOfLegendsClient/" + info.version + " (CEF 91) Safari/537.36" + "\r\n" +
 		"X-Riot-Source: rcp-fe-lol-social" + "\r\n" +
 		"sec-ch-ua: \"Chromium\";v=\"91\"" + "\r\n" +
 		"sec-ch-ua-mobile: ?0" + "\r\n" +
 		"Sec-Fetch-Site: same-origin" + "\r\n" +
 		"Sec-Fetch-Mode: cors" + "\r\n" +
 		"Sec-Fetch-Dest: empty" + "\r\n" +
-		"Referer: https://127.0.0.1:" + std::to_string(leaguePort) + "/index.html" + "\r\n" +
+		"Referer: https://127.0.0.1:" + std::to_string(info.port) + "/index.html" + "\r\n" +
 		"Accept-Encoding: gzip, deflate, br" + "\r\n" +
 		"Accept-Language: en-US,en;q=0.9";
 }
 
-DWORD Auth::GetProcessId(std::wstring processName)
+std::string Auth::MakeRiotHeader(const ClientInfo& info)
+{
+	return "Host: 127.0.0.1:" + std::to_string(info.port) + "\r\n" +
+		"Connection: keep-alive" + "\r\n" +
+		"Authorization: Basic " + info.token + "\r\n" +
+		"Accept: application/json" + "\r\n" +
+		"Access-Control-Allow-Credentials: true" + "\r\n" +
+		"Access-Control-Allow-Origin: 127.0.0.1" + "\r\n" +
+		"Content-Type: application/json" + "\r\n" +
+		"Origin: https://127.0.0.1:" + std::to_string(info.port) + "\r\n" +
+		"Sec-Fetch-Dest: empty" + "\r\n" +
+		"Sec-Fetch-Mode: cors" + "\r\n" +
+		"Sec-Fetch-Site: same-origin" + "\r\n" +
+		"Sec-Fetch-User: ?F" + "\r\n" +
+		"User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) RiotClient/" + info.version + " (CEF 74) Safari/537.36" + "\r\n" +
+		"sec-ch-ua: Chromium" + "\r\n" +
+		"Referer: https://127.0.0.1:" + std::to_string(info.port) + "/index.html" + "\r\n" +
+		"Accept-Encoding: gzip, deflate, br" + "\r\n" +
+		"Accept-Language: en-US,en;q=0.9";
+}
+
+DWORD Auth::GetProcessId(const std::wstring& processName)
 {
 	HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, NULL);
 	if (snapshot != INVALID_HANDLE_VALUE)
@@ -143,7 +115,30 @@ DWORD Auth::GetProcessId(std::wstring processName)
 	return 0;
 }
 
-std::wstring Auth::GetProcessCommandLine(DWORD processId)
+std::vector<DWORD> Auth::GetAllProcessIds(const std::wstring& processName)
+{
+	std::vector<DWORD>pids;
+	HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, NULL);
+	if (snapshot != INVALID_HANDLE_VALUE)
+	{
+		PROCESSENTRY32W entry;
+		entry.dwSize = sizeof(PROCESSENTRY32W);
+		if (Process32FirstW(snapshot, &entry))
+		{
+			do
+			{
+				if (std::wstring(entry.szExeFile) == processName)
+				{
+					pids.emplace_back(entry.th32ProcessID);
+				}
+			} while (Process32NextW(snapshot, &entry));
+		}
+	}
+	CloseHandle(snapshot);
+	return pids;
+}
+
+std::wstring Auth::GetProcessCommandLine(const DWORD& processId)
 {
 	typedef NTSTATUS(__stdcall* tNtQueryInformationProcess)
 		(
@@ -232,7 +227,7 @@ std::wstring Auth::GetProcessCommandLine(DWORD processId)
 	return result;
 }
 
-std::wstring Auth::GetProcessPath(DWORD processId)
+std::wstring Auth::GetProcessPath(const DWORD& processId)
 {
 	HANDLE processHandle = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, 0, processId);
 	if (processHandle)
@@ -248,7 +243,7 @@ std::wstring Auth::GetProcessPath(DWORD processId)
 	return L"";
 }
 
-std::string Auth::GetFileVersion(std::wstring file)
+std::string Auth::GetFileVersion(const std::wstring& file)
 {
 	DWORD versionSize = GetFileVersionInfoSizeW(file.c_str(), 0);
 	if (versionSize)

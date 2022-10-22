@@ -1,5 +1,7 @@
 #pragma once
 
+#include "LCU.h"
+
 class InvokeTab
 {
 public:
@@ -39,7 +41,7 @@ public:
 			if (ImGui::Button("Submit##submitInvoke"))
 			{
 				std::string req = "https://127.0.0.1/lol-login/v1/session/invoke?destination=" + std::string(destination) + "&method=" + std::string(method) + "&args=[" + std::string(args) + "]";
-				result = http->Request("POST", req, "", auth->leagueHeader, "", "", auth->leaguePort);
+				result = LCU::Request("POST", req, "");
 			}
 
 			ImGui::Text("Result:");
@@ -72,7 +74,7 @@ public:
 			if (!sResultJson.empty())
 			{
 				cResultJson = &sResultJson[0];
-				ImGui::InputTextMultiline("##gameResult", cResultJson, sResultJson.size() + 1, ImVec2(600, 200));
+				ImGui::InputTextMultiline("##gameResult", cResultJson, sResultJson.size() + 1, ImVec2(600, 232));
 			}
 
 			ImGui::EndTabItem();

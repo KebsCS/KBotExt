@@ -2,9 +2,8 @@
 
 #include "Definitions.h"
 #include "Includes.h"
-#include "HTTP.h"
 #include "Utils.h"
-#include "Auth.h"
+#include "LCU.h"
 #include "Config.h"
 
 class InfoTab
@@ -36,20 +35,20 @@ public:
 
 			if (ImGui::Button("Submit##playerName") || ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Enter), false))
 			{
-				result = http->Request("GET", "https://127.0.0.1/lol-summoner/v1/summoners?name=" + std::string(playerName), "", auth->leagueHeader, "", "", auth->leaguePort);
+				result = LCU::Request("GET", "https://127.0.0.1/lol-summoner/v1/summoners?name=" + std::string(playerName));
 				bPressed = true;
 			}
 
 			ImGui::SameLine();
 			if (ImGui::Button("puuid##playerName"))
 			{
-				result = http->Request("GET", "https://127.0.0.1/lol-summoner/v1/summoners-by-puuid-cached/" + std::string(playerName), "", auth->leagueHeader, "", "", auth->leaguePort);
+				result = LCU::Request("GET", "https://127.0.0.1/lol-summoner/v1/summoners-by-puuid-cached/" + std::string(playerName));
 				bPressed = true;
 			}
 			ImGui::SameLine();
 			if (ImGui::Button("summId##playerName"))
 			{
-				result = http->Request("GET", "https://127.0.0.1/lol-summoner/v1/summoners/" + std::string(playerName), "", auth->leagueHeader, "", "", auth->leaguePort);
+				result = LCU::Request("GET", "https://127.0.0.1/lol-summoner/v1/summoners/" + std::string(playerName));
 				bPressed = true;
 			}
 			ImGui::SameLine();
@@ -62,13 +61,13 @@ public:
 
 				std::string mySummId;
 
-				std::string getSession = http->Request("GET", "https://127.0.0.1/lol-login/v1/session", "", auth->leagueHeader, "", "", auth->leaguePort);
+				std::string getSession = LCU::Request("GET", "https://127.0.0.1/lol-login/v1/session");
 				if (reader->parse(getSession.c_str(), getSession.c_str() + static_cast<int>(getSession.length()), &root, &err))
 				{
 					mySummId = root["summonerId"].asString();
 				}
 
-				result = http->Request("GET", "https://127.0.0.1/lol-summoner/v1/summoners/" + mySummId, "", auth->leagueHeader, "", "", auth->leaguePort);
+				result = LCU::Request("GET", "https://127.0.0.1/lol-summoner/v1/summoners/" + mySummId);
 				bPressed = true;
 			}
 
@@ -120,27 +119,27 @@ public:
 			if (!sResultJson.empty())
 			{
 				cResultJson = &sResultJson[0];
-				ImGui::InputTextMultiline("##infoResult", cResultJson, sResultJson.size() + 1, ImVec2(600, 300));
+				ImGui::InputTextMultiline("##infoResult", cResultJson, sResultJson.size() + 1, ImVec2(600, 350));
 			}
 
 			if (ImGui::Button("Invite to lobby##infoTab"))
 			{
 				std::string invite = R"([{"toSummonerId":)" + accID + R"(}])";
-				http->Request("POST", "https://127.0.0.1/lol-lobby/v2/lobby/invitations", invite, auth->leagueHeader, "", "", auth->leaguePort);
+				LCU::Request("POST", "https://127.0.0.1/lol-lobby/v2/lobby/invitations", invite);
 				invite = R"([{"toSummonerId":)" + summID + R"(}])";
-				http->Request("POST", "https://127.0.0.1/lol-lobby/v2/lobby/invitations", invite, auth->leagueHeader, "", "", auth->leaguePort);
+				LCU::Request("POST", "https://127.0.0.1/lol-lobby/v2/lobby/invitations", invite);
 			}
 			ImGui::SameLine();
 			if (ImGui::Button("Invite to friends##infoTab"))
 			{
 				std::string invite = R"({"name":")" + summName + R"("})";
-				http->Request("POST", "https://127.0.0.1/lol-chat/v1/friend-requests", invite, auth->leagueHeader, "", "", auth->leaguePort);
+				LCU::Request("POST", "https://127.0.0.1/lol-chat/v1/friend-requests", invite);
 			}
 			ImGui::SameLine();
 			if (ImGui::Button("Add to block list##infoTab"))
 			{
 				std::string body = R"({ "summonerId":)" + summID + "}";
-				http->Request("POST", "https://127.0.0.1/lol-chat/v1/blocked-players", body, auth->leagueHeader, "", "", auth->leaguePort);
+				LCU::Request("POST", "https://127.0.0.1/lol-chat/v1/blocked-players", body);
 			}
 
 			if (ImGui::Button("Copy to clipboard##infoTab"))

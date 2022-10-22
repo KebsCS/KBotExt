@@ -1,8 +1,18 @@
 #pragma once
 
 #include <string>
+#include <vector>
 
 #include "base64.h"
+
+struct ClientInfo
+{
+	int port = 0;
+	std::string token;
+	std::string header;
+	std::string version;
+	std::wstring path;
+};
 
 class Auth
 {
@@ -10,37 +20,21 @@ public:
 	Auth() = default;
 	~Auth() = default;
 
-	int riotPort = 0;
-	std::string riotToken;
-	std::string riotHeader;
-	std::string riotVersion;
-	std::wstring riotPath;
+	static std::vector<DWORD> GetAllProcessIds(const std::wstring& processName);
 
-	int leaguePort = 0;
-	std::string leagueToken;
-	std::string leagueHeader;
-	std::string leagueVersion;
-	std::wstring leaguePath;
+	static ClientInfo GetClientInfo(const DWORD& pid);
+	static DWORD GetProcessId(const std::wstring& processName);
 
-	// returns true on success
-	bool GetRiotClientInfo();
+	static std::string MakeLeagueHeader(const ClientInfo& info);
+	static std::string MakeRiotHeader(const ClientInfo& info);
 
-	void MakeRiotHeader();
-
-	// returns true on success
-	bool GetLeagueClientInfo();
-
-	void MakeLeagueHeader();
 private:
-	Base64 base64;
+	static inline Base64 base64;
 
-	int GetPort(std::string cmdLine);
-	std::string GetToken(std::string cmdLine);
+	static int GetPort(const std::string& cmdLine);
+	static std::string GetToken(const std::string& cmdLine);
 
-	DWORD GetProcessId(std::wstring processName);
-	std::wstring GetProcessCommandLine(DWORD processId);
-	std::wstring GetProcessPath(DWORD processId);
-	std::string GetFileVersion(std::wstring file);
+	static std::wstring GetProcessCommandLine(const DWORD& processId);
+	static std::wstring GetProcessPath(const DWORD& processId);
+	static std::string GetFileVersion(const std::wstring& file);
 };
-
-extern Auth* auth;

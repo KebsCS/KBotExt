@@ -177,6 +177,7 @@
     <ClCompile Include="json\json_value.cpp" />
     <ClCompile Include="json\json_writer.cpp" />
     <ClCompile Include="KBotExt.cpp" />
+    <ClCompile Include="LCU.cpp" />
     <ClCompile Include="Utils.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -210,6 +211,7 @@
     <ClInclude Include="json\value.h" />
     <ClInclude Include="json\version.h" />
     <ClInclude Include="json\writer.h" />
+    <ClInclude Include="LCU.h" />
     <ClInclude Include="LoginTab.h" />
     <ClInclude Include="Misc.h" />
     <ClInclude Include="MiscTab.h" />

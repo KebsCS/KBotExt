@@ -2,9 +2,8 @@
 
 #include "Definitions.h"
 #include "Includes.h"
-#include "HTTP.h"
 #include "Utils.h"
-#include "Auth.h"
+#include "LCU.h"
 #include "Misc.h"
 #include "Config.h"
 
@@ -18,7 +17,7 @@ private:
 	{
 		while (true)
 		{
-			if (::FindWindowA("RCLIENT", "Riot Client") && auth->riotPort != 0)
+			if (::FindWindowA("RCLIENT", "Riot Client") && LCU::riot.port != 0)
 			{
 				// waits to be sure that client is fully loaded
 				std::this_thread::sleep_for(std::chrono::milliseconds(2000));
@@ -32,7 +31,7 @@ private:
 	static std::string Login(std::string username, std::string password)
 	{
 		// If riot client not open
-		if (auth->riotPort == 0)
+		if (LCU::riot.port == 0)
 		{
 			if (std::filesystem::exists(S.leaguePath))
 			{
@@ -46,10 +45,10 @@ private:
 		}
 
 		// refresh session
-		http->Request("POST", "https://127.0.0.1/rso-auth/v2/authorizations", R"({"clientId":"riot-client","trustLevels":["always_trusted"]})", auth->riotHeader, "", "", auth->riotPort);
+		HTTP::Request("POST", "https://127.0.0.1/rso-auth/v2/authorizations", R"({"clientId":"riot-client","trustLevels":["always_trusted"]})", LCU::riot.header, "", "", LCU::riot.port);
 
 		std::string loginBody = R"({"username":")" + username + R"(","password":")" + password + R"(","persistLogin":false})";
-		std::string result = http->Request("PUT", "https://127.0.0.1/rso-auth/v1/session/credentials", loginBody, auth->riotHeader, "", "", auth->riotPort);
+		std::string result = HTTP::Request("PUT", "https://127.0.0.1/rso-auth/v1/session/credentials", loginBody, LCU::riot.header, "", "", LCU::riot.port);
 
 		Json::CharReaderBuilder builder;
 		const std::unique_ptr<Json::CharReader> reader(builder.newCharReader());

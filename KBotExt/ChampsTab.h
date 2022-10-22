@@ -2,8 +2,7 @@
 
 #include "Definitions.h"
 #include "Includes.h"
-#include "HTTP.h"
-#include "Auth.h"
+#include "LCU.h"
 
 #pragma warning (disable : 4996)
 
@@ -43,13 +42,13 @@ public:
 				static Json::CharReaderBuilder builder;
 				static const std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
 				static JSONCPP_STRING err;
-				std::string getSession = http->Request("GET", "https://127.0.0.1/lol-login/v1/session", "", auth->leagueHeader, "", "", auth->leaguePort);
+				std::string getSession = LCU::Request("GET", "https://127.0.0.1/lol-login/v1/session");
 				if (reader->parse(getSession.c_str(), getSession.c_str() + static_cast<int>(getSession.length()), &root, &err))
 				{
 					std::string summId = root["summonerId"].asString();
 
-					std::string getChampions = http->Request("GET",
-						std::format("https://127.0.0.1/lol-champions/v1/inventories/{}/champions-minimal", summId), "", auth->leagueHeader, "", "", auth->leaguePort);
+					std::string getChampions = LCU::Request("GET",
+						std::format("https://127.0.0.1/lol-champions/v1/inventories/{}/champions-minimal", summId));
 
 					if (reader->parse(getChampions.c_str(), getChampions.c_str() + static_cast<int>(getChampions.length()), &root, &err))
 					{
@@ -89,8 +88,8 @@ public:
 						}
 					}
 
-					std::string getCollections = http->Request("GET",
-						std::format("https://127.0.0.1/lol-collections/v1/inventories/{}/champion-mastery", summId), "", auth->leagueHeader, "", "", auth->leaguePort);
+					std::string getCollections = LCU::Request("GET",
+						std::format("https://127.0.0.1/lol-collections/v1/inventories/{}/champion-mastery", summId));
 
 					if (reader->parse(getCollections.c_str(), getCollections.c_str() + static_cast<int>(getCollections.length()), &root, &err))
 					{

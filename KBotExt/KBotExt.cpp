@@ -2,10 +2,11 @@
 #include <string>
 #include <thread>
 
+#include "HTTP.h"
 #include "Definitions.h"
 #include "Includes.h"
 #include "DirectX.h"
-#include "Auth.h"
+#include "LCU.h"
 #include "Utils.h"
 #include "Config.h"
 
@@ -119,14 +120,16 @@ int WINAPI wWinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/, LPWSTR
 		freopen_s(&f, "CONOUT$", "w", stdout);
 #endif
 
-		if (auth->GetLeagueClientInfo())
+		LCU::GetLeagueProcesses();
+
+		if (LCU::SetLeagueClientInfo())
 		{
 			//league client is running
 		}
 		else
 		{
 			//riot client with login screen is up
-			auth->GetRiotClientInfo();
+			LCU::SetRiotClientInfo();
 		}
 
 		std::wcout << lpCmdLine << std::endl;
@@ -226,17 +229,25 @@ int WINAPI wWinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/, LPWSTR
 			{
 				Direct3D9.closedClient = true;
 				closedNow = true;
+				if (!LCU::leagueProcesses.empty())
+					LCU::leagueProcesses.clear();
 				if (::FindWindowA("RCLIENT", "Riot Client"))
 				{
-					if (auth->riotPort == 0)
-						auth->GetRiotClientInfo();
+					if (LCU::riot.port == 0)
+					{
+						LCU::SetRiotClientInfo();
+					}
 				}
 				else
-					auth->riotPort = 0;
+				{
+					LCU::riot.port = 0;
+				}
 			}
 			else if (closedNow)
 			{
-				auth->GetLeagueClientInfo();
+				LCU::GetLeagueProcesses();
+				LCU::SetLeagueClientInfo();
+
 				Direct3D9.closedClient = false;
 				closedNow = false;
 			}

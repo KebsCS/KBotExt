@@ -3,7 +3,7 @@
 #include "Definitions.h"
 #include "Includes.h"
 #include "HTTP.h"
-#include "Auth.h"
+#include "LCU.h"
 #include "Utils.h"
 #include "Misc.h"
 
@@ -130,7 +130,7 @@ public:
 			{
 				if (botChamps.empty())
 				{
-					std::string getBots = http->Request("GET", "https://127.0.0.1/lol-lobby/v2/lobby/custom/available-bots", "", auth->leagueHeader, "", "", auth->leaguePort);
+					std::string getBots = LCU::Request("GET", "https://127.0.0.1/lol-lobby/v2/lobby/custom/available-bots");
 					Json::CharReaderBuilder builder;
 					const std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
 					JSONCPP_STRING err;
@@ -183,7 +183,7 @@ public:
 			{
 				std::string team = botTeam ? R"(,"teamId":"200"})" : R"(,"teamId":"100"})";
 				std::string body = R"({"botDifficulty":")" + difficulties[indexDifficulty] + R"(","championId":)" + std::to_string(botChamps[indexBots].first) + team;
-				result = http->Request("POST", "https://127.0.0.1/lol-lobby/v1/lobby/custom/bots", body, auth->leagueHeader, "", "", auth->leaguePort);
+				result = LCU::Request("POST", "https://127.0.0.1/lol-lobby/v1/lobby/custom/bots", body);
 			}
 			ImGui::SameLine();
 			ImGui::RadioButton("Blue", &botTeam, 0); ImGui::SameLine();
@@ -215,13 +215,13 @@ public:
 				}
 				if (gameID == DraftPick || gameID == SoloDuo || gameID == Flex)
 				{
-					result = http->Request("POST", "https://127.0.0.1/lol-lobby/v2/lobby", body, auth->leagueHeader, "", "", auth->leaguePort);
-					http->Request("PUT", "https://127.0.0.1/lol-lobby/v1/lobby/members/localMember/position-preferences",
-						"{\"firstPreference\":\"" + firstPosition[indexFirstPosition] + "\",\"secondPreference\":\"" + secondPosition[indexSecondPosition] + "\"}", auth->leagueHeader, "", "", auth->leaguePort);
+					result = LCU::Request("POST", "https://127.0.0.1/lol-lobby/v2/lobby", body);
+					LCU::Request("PUT", "https://127.0.0.1/lol-lobby/v1/lobby/members/localMember/position-preferences",
+						"{\"firstPreference\":\"" + firstPosition[indexFirstPosition] + "\",\"secondPreference\":\"" + secondPosition[indexSecondPosition] + "\"}");
 				}
 				else
 				{
-					result = http->Request("POST", "https://127.0.0.1/lol-lobby/v2/lobby", body, auth->leagueHeader, "", "", auth->leaguePort);
+					result = LCU::Request("POST", "https://127.0.0.1/lol-lobby/v2/lobby", body);
 				}
 
 				/*	{
@@ -292,8 +292,8 @@ public:
 
 			if (ImGui::Button("Pick roles"))
 			{
-				result = http->Request("PUT", "https://127.0.0.1/lol-lobby/v1/lobby/members/localMember/position-preferences",
-					"{\"firstPreference\":\"" + firstPosition[indexFirstPosition] + "\",\"secondPreference\":\"" + secondPosition[indexSecondPosition] + "\"}", auth->leagueHeader, "", "", auth->leaguePort);
+				result = LCU::Request("PUT", "https://127.0.0.1/lol-lobby/v1/lobby/members/localMember/position-preferences",
+					"{\"firstPreference\":\"" + firstPosition[indexFirstPosition] + "\",\"secondPreference\":\"" + secondPosition[indexSecondPosition] + "\"}");
 			}
 			ImGui::SameLine();
 			ImGui::HelpMarker("If you are already in a lobby you can use this button to pick the roles, or start a new lobby with the buttons above");
@@ -305,7 +305,7 @@ public:
 			ImGui::Columns(3, 0, false);
 			if (ImGui::Button("Start queue"))
 			{
-				result = http->Request("POST", "https://127.0.0.1/lol-lobby/v2/lobby/matchmaking/search", "", auth->leagueHeader, "", "", auth->leaguePort);
+				result = LCU::Request("POST", "https://127.0.0.1/lol-lobby/v2/lobby/matchmaking/search");
 			}
 			ImGui::NextColumn();
 
@@ -313,7 +313,7 @@ public:
 			// unless you reenter the lobby :)
 			if (ImGui::Button("Dodge"))
 			{
-				result = http->Request("POST", R"(https://127.0.0.1/lol-login/v1/session/invoke?destination=lcdsServiceProxy&method=call&args=["","teambuilder-draft","quitV2",""])", "", auth->leagueHeader, "", "", auth->leaguePort);
+				result = LCU::Request("POST", R"(https://127.0.0.1/lol-login/v1/session/invoke?destination=lcdsServiceProxy&method=call&args=["","teambuilder-draft","quitV2",""])", "");
 			}
 			ImGui::SameLine();
 			ImGui::HelpMarker("Dodges lobby instantly, you still lose LP, but you don't have to restart the client");
@@ -321,7 +321,7 @@ public:
 			if (ImGui::Button("Multi OP.GG"))
 			{
 				std::string names;
-				std::string champSelect = http->Request("GET", "https://127.0.0.1/lol-champ-select/v1/session", "", auth->leagueHeader, "", "", auth->leaguePort);
+				std::string champSelect = LCU::Request("GET", "https://127.0.0.1/lol-champ-select/v1/session");
 				if (!champSelect.empty() && champSelect.find("RPC_ERROR") == std::string::npos)
 				{
 					Json::CharReaderBuilder builder;
@@ -331,7 +331,7 @@ public:
 					Json::Value rootCSelect;
 					Json::Value rootSummoner;
 
-					std::string regionLocale = http->Request("GET", "https://127.0.0.1/riotclient/get_region_locale", "", auth->leagueHeader, "", "", auth->leaguePort);
+					std::string regionLocale = LCU::Request("GET", "https://127.0.0.1/riotclient/get_region_locale");
 					if (reader->parse(regionLocale.c_str(), regionLocale.c_str() + static_cast<int>(regionLocale.length()), &rootLocale, &err))
 					{
 						std::wstring region = Utils::StringToWstring(rootLocale["webRegion"].asString());
@@ -346,7 +346,7 @@ public:
 									std::string summId = teamArr[i]["summonerId"].asString();
 									if (summId != "0")
 									{
-										std::string summoner = http->Request("GET", "https://127.0.0.1/lol-summoner/v1/summoners/" + summId, "", auth->leagueHeader, "", "", auth->leaguePort);
+										std::string summoner = LCU::Request("GET", "https://127.0.0.1/lol-summoner/v1/summoners/" + summId);
 										if (reader->parse(summoner.c_str(), summoner.c_str() + static_cast<int>(summoner.length()), &rootSummoner, &err))
 										{
 											std::wstring summName = Utils::StringToWstring(rootSummoner["internalName"].asString());
@@ -374,7 +374,7 @@ public:
 			ImGui::NextColumn();
 			if (ImGui::Button("Invite everyone to lobby"))
 			{
-				std::string getFriends = http->Request("GET", "https://127.0.0.1/lol-chat/v1/friends", "", auth->leagueHeader, "", "", auth->leaguePort);
+				std::string getFriends = LCU::Request("GET", "https://127.0.0.1/lol-chat/v1/friends");
 
 				Json::CharReaderBuilder builder;
 				const std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
@@ -388,8 +388,7 @@ public:
 						{
 							std::string friendSummId = root[i]["summonerId"].asString();
 							std::string inviteBody = "[{\"toSummonerId\":" + friendSummId + "}]";
-							http->Request("POST", "https://127.0.0.1/lol-lobby/v2/lobby/invitations", inviteBody,
-								auth->leagueHeader, "", "", auth->leaguePort);
+							LCU::Request("POST", "https://127.0.0.1/lol-lobby/v2/lobby/invitations", inviteBody);
 						}
 						result = "Invited friends to lobby";
 					}
@@ -406,9 +405,9 @@ public:
 				Json::Value rootSession;
 				Json::Value rootPurchaseHistory;
 
-				std::string storeUrl = http->Request("GET", "https://127.0.0.1/lol-store/v1/getStoreUrl", "", auth->leagueHeader, "", "", auth->leaguePort);
+				std::string storeUrl = LCU::Request("GET", "https://127.0.0.1/lol-store/v1/getStoreUrl");
 				storeUrl = storeUrl.erase(0, 1).erase(storeUrl.size() - 1);
-				std::string session = http->Request("GET", "https://127.0.0.1/lol-login/v1/session", "", auth->leagueHeader, "", "", auth->leaguePort);
+				std::string session = LCU::Request("GET", "https://127.0.0.1/lol-login/v1/session");
 				if (reader->parse(session.c_str(), session.c_str() + static_cast<int>(session.length()), &rootSession, &err))
 				{
 					std::string accountId = rootSession["accountId"].asString();
@@ -416,11 +415,11 @@ public:
 					std::string authorizationHeader = "Authorization: Bearer " + idToken + "\r\n" +
 						"Accept: application/json" + "\r\n" +
 						"Content-Type: application/json" + "\r\n";
-					std::string purchaseHistory = http->Request("GET", storeUrl+"/storefront/v3/history/purchase", "", authorizationHeader, "", "");
+					std::string purchaseHistory = HTTP::Request("GET", storeUrl + "/storefront/v3/history/purchase", "", authorizationHeader, "", "");
 					if (reader->parse(purchaseHistory.c_str(), purchaseHistory.c_str() + static_cast<int>(purchaseHistory.length()), &rootPurchaseHistory, &err))
 					{
 						std::string transactionId = rootPurchaseHistory["transactions"][0]["transactionId"].asString();
-						result = http->Request("POST", storeUrl+"/storefront/v3/refund", "{\"accountId\":" + accountId + ",\"transactionId\":\"" + transactionId + "\",\"inventoryType\":\"CHAMPION\",\"language\":\"EN_US\"}", authorizationHeader, "", "");
+						result = HTTP::Request("POST", storeUrl + "/storefront/v3/refund", "{\"accountId\":" + accountId + ",\"transactionId\":\"" + transactionId + "\",\"inventoryType\":\"CHAMPION\",\"language\":\"EN_US\"}", authorizationHeader, "", "");
 					}
 				}
 			}
@@ -617,7 +616,7 @@ public:
 	{
 		std::vector<std::pair<int, std::string>>temp;
 
-		std::string result = http->Request("GET", "https://127.0.0.1/lol-champions/v1/owned-champions-minimal", "", auth->leagueHeader, "", "", auth->leaguePort);
+		std::string result = LCU::Request("GET", "https://127.0.0.1/lol-champions/v1/owned-champions-minimal");
 		Json::CharReaderBuilder builder;
 		const std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
 		JSONCPP_STRING err;
@@ -647,7 +646,7 @@ public:
 		Json::CharReaderBuilder builder;
 		const std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
 		JSONCPP_STRING err;
-		std::string getChat = http->Request("GET", "https://127.0.0.1/lol-chat/v1/conversations", "", auth->leagueHeader, "", "", auth->leaguePort);
+		std::string getChat = LCU::Request("GET", "https://127.0.0.1/lol-chat/v1/conversations");
 		if (reader->parse(getChat.c_str(), getChat.c_str() + static_cast<int>(getChat.length()), &root, &err))
 		{
 			if (root.isArray())
@@ -661,13 +660,13 @@ public:
 					std::string error = "errorCode";
 					while (error.find("errorCode") != std::string::npos)
 					{
-						error = http->Request("POST", request, R"({"type":"chat", "body":")" + std::string(S.gameTab.instantMessage) + R"("})", auth->leagueHeader, "", "", auth->leaguePort);
+						error = LCU::Request("POST", request, R"({"type":"chat", "body":")" + std::string(S.gameTab.instantMessage) + R"("})");
 						if (S.gameTab.instantMessageTimes > 1)
 						{
 							for (int time = 0; time < S.gameTab.instantMessageTimes - 1; time++)
 							{
 								std::this_thread::sleep_for(std::chrono::milliseconds(S.gameTab.instantMessageDelayTimes));
-								error = http->Request("POST", request, R"({"type":"chat", "body":")" + std::string(S.gameTab.instantMessage) + R"("})", auth->leagueHeader, "", "", auth->leaguePort);
+								error = LCU::Request("POST", request, R"({"type":"chat", "body":")" + std::string(S.gameTab.instantMessage) + R"("})");
 							}
 						}
 						std::this_thread::sleep_for(std::chrono::milliseconds(1));
@@ -694,7 +693,7 @@ public:
 						Json::CharReaderBuilder builder;
 						const std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
 						JSONCPP_STRING err;
-						std::string getSearchState = http->Request("GET", "https://127.0.0.1/lol-lobby/v2/lobby/matchmaking/search-state", "", auth->leagueHeader, "", "", auth->leaguePort);
+						std::string getSearchState = LCU::Request("GET", "https://127.0.0.1/lol-lobby/v2/lobby/matchmaking/search-state");
 						if (reader->parse(getSearchState.c_str(), getSearchState.c_str() + static_cast<int>(getSearchState.length()), &rootSearch, &err))
 						{
 							static bool foundCell = false;
@@ -703,7 +702,7 @@ public:
 							std::string searchState = rootSearch["searchState"].asString();
 							if (searchState == "Found")
 							{
-								std::string getChampSelect = http->Request("GET", "https://127.0.0.1/lol-champ-select/v1/session", "", auth->leagueHeader, "", "", auth->leaguePort);
+								std::string getChampSelect = LCU::Request("GET", "https://127.0.0.1/lol-champ-select/v1/session");
 								if (getChampSelect.find("RPC_ERROR") != std::string::npos)
 								{
 									foundCell = false;
@@ -711,7 +710,7 @@ public:
 									useBackupId = 0;
 									if (S.gameTab.autoAcceptEnabled)
 									{
-										http->Request("POST", "https://127.0.0.1/lol-matchmaking/v1/ready-check/accept", "", auth->leagueHeader, "", "", auth->leaguePort);
+										LCU::Request("POST", "https://127.0.0.1/lol-matchmaking/v1/ready-check/accept", "");
 									}
 									std::this_thread::sleep_for(std::chrono::milliseconds(100));
 								}
@@ -754,7 +753,7 @@ public:
 										if (S.gameTab.instalockEnabled || S.gameTab.autoBanId)
 										{
 											// get own summid
-											std::string getSession = http->Request("GET", "https://127.0.0.1/lol-login/v1/session", "", auth->leagueHeader, "", "", auth->leaguePort);
+											std::string getSession = LCU::Request("GET", "https://127.0.0.1/lol-login/v1/session");
 											if (reader->parse(getSession.c_str(), getSession.c_str() + static_cast<int>(getSession.length()), &rootSession, &err))
 											{
 												static int cellId = 0;
@@ -801,8 +800,8 @@ public:
 																			if (useBackupId)
 																				currentPick = useBackupId;
 
-																			http->Request("PATCH", "https://127.0.0.1/lol-champ-select/v1/session/actions/" + actions[i]["id"].asString(),
-																				R"({"completed":true,"championId":)" + std::to_string(currentPick) + "}", auth->leagueHeader, "", "", auth->leaguePort);
+																			LCU::Request("PATCH", "https://127.0.0.1/lol-champ-select/v1/session/actions/" + actions[i]["id"].asString(),
+																				R"({"completed":true,"championId":)" + std::to_string(currentPick) + "}");
 																		}
 																		//else
 																		//{
@@ -817,8 +816,8 @@ public:
 																		{
 																			std::this_thread::sleep_for(std::chrono::milliseconds(S.gameTab.autoBanDelay));
 
-																			http->Request("PATCH", "https://127.0.0.1/lol-champ-select/v1/session/actions/" + actions[i]["id"].asString(),
-																				R"({"completed":true,"championId":)" + std::to_string(S.gameTab.autoBanId) + "}", auth->leagueHeader, "", "", auth->leaguePort);
+																			LCU::Request("PATCH", "https://127.0.0.1/lol-champ-select/v1/session/actions/" + actions[i]["id"].asString(),
+																				R"({"completed":true,"championId":)" + std::to_string(S.gameTab.autoBanId) + "}");
 																		}
 																	}
 																	//else break;
@@ -832,7 +831,7 @@ public:
 																		{
 																			if (S.gameTab.dodgeOnBan)
 																			{
-																				http->Request("POST", R"(https://127.0.0.1/lol-login/v1/session/invoke?destination=lcdsServiceProxy&method=call&args=["","teambuilder-draft","quitV2",""])", "", auth->leagueHeader, "", "", auth->leaguePort);
+																				LCU::Request("POST", R"(https://127.0.0.1/lol-login/v1/session/invoke?destination=lcdsServiceProxy&method=call&args=["","teambuilder-draft","quitV2",""])", "");
 																			}
 																			else if (S.gameTab.backupId)
 																			{
