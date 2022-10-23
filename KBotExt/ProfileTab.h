@@ -214,6 +214,26 @@ public:
 
 			ImGui::Separator();
 
+			static int gamemodeID;
+			ImGui::Text("Lobby Gamemode ID:");
+			ImGui::SameLine;
+			ImGui::HelpMarker("DraftPick = 400\nSoloDuo = 420\nBlindPick = 430\nFlex = 440\nARAM = 450\nClash = 700\nIntroBots = 830\nBeginnerBots = 840\nIntermediateBots = 850\nARURF = 900\nTFTNormal = 1090\nTFTRanked = 1100\nTFTTutorial = 1110\nTFTHyperRoll = 1130\nNexusBlitz = 1300\nHA = 860\nTutorial1 = 2000\nTutorial2 = 2010\nTutorial3 = 2020");
+			ImGui::InputInt("##inputGamemode:", &gamemodeID, 1, 100);
+
+			static char lobbyPlayers[2048 * 16];
+			ImGui::Text("Lobby Player Summoner IDs:");
+			ImGui::SameLine;
+			ImGui::HelpMarker("E.g. [123, 456, ...]");
+			ImGui::InputText("##inputPlayers:", lobbyPlayers, 1000);
+
+			if (ImGui::Button("Submit##submitLobby"))
+			{
+				std::string body = R"({"lol": {"pty": "{\"queueId\":)" + std::to_string(gamemodeID) + R"(, \"summoners\":)" + lobbyPlayers + "}\"}}";
+				std::string result = LCU::Request("PUT", "https://127.0.0.1/lol-chat/v1/me", body);
+			}
+
+			ImGui::Separator();
+
 			static int iconID;
 			ImGui::Text("Icon:");
 			ImGui::InputInt("##inputIcon:", &iconID, 1, 100);
