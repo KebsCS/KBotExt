@@ -3,6 +3,7 @@
 #include "GameTab.h"
 #include "InfoTab.h"
 #include "LoginTab.h"
+#include "LobbyTab.h"
 #include "ProfileTab.h"
 #include "MiscTab.h"
 #include "CustomTab.h"
@@ -135,6 +136,8 @@ int Direct3D9Render::Render()
 			GameTab::Render();
 
 			ProfileTab::Render();
+
+			LobbyTab::Render();
 
 			InfoTab::Render();
 
