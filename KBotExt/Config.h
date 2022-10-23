@@ -55,6 +55,13 @@ struct Settings
 
 	struct
 	{
+		std::string lobbyMessage = "";
+		std::string messageName = "";
+
+	}lobbyTab;
+
+	struct
+	{
 		int firstRole = 0;
 		int secondRole = 0;
 		bool autoAcceptEnabled = false;
