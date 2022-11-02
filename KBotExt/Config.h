@@ -20,6 +20,7 @@ struct Settings
 	bool streamProof = false;
 	bool debugger = false;
 	std::string currentDebugger;
+	std::vector<std::string>ignoredVersions;
 
 	struct
 	{
@@ -130,6 +131,12 @@ public:
 				root["gameTab"]["dodgeOnBan"] = S.gameTab.dodgeOnBan;
 				root["gameTab"]["backupId"] = S.gameTab.backupId;
 
+				{
+					root["ignoredVersions"] = Json::Value(Json::arrayValue);
+					for (const std::string& version : S.ignoredVersions)
+						root["ignoredVersions"].append(version);
+				}
+
 				if (S.bAddFont)
 				{
 					S.bAddFont = false;
@@ -197,6 +204,14 @@ public:
 				if (auto t = root["gameTab"]["autoBanDelay"]; !t.empty()) S.gameTab.autoBanDelay = t.asInt();
 				if (auto t = root["gameTab"]["dodgeOnBan"]; !t.empty()) S.gameTab.dodgeOnBan = t.asBool();
 				if (auto t = root["gameTab"]["backupId"]; !t.empty()) S.gameTab.backupId = t.asInt();
+
+				if (root["ignoredVersions"].isArray() && !root["ignoredVersions"].empty())
+				{
+					for (Json::Value::ArrayIndex i = 0; i < root["ignoredVersions"].size(); i++)
+					{
+						S.ignoredVersions.emplace_back(root["ignoredVersions"][i].asString());
+					}
+				}
 
 				if (root["fonts"].isArray() && !root["fonts"].empty())
 				{

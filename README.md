@@ -1,6 +1,6 @@
-![Example](https://i.imgur.com/2I4dHSg.png)
+![Example](https://i.imgur.com/Q5MsDE4.png)
 
-[More screenshots](https://imgur.com/a/eUpsstC)
+[More screenshots](https://imgur.com/a/kGXmArZ)
 
 
 ## Technologies used
@@ -27,11 +27,13 @@
 * Force close the client instantly
 * Mass delete all friends sorted by folders
 * Accept or delete all friend requests
+* Set custom in-game minimap scale
 * Disenchant any loot you want with 1 click
 * Champion name to id lookup
 * Send any custom request or invoke
 * Stream proof
 * IFEO debugger for using HTTP debuggers
+* Log cleaner
 * Automatically saves your preferences
 * Customizable font and window size
 * 1 click login with automated client open

@@ -12,7 +12,7 @@ class Misc
 {
 public:
 
-	static inline std::string programVersion = "1.4.0";
+	static inline std::string programVersion = "1.5.0";
 
 	static void LaunchLegacyClient()
 	{
@@ -73,6 +73,20 @@ public:
 					{
 						ShellExecuteW(0, 0, L"https://github.com/KebsCS/KBotExt/releases/latest", 0, 0, SW_SHOW);
 					}
+				}
+			}
+			if (latestTag != Misc::programVersion
+				&& std::find(S.ignoredVersions.begin(), S.ignoredVersions.end(), latestTag) == S.ignoredVersions.end())
+			{
+				const auto status = MessageBoxA(0, "Open download website?\nCancel to ignore this version forever", "New minor update available", MB_YESNOCANCEL | MB_SETFOREGROUND);
+				if (status == IDYES)
+				{
+					ShellExecuteW(0, 0, L"https://github.com/KebsCS/KBotExt/releases/latest", 0, 0, SW_SHOW);
+				}
+				else if (status == IDCANCEL)
+				{
+					S.ignoredVersions.emplace_back(latestTag);
+					Config::Save();
 				}
 			}
 		}
