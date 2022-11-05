@@ -56,8 +56,9 @@ struct Settings
 
 	struct
 	{
-		int firstRole = 0;
-		int secondRole = 0;
+		size_t indexFirstRole = 0;
+		size_t indexSecondRole = 0;
+		size_t indexMultiSearch = 0;
 		bool autoAcceptEnabled = false;
 		bool instalockEnabled = false;
 		bool autoBanEnabled = false;
@@ -115,8 +116,9 @@ public:
 				root["invokeTab"]["destination"] = S.invokeTab.destination;
 				root["invokeTab"]["method"] = S.invokeTab.method;
 				root["invokeTab"]["args"] = S.invokeTab.args;
-				root["gameTab"]["firstRole"] = S.gameTab.firstRole;
-				root["gameTab"]["secondRole"] = S.gameTab.secondRole;
+				root["gameTab"]["indexFirstRole"] = S.gameTab.indexFirstRole;
+				root["gameTab"]["indexSecondRole"] = S.gameTab.indexSecondRole;
+				root["gameTab"]["indexMultiSearch"] = S.gameTab.indexMultiSearch;
 				root["gameTab"]["autoAcceptEnabled"] = S.gameTab.autoAcceptEnabled;
 				root["gameTab"]["instalockEnabled"] = S.gameTab.instalockEnabled;
 				root["gameTab"]["autoBanEnabled"] = S.gameTab.autoBanEnabled;
@@ -189,8 +191,9 @@ public:
 				if (auto t = root["invokeTab"]["destination"]; !t.empty()) S.invokeTab.destination = t.asString();
 				if (auto t = root["invokeTab"]["method"]; !t.empty()) S.invokeTab.method = t.asString();
 				if (auto t = root["invokeTab"]["args"]; !t.empty()) S.invokeTab.args = t.asString();
-				if (auto t = root["gameTab"]["firstRole"]; !t.empty()) S.gameTab.firstRole = t.asInt();
-				if (auto t = root["gameTab"]["secondRole"]; !t.empty()) S.gameTab.secondRole = t.asInt();
+				if (auto t = root["gameTab"]["indexFirstRole"]; !t.empty()) S.gameTab.indexFirstRole = t.asUInt();
+				if (auto t = root["gameTab"]["indexSecondRole"]; !t.empty()) S.gameTab.indexSecondRole = t.asUInt();
+				if (auto t = root["gameTab"]["indexMultiSearch"]; !t.empty()) S.gameTab.indexMultiSearch = t.asUInt();
 				if (auto t = root["gameTab"]["autoAcceptEnabled"]; !t.empty()) S.gameTab.autoAcceptEnabled = t.asBool();
 				if (auto t = root["gameTab"]["instalockEnabled"]; !t.empty()) S.gameTab.instalockEnabled = t.asBool();
 				if (auto t = root["gameTab"]["autoBanEnabled"]; !t.empty()) S.gameTab.autoBanEnabled = t.asBool();

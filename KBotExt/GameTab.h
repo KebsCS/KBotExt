@@ -19,9 +19,7 @@ public:
 			static std::string custom;
 
 			static std::vector<std::string>firstPosition = { "UNSELECTED", "TOP", "JUNGLE", "MIDDLE", "BOTTOM", "UTILITY", "FILL" };
-			static int indexFirstPosition = 0;
 			static std::vector<std::string>secondPosition = { "UNSELECTED", "TOP", "JUNGLE", "MIDDLE", "BOTTOM", "UTILITY", "FILL" };
-			static int indexSecondPosition = 0;
 
 			static int gameID = 0;
 
@@ -216,8 +214,9 @@ public:
 				if (gameID == DraftPick || gameID == SoloDuo || gameID == Flex)
 				{
 					result = LCU::Request("POST", "https://127.0.0.1/lol-lobby/v2/lobby", body);
-					LCU::Request("PUT", "https://127.0.0.1/lol-lobby/v1/lobby/members/localMember/position-preferences",
-						"{\"firstPreference\":\"" + firstPosition[indexFirstPosition] + "\",\"secondPreference\":\"" + secondPosition[indexSecondPosition] + "\"}");
+					LCU::Request("PUT", "/lol-lobby/v1/lobby/members/localMember/position-preferences",
+						"{\"firstPreference\":\"" + firstPosition[S.gameTab.indexFirstRole]
+						+ "\",\"secondPreference\":\"" + secondPosition[S.gameTab.indexSecondRole] + "\"}");
 				}
 				else
 				{
@@ -242,19 +241,14 @@ public:
 
 			ImGui::Columns(3, 0, false);
 
-			if (indexFirstPosition != S.gameTab.firstRole)
-			{
-				indexFirstPosition = S.gameTab.firstRole;
-			}
-			const char* labelFirstPosition = firstPosition[indexFirstPosition].c_str();
-
+			const char* labelFirstPosition = firstPosition[S.gameTab.indexFirstRole].c_str();
 			if (ImGui::BeginCombo("##comboFirstPosition", labelFirstPosition, 0))
 			{
 				for (size_t n = 0; n < firstPosition.size(); n++)
 				{
-					const bool isSelected = (S.gameTab.firstRole == n);
+					const bool isSelected = (S.gameTab.indexFirstRole == n);
 					if (ImGui::Selectable(firstPosition[n].c_str(), isSelected))
-						S.gameTab.firstRole = n;
+						S.gameTab.indexFirstRole = n;
 
 					if (isSelected)
 						ImGui::SetItemDefaultFocus();
@@ -266,19 +260,14 @@ public:
 
 			ImGui::NextColumn();
 
-			if (indexSecondPosition != S.gameTab.secondRole)
-			{
-				indexSecondPosition = S.gameTab.secondRole;
-			}
-			const char* second_labelPosition = secondPosition[indexSecondPosition].c_str();
-
+			const char* second_labelPosition = secondPosition[S.gameTab.indexSecondRole].c_str();
 			if (ImGui::BeginCombo("##comboSecondPosition", second_labelPosition, 0))
 			{
 				for (size_t n = 0; n < secondPosition.size(); n++)
 				{
-					const bool isSelected = (S.gameTab.secondRole == n);
+					const bool isSelected = (S.gameTab.indexSecondRole == n);
 					if (ImGui::Selectable(secondPosition[n].c_str(), isSelected))
-						S.gameTab.secondRole = n;
+						S.gameTab.indexSecondRole = n;
 
 					if (isSelected)
 						ImGui::SetItemDefaultFocus();
@@ -292,8 +281,9 @@ public:
 
 			if (ImGui::Button("Pick roles"))
 			{
-				result = LCU::Request("PUT", "https://127.0.0.1/lol-lobby/v1/lobby/members/localMember/position-preferences",
-					"{\"firstPreference\":\"" + firstPosition[indexFirstPosition] + "\",\"secondPreference\":\"" + secondPosition[indexSecondPosition] + "\"}");
+				result = LCU::Request("PUT", "/lol-lobby/v1/lobby/members/localMember/position-preferences",
+					"{\"firstPreference\":\"" + firstPosition[S.gameTab.indexFirstRole]
+					+ "\",\"secondPreference\":\"" + secondPosition[S.gameTab.indexSecondRole] + "\"}");
 			}
 			ImGui::SameLine();
 			ImGui::HelpMarker("If you are already in a lobby you can use this button to pick the roles, or start a new lobby with the buttons above");
@@ -318,7 +308,13 @@ public:
 			ImGui::SameLine();
 			ImGui::HelpMarker("Dodges lobby instantly, you still lose LP, but you don't have to restart the client");
 			ImGui::NextColumn();
-			if (ImGui::Button("Multi OP.GG"))
+
+			static std::vector<std::string>itemsMultiSearch = {
+				"OP.GG", "U.GG", "PORO.GG", "Porofessor.gg"
+			};
+			const char* selectedMultiSearch = itemsMultiSearch[S.gameTab.indexMultiSearch].c_str();
+
+			if (ImGui::Button("Multi-Search"))
 			{
 				std::string names;
 				std::string champSelect = LCU::Request("GET", "https://127.0.0.1/lol-champ-select/v1/session");
@@ -327,41 +323,97 @@ public:
 					Json::CharReaderBuilder builder;
 					const std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
 					JSONCPP_STRING err;
-					Json::Value rootLocale;
+					Json::Value rootRegion;
 					Json::Value rootCSelect;
 					Json::Value rootSummoner;
 
-					std::string regionLocale = LCU::Request("GET", "https://127.0.0.1/riotclient/get_region_locale");
-					if (reader->parse(regionLocale.c_str(), regionLocale.c_str() + static_cast<int>(regionLocale.length()), &rootLocale, &err))
+					if (reader->parse(champSelect.c_str(), champSelect.c_str() + static_cast<int>(champSelect.length()), &rootCSelect, &err))
 					{
-						std::wstring region = Utils::StringToWstring(rootLocale["webRegion"].asString());
-						if (reader->parse(champSelect.c_str(), champSelect.c_str() + static_cast<int>(champSelect.length()), &rootCSelect, &err))
+						auto teamArr = rootCSelect["myTeam"];
+						if (teamArr.isArray())
 						{
-							std::wstring url = L"https://" + region + L".op.gg/multi/query=";
-							auto teamArr = rootCSelect["myTeam"];
-							if (teamArr.isArray())
+							std::wstring summNames = L"";
+							for (Json::Value::ArrayIndex i = 0; i < teamArr.size(); ++i)
 							{
-								for (Json::Value::ArrayIndex i = 0; i < teamArr.size(); ++i)
+								std::string summId = teamArr[i]["summonerId"].asString();
+								if (summId != "0")
 								{
-									std::string summId = teamArr[i]["summonerId"].asString();
-									if (summId != "0")
+									std::string summoner = LCU::Request("GET", "https://127.0.0.1/lol-summoner/v1/summoners/" + summId);
+									if (reader->parse(summoner.c_str(), summoner.c_str() + static_cast<int>(summoner.length()), &rootSummoner, &err))
 									{
-										std::string summoner = LCU::Request("GET", "https://127.0.0.1/lol-summoner/v1/summoners/" + summId);
-										if (reader->parse(summoner.c_str(), summoner.c_str() + static_cast<int>(summoner.length()), &rootSummoner, &err))
-										{
-											std::wstring summName = Utils::StringToWstring(rootSummoner["internalName"].asString());
-											url += summName + L",";
-										}
+										summNames += Utils::StringToWstring(rootSummoner["internalName"].asString()) + L",";
 									}
 								}
+							}
+
+							std::wstring region;
+							if (itemsMultiSearch[S.gameTab.indexMultiSearch] == "U.GG") // platformId (euw1, eun1, na1)
+							{
+								std::string getAuthorization = LCU::Request("GET", "/lol-rso-auth/v1/authorization");
+								if (reader->parse(getAuthorization.c_str(), getAuthorization.c_str() + static_cast<int>(getAuthorization.length()), &rootRegion, &err))
+								{
+									region = Utils::StringToWstring(rootRegion["currentPlatformId"].asString());
+								}
+							}
+							else // region code (euw, eune na)
+							{
+								std::string getRegion = LCU::Request("GET", "/riotclient/get_region_locale");
+								if (reader->parse(getRegion.c_str(), getRegion.c_str() + static_cast<int>(getRegion.length()), &rootRegion, &err))
+								{
+									region = Utils::StringToWstring(rootRegion["webRegion"].asString());
+								}
+							}
+
+							if (!region.empty())
+							{
+								if (summNames.at(summNames.size() - 1) == L',')
+									summNames.pop_back();
+
+								std::wstring url;
+								if (itemsMultiSearch[S.gameTab.indexMultiSearch] == "OP.GG")
+								{
+									url = L"https://" + region + L".op.gg/multi/query=" + summNames;
+								}
+								else if (itemsMultiSearch[S.gameTab.indexMultiSearch] == "U.GG")
+								{
+									url = L"https://u.gg/multisearch?summoners=" + summNames + L"&region=" + Utils::ToLower(region);
+								}
+								else if (itemsMultiSearch[S.gameTab.indexMultiSearch] == "PORO.GG")
+								{
+									url = L"https://poro.gg/multi?region=" + Utils::ToUpper(region) + L"&q=" + summNames;
+								}
+								else if (itemsMultiSearch[S.gameTab.indexMultiSearch] == "Porofessor.gg")
+								{
+									url = L"https://porofessor.gg/pregame/" + region + L"/" + summNames;
+								}
+
 								ShellExecuteW(0, 0, url.c_str(), 0, 0, SW_SHOW);
 								result = Utils::WstringToString(url);
 							}
+							else
+								result = "Failed to get region";
 						}
 					}
 				}
 				else
 					result = "Champion select not found";
+			}
+
+			ImGui::SameLine();
+
+			ImGui::SetNextItemWidth(static_cast<float>(S.Window.width / 6));
+			if (ImGui::BeginCombo("##comboMultiSearch", selectedMultiSearch, 0))
+			{
+				for (size_t n = 0; n < itemsMultiSearch.size(); n++)
+				{
+					const bool is_selected = (S.gameTab.indexMultiSearch == n);
+					if (ImGui::Selectable(itemsMultiSearch[n].c_str(), is_selected))
+						S.gameTab.indexMultiSearch = n;
+
+					if (is_selected)
+						ImGui::SetItemDefaultFocus();
+				}
+				ImGui::EndCombo();
 			}
 
 			ImGui::Columns(1);

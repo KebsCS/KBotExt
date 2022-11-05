@@ -11,6 +11,7 @@ public:
 	static std::wstring ToLower(std::wstring wstr);
 
 	static std::string ToUpper(std::string str);
+	static std::wstring ToUpper(std::wstring wstr);
 
 	//check if strA contains strB
 	static bool StringContains(std::string strA, std::string strB, bool ignoreCase = false);

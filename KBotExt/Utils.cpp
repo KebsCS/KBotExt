@@ -31,6 +31,12 @@ std::string Utils::ToUpper(std::string str)
 	return str;
 }
 
+std::wstring Utils::ToUpper(std::wstring wstr)
+{
+	std::transform(wstr.begin(), wstr.end(), wstr.begin(), std::towupper);
+	return wstr;
+}
+
 bool Utils::StringContains(std::string strA, std::string strB, bool ignoreCase)
 {
 	if (strA.empty() || strB.empty())
