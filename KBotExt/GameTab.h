@@ -1019,7 +1019,7 @@ public:
 			return "Failed to fetch op.gg runes";
 		}
 
-		LCU::Request("DELETE", "/lol-perks/v1/page/" + currentPageId);
+		LCU::Request("DELETE", "/lol-perks/v1/pages/" + currentPageId);
 
 		Json::Value rootPage;
 		rootPage["name"] = currentChampionName + " OP.GG";
