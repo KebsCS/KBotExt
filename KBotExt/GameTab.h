@@ -994,26 +994,27 @@ public:
 				if (buf.find("grayscale") != std::string::npos)
 					continue;
 
-				if (buf.find("/perk/") != std::string::npos)
+				if (buf.find("/perkStyle/") != std::string::npos)
+				{
+					buf = buf.substr(buf.find("/perkStyle/") + strlen("/perkStyle/"), 4);
+					if (primaryPerk.empty())
+						primaryPerk = buf;
+					else if (secondaryPerk.empty())
+						secondaryPerk = buf;
+				}
+				else if (buf.find("/perk/") != std::string::npos)
 				{
 					buf = buf.substr(buf.find("/perk/") + strlen("/perk/"), 4);
-					std::cout << buf << std::endl;
 					runes.emplace_back(buf);
-
-					if (primaryPerk.empty())
-						primaryPerk = buf.substr(0, 2) + "00";
-					else if (secondaryPerk.empty() && buf.substr(0, 2) != primaryPerk.substr(0, 2))
-						secondaryPerk = buf.substr(0, 2) + "00";
 				}
 				else if (buf.find("/perkShard/") != std::string::npos)
 				{
 					buf = buf.substr(buf.find("/perkShard/") + strlen("/perkShard/"), 4);
-					std::cout << buf << std::endl;
 					runes.emplace_back(buf);
 				}
 			}
 		}
-		if (runes.size() != 9)
+		if (runes.size() != 9 || primaryPerk.empty() || secondaryPerk.empty())
 		{
 			return "Failed to fetch op.gg runes";
 		}
