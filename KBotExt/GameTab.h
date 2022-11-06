@@ -239,8 +239,8 @@ public:
 
 			ImGui::Separator();
 
-			ImGui::Columns(3, 0, false);
-
+			ImGui::Columns(2, 0, false);
+			ImGui::SetNextItemWidth(static_cast<float>(S.Window.width / 7));
 			const char* labelFirstPosition = firstPosition[S.gameTab.indexFirstRole].c_str();
 			if (ImGui::BeginCombo("##comboFirstPosition", labelFirstPosition, 0))
 			{
@@ -255,11 +255,11 @@ public:
 				}
 				ImGui::EndCombo();
 			}
+			/*		ImGui::SameLine();
+					ImGui::Text("Primary");*/
+
 			ImGui::SameLine();
-			ImGui::Text("Primary");
-
-			ImGui::NextColumn();
-
+			ImGui::SetNextItemWidth(static_cast<float>(S.Window.width / 7));
 			const char* second_labelPosition = secondPosition[S.gameTab.indexSecondRole].c_str();
 			if (ImGui::BeginCombo("##comboSecondPosition", second_labelPosition, 0))
 			{
@@ -274,10 +274,10 @@ public:
 				}
 				ImGui::EndCombo();
 			}
-			ImGui::SameLine();
-			ImGui::Text("Secondary");
+			//ImGui::SameLine();
+			//ImGui::Text("Secondary");
 
-			ImGui::NextColumn();
+			ImGui::SameLine();
 
 			if (ImGui::Button("Pick roles"))
 			{
@@ -287,6 +287,13 @@ public:
 			}
 			ImGui::SameLine();
 			ImGui::HelpMarker("If you are already in a lobby you can use this button to pick the roles, or start a new lobby with the buttons above");
+
+			ImGui::NextColumn();
+
+			if (ImGui::Button("Change runes"))
+			{
+				result = ChangeRunesOpgg();
+			}
 
 			ImGui::Columns(1);
 
@@ -316,87 +323,7 @@ public:
 
 			if (ImGui::Button("Multi-Search"))
 			{
-				std::string names;
-				std::string champSelect = LCU::Request("GET", "https://127.0.0.1/lol-champ-select/v1/session");
-				if (!champSelect.empty() && champSelect.find("RPC_ERROR") == std::string::npos)
-				{
-					Json::CharReaderBuilder builder;
-					const std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
-					JSONCPP_STRING err;
-					Json::Value rootRegion;
-					Json::Value rootCSelect;
-					Json::Value rootSummoner;
-
-					if (reader->parse(champSelect.c_str(), champSelect.c_str() + static_cast<int>(champSelect.length()), &rootCSelect, &err))
-					{
-						auto teamArr = rootCSelect["myTeam"];
-						if (teamArr.isArray())
-						{
-							std::wstring summNames = L"";
-							for (Json::Value::ArrayIndex i = 0; i < teamArr.size(); ++i)
-							{
-								std::string summId = teamArr[i]["summonerId"].asString();
-								if (summId != "0")
-								{
-									std::string summoner = LCU::Request("GET", "https://127.0.0.1/lol-summoner/v1/summoners/" + summId);
-									if (reader->parse(summoner.c_str(), summoner.c_str() + static_cast<int>(summoner.length()), &rootSummoner, &err))
-									{
-										summNames += Utils::StringToWstring(rootSummoner["internalName"].asString()) + L",";
-									}
-								}
-							}
-
-							std::wstring region;
-							if (itemsMultiSearch[S.gameTab.indexMultiSearch] == "U.GG") // platformId (euw1, eun1, na1)
-							{
-								std::string getAuthorization = LCU::Request("GET", "/lol-rso-auth/v1/authorization");
-								if (reader->parse(getAuthorization.c_str(), getAuthorization.c_str() + static_cast<int>(getAuthorization.length()), &rootRegion, &err))
-								{
-									region = Utils::StringToWstring(rootRegion["currentPlatformId"].asString());
-								}
-							}
-							else // region code (euw, eune na)
-							{
-								std::string getRegion = LCU::Request("GET", "/riotclient/get_region_locale");
-								if (reader->parse(getRegion.c_str(), getRegion.c_str() + static_cast<int>(getRegion.length()), &rootRegion, &err))
-								{
-									region = Utils::StringToWstring(rootRegion["webRegion"].asString());
-								}
-							}
-
-							if (!region.empty())
-							{
-								if (summNames.at(summNames.size() - 1) == L',')
-									summNames.pop_back();
-
-								std::wstring url;
-								if (itemsMultiSearch[S.gameTab.indexMultiSearch] == "OP.GG")
-								{
-									url = L"https://" + region + L".op.gg/multi/query=" + summNames;
-								}
-								else if (itemsMultiSearch[S.gameTab.indexMultiSearch] == "U.GG")
-								{
-									url = L"https://u.gg/multisearch?summoners=" + summNames + L"&region=" + Utils::ToLower(region);
-								}
-								else if (itemsMultiSearch[S.gameTab.indexMultiSearch] == "PORO.GG")
-								{
-									url = L"https://poro.gg/multi?region=" + Utils::ToUpper(region) + L"&q=" + summNames;
-								}
-								else if (itemsMultiSearch[S.gameTab.indexMultiSearch] == "Porofessor.gg")
-								{
-									url = L"https://porofessor.gg/pregame/" + region + L"/" + summNames;
-								}
-
-								ShellExecuteW(0, 0, url.c_str(), 0, 0, SW_SHOW);
-								result = Utils::WstringToString(url);
-							}
-							else
-								result = "Failed to get region";
-						}
-					}
-				}
-				else
-					result = "Champion select not found";
+				result = MultiSearch(itemsMultiSearch[S.gameTab.indexMultiSearch]);
 			}
 
 			ImGui::SameLine();
@@ -923,5 +850,185 @@ public:
 
 			std::this_thread::sleep_for(std::chrono::milliseconds(1));
 		}
+	}
+
+	static std::string MultiSearch(const std::string& website)
+	{
+		std::string names;
+		std::string champSelect = LCU::Request("GET", "https://127.0.0.1/lol-champ-select/v1/session");
+		if (!champSelect.empty() && champSelect.find("RPC_ERROR") == std::string::npos)
+		{
+			Json::CharReaderBuilder builder;
+			const std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
+			JSONCPP_STRING err;
+			Json::Value rootRegion;
+			Json::Value rootCSelect;
+			Json::Value rootSummoner;
+
+			if (reader->parse(champSelect.c_str(), champSelect.c_str() + static_cast<int>(champSelect.length()), &rootCSelect, &err))
+			{
+				auto teamArr = rootCSelect["myTeam"];
+				if (teamArr.isArray())
+				{
+					std::wstring summNames = L"";
+					for (Json::Value::ArrayIndex i = 0; i < teamArr.size(); ++i)
+					{
+						std::string summId = teamArr[i]["summonerId"].asString();
+						if (summId != "0")
+						{
+							std::string summoner = LCU::Request("GET", "https://127.0.0.1/lol-summoner/v1/summoners/" + summId);
+							if (reader->parse(summoner.c_str(), summoner.c_str() + static_cast<int>(summoner.length()), &rootSummoner, &err))
+							{
+								summNames += Utils::StringToWstring(rootSummoner["internalName"].asString()) + L",";
+							}
+						}
+					}
+
+					std::wstring region;
+					if (website == "U.GG") // platformId (euw1, eun1, na1)
+					{
+						std::string getAuthorization = LCU::Request("GET", "/lol-rso-auth/v1/authorization");
+						if (reader->parse(getAuthorization.c_str(), getAuthorization.c_str() + static_cast<int>(getAuthorization.length()), &rootRegion, &err))
+						{
+							region = Utils::StringToWstring(rootRegion["currentPlatformId"].asString());
+						}
+					}
+					else // region code (euw, eune na)
+					{
+						std::string getRegion = LCU::Request("GET", "/riotclient/get_region_locale");
+						if (reader->parse(getRegion.c_str(), getRegion.c_str() + static_cast<int>(getRegion.length()), &rootRegion, &err))
+						{
+							region = Utils::StringToWstring(rootRegion["webRegion"].asString());
+						}
+					}
+
+					if (!region.empty())
+					{
+						if (summNames.at(summNames.size() - 1) == L',')
+							summNames.pop_back();
+
+						std::wstring url;
+						if (website == "OP.GG")
+						{
+							url = L"https://" + region + L".op.gg/multi/query=" + summNames;
+						}
+						else if (website == "U.GG")
+						{
+							url = L"https://u.gg/multisearch?summoners=" + summNames + L"&region=" + Utils::ToLower(region);
+						}
+						else if (website == "PORO.GG")
+						{
+							url = L"https://poro.gg/multi?region=" + Utils::ToUpper(region) + L"&q=" + summNames;
+						}
+						else if (website == "Porofessor.gg")
+						{
+							url = L"https://porofessor.gg/pregame/" + region + L"/" + summNames;
+						}
+
+						ShellExecuteW(0, 0, url.c_str(), 0, 0, SW_SHOW);
+						return Utils::WstringToString(url);
+					}
+					else
+						return "Failed to get region";
+				}
+			}
+		}
+		else
+			return "Champion select not found";
+	}
+
+	static std::string ChangeRunesOpgg()
+	{
+		std::string champSelect = LCU::Request("GET", "/lol-champ-select/v1/session");
+		if (champSelect.empty() || champSelect.find("RPC_ERROR") != std::string::npos)
+		{
+			return "Champion select not found";
+		}
+
+		Json::CharReaderBuilder builder;
+		const std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
+		JSONCPP_STRING err;
+		Json::Value rootCurrentPage;
+		//Json::Value rootCSelect;
+		//
+		//if (!reader->parse(champSelect.c_str(), champSelect.c_str() + static_cast<int>(champSelect.length()), &rootCSelect, &err))
+		//{
+		//	return "Failed to get champion select";
+		//}
+
+		std::string currentChampion = LCU::Request("GET", "/lol-champ-select/v1/current-champion");
+		if (currentChampion == "0")
+		{
+			return "Champion not picked";
+		}
+
+		std::string currentChampionName;
+		for (const auto& c : champSkins)
+		{
+			if (std::stoi(currentChampion) == c.key)
+			{
+				currentChampionName = c.name;
+				break;
+			}
+		}
+
+		std::string getCurrentPage = LCU::Request("GET", "/lol-perks/v1/currentpage");
+		if (!reader->parse(getCurrentPage.c_str(), getCurrentPage.c_str() + static_cast<int>(getCurrentPage.length()), &rootCurrentPage, &err))
+		{
+			return "Failed to get current rune page";
+		}
+		std::string currentPageId = rootCurrentPage["id"].asString();
+
+		std::stringstream ssOpgg(HTTP::Request("GET", "https://www.op.gg/champions/" + Utils::ToLower(currentChampionName)));
+		std::vector<std::string>runes;
+		std::string primaryPerk, secondaryPerk;
+
+		std::string buf;
+		while (ssOpgg >> buf)
+		{
+			if (runes.size() == 9)
+				break;
+
+			if (buf.find("src=\"https://opgg-static.akamaized.net/images/lol/perk") != std::string::npos)
+			{
+				if (buf.find("grayscale") != std::string::npos)
+					continue;
+
+				if (buf.find("/perk/") != std::string::npos)
+				{
+					buf = buf.substr(buf.find("/perk/") + strlen("/perk/"), 4);
+					std::cout << buf << std::endl;
+					runes.emplace_back(buf);
+
+					if (primaryPerk.empty())
+						primaryPerk = buf.substr(0, 2) + "00";
+					else if (secondaryPerk.empty() && buf.substr(0, 2) != primaryPerk.substr(0, 2))
+						secondaryPerk = buf.substr(0, 2) + "00";
+				}
+				else if (buf.find("/perkShard/") != std::string::npos)
+				{
+					buf = buf.substr(buf.find("/perkShard/") + strlen("/perkShard/"), 4);
+					std::cout << buf << std::endl;
+					runes.emplace_back(buf);
+				}
+			}
+		}
+		if (runes.size() != 9)
+		{
+			return "Failed to fetch op.gg runes";
+		}
+
+		LCU::Request("DELETE", "/lol-perks/v1/page/" + currentPageId);
+
+		Json::Value rootPage;
+		rootPage["name"] = currentChampionName + " OP.GG";
+		rootPage["primaryStyleId"] = primaryPerk;
+		rootPage["subStyleId"] = secondaryPerk;
+		rootPage["selectedPerkIds"] = Json::Value(Json::arrayValue);
+		for (const std::string& rune : runes)
+			rootPage["selectedPerkIds"].append(rune);
+		rootPage["current"] = true;
+
+		return LCU::Request("POST", "lol-perks/v1/pages", rootPage.toStyledString());
 	}
 };
