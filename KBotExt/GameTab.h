@@ -939,11 +939,11 @@ public:
 
 	static std::string ChangeRunesOpgg()
 	{
-		std::string champSelect = LCU::Request("GET", "/lol-champ-select/v1/session");
-		if (champSelect.empty() || champSelect.find("RPC_ERROR") != std::string::npos)
-		{
-			return "Champion select not found";
-		}
+		/*	std::string champSelect = LCU::Request("GET", "/lol-champ-select/v1/session");
+			if (champSelect.empty() || champSelect.find("RPC_ERROR") != std::string::npos)
+			{
+				return "Champion select not found";
+			}*/
 
 		Json::CharReaderBuilder builder;
 		const std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
@@ -957,7 +957,7 @@ public:
 		//}
 
 		std::string currentChampion = LCU::Request("GET", "/lol-champ-select/v1/current-champion");
-		if (currentChampion == "0")
+		if (currentChampion == "0" || currentChampion.empty() || currentChampion.find("RPC_ERROR") != std::string::npos)
 		{
 			return "Champion not picked";
 		}
@@ -989,7 +989,8 @@ public:
 			if (runes.size() == 9)
 				break;
 
-			if (buf.find("src=\"https://opgg-static.akamaized.net/images/lol/perk") != std::string::npos)
+			if (buf.find("src=\"https://opgg-static.akamaized.net/images/lol/perk") != std::string::npos
+				|| buf.find("src=\"https://opgg-static.akamaized.net/meta/images/lol/perk") != std::string::npos)
 			{
 				if (buf.find("grayscale") != std::string::npos)
 					continue;
