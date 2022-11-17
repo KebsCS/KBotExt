@@ -864,15 +864,24 @@ public:
 			Json::Value rootRegion;
 			Json::Value rootCSelect;
 			Json::Value rootSummoner;
+			Json::Value rootPartcipants;
+
+			std::wstring summNames = L"";
+			bool isRanked = false;
 
 			if (reader->parse(champSelect.c_str(), champSelect.c_str() + static_cast<int>(champSelect.length()), &rootCSelect, &err))
 			{
 				auto teamArr = rootCSelect["myTeam"];
 				if (teamArr.isArray())
 				{
-					std::wstring summNames = L"";
 					for (Json::Value::ArrayIndex i = 0; i < teamArr.size(); ++i)
 					{
+						if (teamArr[i]["nameVisibilityType"].asString() == "HIDDEN")
+						{
+							isRanked = true;
+							break;
+						}
+
 						std::string summId = teamArr[i]["summonerId"].asString();
 						if (summId != "0")
 						{
@@ -880,6 +889,26 @@ public:
 							if (reader->parse(summoner.c_str(), summoner.c_str() + static_cast<int>(summoner.length()), &rootSummoner, &err))
 							{
 								summNames += Utils::StringToWstring(rootSummoner["internalName"].asString()) + L",";
+							}
+						}
+					}
+
+					if (isRanked)
+					{
+						summNames = L"";
+
+						LCU::SetCurrentClientRiotInfo();
+						std::string participants = HTTP::Request("GET", "https://127.0.0.1/chat/v5/participants/champ-select", "",
+							LCU::riot.header, "", "", LCU::riot.port);
+						if (reader->parse(participants.c_str(), participants.c_str() + static_cast<int>(participants.length()), &rootPartcipants, &err))
+						{
+							auto participantsArr = rootPartcipants["participants"];
+							if (participantsArr.isArray())
+							{
+								for (Json::Value::ArrayIndex i = 0; i < participantsArr.size(); ++i)
+								{
+									summNames += Utils::StringToWstring(participantsArr[i]["name"].asString()) + L",";
+								}
 							}
 						}
 					}
@@ -904,6 +933,9 @@ public:
 
 					if (!region.empty())
 					{
+						if (summNames.empty())
+							return "Failed to get summoner names";
+
 						if (summNames.at(summNames.size() - 1) == L',')
 							summNames.pop_back();
 

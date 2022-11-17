@@ -17,6 +17,8 @@ public:
 	static bool SetLeagueClientInfo(const ClientInfo& info);
 	static bool SetLeagueClientInfo();
 
+	static bool SetCurrentClientRiotInfo();
+
 	static inline std::vector<std::pair<DWORD, std::string>> leagueProcesses;
 	static inline size_t indexLeagueProcesses = 0; // currently selected process
 	static void GetLeagueProcesses();

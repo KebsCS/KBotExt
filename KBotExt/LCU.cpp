@@ -57,6 +57,11 @@ bool LCU::SetLeagueClientInfo()
 	return SetLeagueClientInfo(Auth::GetClientInfo(LCU::leagueProcesses[LCU::indexLeagueProcesses].first));
 }
 
+bool LCU::SetCurrentClientRiotInfo()
+{
+	return SetRiotClientInfo(Auth::GetClientInfo(LCU::leagueProcesses[LCU::indexLeagueProcesses].first, true));
+}
+
 void LCU::GetLeagueProcesses()
 {
 	std::vector<DWORD>allProcessIds = Auth::GetAllProcessIds(L"LeagueClientUx.exe");

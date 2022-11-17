@@ -48,15 +48,24 @@ public:
 				static char inputPort[64] = "";
 				ImGui::Text("Port:");
 				ImGui::InputText("##inputPort", inputPort, 64, ImGuiInputTextFlags_CharsDecimal);
-				std::string sPort = std::string(inputPort);
-				if (!sPort.empty())
-					customPort = std::stoi(sPort);
-				else
-					customPort = -1;
 
 				static char inputHeader[1024 * 16];
 				ImGui::Text("Header:");
 				ImGui::InputTextMultiline("##inputHeader", (inputHeader), IM_ARRAYSIZE(inputHeader), ImVec2(600, 100), ImGuiInputTextFlags_AllowTabInput);
+
+				if (ImGui::Button("Set Riot Client Info"))
+				{
+					LCU::SetCurrentClientRiotInfo();
+					std::strcpy(inputPort, std::to_string(LCU::riot.port).c_str());
+					std::strcpy(inputHeader, LCU::riot.header.c_str());
+				}
+
+				std::string sPort = std::string(inputPort);
+				if (!sPort.empty())
+					customPort = std::stoi(sPort);
+				else
+					customPort = 443;
+
 				std::string sHeader = std::string(inputHeader);
 				customHeader = sHeader;
 			}

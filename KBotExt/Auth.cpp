@@ -9,7 +9,7 @@
 #include "Auth.h"
 #include "Utils.h"
 
-ClientInfo Auth::GetClientInfo(const DWORD& pid)
+ClientInfo Auth::GetClientInfo(const DWORD& pid, bool riotClient)
 {
 	if (!pid)
 		return {};
@@ -19,17 +19,18 @@ ClientInfo Auth::GetClientInfo(const DWORD& pid)
 		return {};
 
 	ClientInfo info;
-	info.port = GetPort(cmdLine);
-	info.token = GetToken(cmdLine);
+	info.port = GetPort(cmdLine, riotClient);
+	info.token = GetToken(cmdLine, riotClient);
 	info.path = GetProcessPath(pid);
 	info.version = GetFileVersion(info.path);
 
 	return info;
 }
 
-int Auth::GetPort(const std::string& cmdLine)
+int Auth::GetPort(const std::string& cmdLine, bool riotClient)
 {
-	std::regex regexStr("--app-port=(\\d*)");
+	std::regex regexStr;
+	regexStr = riotClient ? ("--riotclient-app-port=(\\d*)") : ("--app-port=(\\d*)");
 	std::smatch m;
 	if (std::regex_search(cmdLine, m, regexStr))
 		return std::stoi(m[1].str());
@@ -37,9 +38,10 @@ int Auth::GetPort(const std::string& cmdLine)
 	return 0;
 }
 
-std::string Auth::GetToken(const std::string& cmdLine)
+std::string Auth::GetToken(const std::string& cmdLine, bool riotClient)
 {
-	std::regex regexStr("--remoting-auth-token=([\\w-]*)");
+	std::regex regexStr;
+	regexStr = riotClient ? ("--riotclient-auth-token=([\\w-]*)") : ("--remoting-auth-token=([\\w-]*)");
 	std::smatch m;
 	if (std::regex_search(cmdLine, m, regexStr))
 	{
