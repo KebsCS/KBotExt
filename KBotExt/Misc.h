@@ -12,7 +12,7 @@ class Misc
 {
 public:
 
-	static inline std::string programVersion = "1.5.0";
+	static inline std::string programVersion = "1.5.1";
 
 	static void LaunchLegacyClient()
 	{

@@ -1,4 +1,4 @@
-![Example](https://i.imgur.com/Q5MsDE4.png)
+![Example](https://i.imgur.com/xcalVGr.png)
 
 [More screenshots](https://imgur.com/a/kGXmArZ)
 
@@ -18,7 +18,8 @@
 * Automatically pick a secondary, or dodge if your champion is banned
 * Dodge lobbies without closing the client
 * Mass invite all friends to lobby
-* Open multi op.gg with all players in a champion select
+* Open multi-search op.gg/u.gg/poro.gg/porofessor.gg with all players in a champion select (works in ranked)
+* Set the best runes for your selected champion
 * Play any champion/skin for free
 * Set custom icon/background/status/rank/mastery visible for everyone
 * Set empty challenge badges (tokens)
