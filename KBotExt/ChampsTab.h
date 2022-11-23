@@ -21,7 +21,7 @@ public:
 			ImGui::SameLine();
 
 			static int iSort = 0;
-			static short iLastSort = -1;
+			static int iLastSort = -1;
 			ImGui::RadioButton("Alphabetically", &iSort, 0);
 			ImGui::SameLine();
 			ImGui::RadioButton("Purchase date", &iSort, 1);

@@ -72,6 +72,12 @@ int WINAPI wWinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/, LPWSTR
 	}
 	else
 	{
+#ifndef NDEBUG
+		AllocConsole();
+		FILE* f;
+		freopen_s(&f, "CONOUT$", "w", stdout);
+#endif
+
 		//Randomize using current time, todo swap with recent c++ random
 		srand(static_cast<unsigned>(time(0)));
 
@@ -113,12 +119,6 @@ int WINAPI wWinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/, LPWSTR
 		// Show the window
 		::ShowWindow(hwnd, SW_SHOWDEFAULT);
 		::UpdateWindow(hwnd);
-
-#ifndef NDEBUG
-		AllocConsole();
-		FILE* f;
-		freopen_s(&f, "CONOUT$", "w", stdout);
-#endif
 
 		LCU::GetLeagueProcesses();
 

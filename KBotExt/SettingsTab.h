@@ -82,7 +82,9 @@ public:
 
 			ImGui::Checkbox("Register debugger IFEO", &S.debugger);
 			ImGui::SameLine();
-			ImGui::Text(" | Hooked to: %s", S.currentDebugger.c_str());
+			ImGui::HelpMarker("Allows for client traffic analysis via a web debugging proxy such as Fiddler. Disable before deleting the program. Doesn't work when Auto-rename is enabled.");
+			ImGui::SameLine();
+			ImGui::Text("| Hooked to: %s", S.currentDebugger.c_str());
 
 			// Terminate all league related processes,
 			// remove read only and hidden property from files

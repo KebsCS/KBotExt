@@ -15,7 +15,7 @@ public:
 
 			static char method[50];
 			static char urlText[1024 * 16];
-			static char requestText[1024 * 16];
+			static char requestText[1024 * 32];
 
 			if (once)
 			{

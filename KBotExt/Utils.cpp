@@ -164,7 +164,7 @@ bool Utils::DownloadFile(std::string fileName, std::string directory, std::strin
 
 bool Utils::ContainsOnlyASCII(std::string buff)
 {
-	for (int i = 0; i < buff.size(); ++i)
+	for (size_t i = 0; i < buff.size(); ++i)
 	{
 		if (buff[i] == 0)
 			return true;

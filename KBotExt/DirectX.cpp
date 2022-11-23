@@ -11,43 +11,6 @@
 #include "ChampsTab.h"
 #include "SettingsTab.h"
 
-// TODO: move this
-void GetAllChampionSkins(std::string patch)
-{
-	std::vector < Champ > temp;
-
-	std::string result = HTTP::Request("GET", "http://ddragon.leagueoflegends.com/cdn/" + patch + "/data/en_US/champion.json");
-	Json::CharReaderBuilder builder;
-	const std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
-	JSONCPP_STRING err;
-	Json::Value root;
-	if (reader->parse(result.c_str(), result.c_str() + static_cast<int>(result.length()), &root, &err))
-	{
-		for (const std::string& name : root["data"].getMemberNames())
-		{
-			std::string result2 = HTTP::Request("GET", "http://ddragon.leagueoflegends.com/cdn/" + patch + "/data/en_US/champion/" + name + ".json");
-			Json::Value root2;
-			if (reader->parse(result2.c_str(), result2.c_str() + static_cast<int>(result2.length()), &root2, &err))
-			{
-				Champ champ;
-				champ.name = name;
-				champ.key = std::stoi(root2["data"][name]["key"].asString());
-				auto skinArr = root2["data"][name]["skins"];
-				for (Json::Value::ArrayIndex i = 0; i < skinArr.size(); ++i)
-				{
-					auto skinObj = skinArr[i];
-					std::pair<std::string, std::string > skin;
-					skin.first = skinObj["id"].asString();
-					skin.second = skinObj["name"].asString();
-					champ.skins.emplace_back(skin);
-				}
-				temp.emplace_back(champ);
-			}
-		}
-	}
-	champSkins = temp;
-}
-
 bool Direct3D9Render::DirectXInit(HWND hWnd)
 {
 	// Setup swap chain
@@ -83,7 +46,7 @@ bool Direct3D9Render::DirectXInit(HWND hWnd)
 
 	gamePatch = Misc::GetCurrentPatch();
 
-	std::thread t{ GetAllChampionSkins, gamePatch };
+	std::thread t{ Misc::GetAllChampionSkins };
 	t.detach();
 
 	std::thread AutoAcceptThread(&GameTab::AutoAccept);
@@ -120,7 +83,7 @@ int Direct3D9Render::Render()
 	std::string connectedTo = "";
 	if (LCU::IsProcessGood())
 		connectedTo = "| Connected to: " + LCU::leagueProcesses[LCU::indexLeagueProcesses].second;
-	sprintf_s(buf, ("KBotExt by kebs - %s %s \t %s ###AnimatedTitle"), gamePatch.c_str(), connectedTo.c_str(), champSkins.empty() ? "Downloading skin data..." : "");
+	sprintf_s(buf, ("KBotExt by kebs - %s %s \t %s ###AnimatedTitle"), gamePatch.c_str(), connectedTo.c_str(), champSkins.empty() ? "Fetching skin data..." : "");
 
 	ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiCond_FirstUseEver);
 	ImGui::SetNextWindowSize(ImVec2(685, 462), ImGuiCond_FirstUseEver);

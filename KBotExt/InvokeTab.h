@@ -12,9 +12,9 @@ public:
 		{
 			static bool once = true;
 
-			static char destination[1024 * 16];
-			static char method[1024 * 16];
-			static char args[1024 * 16];
+			static char destination[1024];
+			static char method[1024];
+			static char args[1024 * 32];
 
 			if (once)
 			{

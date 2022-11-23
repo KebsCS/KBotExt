@@ -106,6 +106,70 @@ public:
 		return "0.0.0";
 	}
 
+	static void GetAllChampionSkins()
+	{
+		std::string getSkins = HTTP::Request("GET", "https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/skins.json");
+		Json::CharReaderBuilder builder;
+		const std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
+		JSONCPP_STRING err;
+		Json::Value root;
+		if (!reader->parse(getSkins.c_str(), getSkins.c_str() + static_cast<int>(getSkins.length()), &root, &err))
+			return;
+
+		std::map<std::string, Champ>champs;
+		for (const std::string& id : root.getMemberNames())
+		{
+			const Json::Value currentSkin = root[id];
+
+			std::string loadScreenPath = currentSkin["loadScreenPath"].asString();
+			size_t nameStart = loadScreenPath.find("ASSETS/Characters/") + strlen("ASSETS/Characters/");
+			std::string champName = loadScreenPath.substr(nameStart, loadScreenPath.find("/", nameStart) - nameStart);
+
+			std::string name = currentSkin["name"].asString();
+
+			std::pair<std::string, std::string> skin;
+			if (currentSkin["isBase"].asBool() == true)
+			{
+				champs[champName].name = champName;
+
+				std::string splashPath = currentSkin["splashPath"].asString();
+				size_t keyStart = splashPath.find("champion-splashes/") + strlen("champion-splashes/");
+				std::string champKey = splashPath.substr(keyStart, splashPath.find("/", keyStart) - keyStart);
+
+				champs[champName].key = std::stoi(champKey);
+				skin.first = id;
+				skin.second = "default";
+				champs[champName].skins.insert(champs[champName].skins.begin(), skin);
+			}
+			else
+			{
+				if (currentSkin["questSkinInfo"]) // K/DA ALL OUT Seraphine
+				{
+					const Json::Value skinTiers = currentSkin["questSkinInfo"]["tiers"];
+					for (Json::Value::ArrayIndex i = 0; i < skinTiers.size(); i++)
+					{
+						skin.first = skinTiers[i]["id"].asString();
+						skin.second = skinTiers[i]["name"].asString();
+						champs[champName].skins.emplace_back(skin);
+					}
+				}
+				else
+				{
+					skin.first = id;
+					skin.second = name;
+					champs[champName].skins.emplace_back(skin);
+				}
+			}
+		}
+
+		std::vector<Champ> temp;
+		for (const auto& c : champs)
+		{
+			temp.emplace_back(c.second);
+		}
+		champSkins = temp;
+	}
+
 	static void TaskKillLeague()
 	{
 		Misc::TerminateProcessByName(L"RiotClientServices.exe");
@@ -127,7 +191,7 @@ public:
 		}
 		else if (champSkins.empty())
 		{
-			return "No data";// "Champion data still downloading";
+			return "No data";// "Champion data is still being fetched";
 		}
 		{
 			for (const auto& c : champSkins)

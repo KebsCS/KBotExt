@@ -448,13 +448,13 @@ public:
 
 			ImGui::Columns(1);
 
-			static bool isStillDownloading = true;
+			static bool isStillBeingFetched = true;
 			if (!champSkins.empty())
-				isStillDownloading = false;
+				isStillBeingFetched = false;
 
 			static std::string chosenInstalock = "Instalock champ \t\tChosen: " + Misc::ChampIdToName(S.gameTab.instalockId) + "###AnimatedInstalock";
 			static int lastInstalockId = 0;
-			if ((lastInstalockId != S.gameTab.instalockId) && !isStillDownloading)
+			if ((lastInstalockId != S.gameTab.instalockId) && !isStillBeingFetched)
 			{
 				lastInstalockId = S.gameTab.instalockId;
 				chosenInstalock = "Instalock champ \t\tChosen: " + Misc::ChampIdToName(S.gameTab.instalockId) + "###AnimatedInstalock";
@@ -474,7 +474,7 @@ public:
 
 			static std::string chosenBackup = "Backup pick \t\t\tChosen: " + Misc::ChampIdToName(S.gameTab.backupId) + "###AnimatedBackup";
 			static int lastBackupId = 0;
-			if ((lastBackupId != S.gameTab.backupId) && !isStillDownloading)
+			if ((lastBackupId != S.gameTab.backupId) && !isStillBeingFetched)
 			{
 				lastBackupId = S.gameTab.backupId;
 				chosenBackup = "Backup pick \t\t\tChosen: " + Misc::ChampIdToName(S.gameTab.backupId) + "###AnimatedBackup";
@@ -506,7 +506,7 @@ public:
 
 			static std::string chosenAutoban = "Auto ban\t\t\t\tChosen: " + Misc::ChampIdToName(S.gameTab.autoBanId) + "###AnimatedAutoban";
 			static int lastAutoban = 0;
-			if ((lastAutoban != S.gameTab.autoBanId) && !isStillDownloading)
+			if ((lastAutoban != S.gameTab.autoBanId) && !isStillBeingFetched)
 			{
 				lastAutoban = S.gameTab.autoBanId;
 				chosenAutoban = "Auto ban\t\t\t\tChosen: " + Misc::ChampIdToName(S.gameTab.autoBanId) + "###AnimatedAutoban";
@@ -515,7 +515,7 @@ public:
 			{
 				if (champSkins.empty())
 				{
-					ImGui::Text("Champion data still downloading");
+					ImGui::Text("Champion data is still being fetched");
 				}
 				else
 				{
@@ -965,8 +965,8 @@ public:
 				}
 			}
 		}
-		else
-			return "Champion select not found";
+
+		return "Champion select not found";
 	}
 
 	static std::string ChangeRunesOpgg()

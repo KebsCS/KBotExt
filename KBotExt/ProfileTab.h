@@ -211,6 +211,8 @@ public:
 					MessageBoxA(0, result.c_str(), 0, 0);
 				}
 			}
+			ImGui::SameLine();
+			ImGui::HelpMarker("Shown on splash art when hovered over in friend's list");
 
 			ImGui::Separator();
 
@@ -253,7 +255,7 @@ public:
 			{
 				if (champSkins.empty())
 				{
-					ImGui::Text("Skin data still downloading");
+					ImGui::Text("Skin data is still being fetched");
 				}
 				else
 				{

@@ -26,9 +26,7 @@ private:
 public:
 	bool closedClient = false;
 
-	Direct3D9Render()
-	{
-	}
+	Direct3D9Render() = default;
 
 	~Direct3D9Render() = default;
 
@@ -55,4 +53,3 @@ public:
 	//initializes imgui styles
 	void MenuInit();
 };
-extern Direct3D9Render Direct3D9;

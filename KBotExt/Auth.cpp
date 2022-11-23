@@ -270,5 +270,3 @@ std::string Auth::GetFileVersion(const std::wstring& file)
 
 	return "";
 }
-
-Auth* auth = new Auth();
