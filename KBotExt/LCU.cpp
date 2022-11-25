@@ -40,6 +40,8 @@ bool LCU::SetRiotClientInfo()
 
 bool LCU::SetLeagueClientInfo(const ClientInfo& info)
 {
+	isCurrentRiotInfoSet = false;
+
 	league = info;
 
 	if (league.port == 0 || league.token == "")
@@ -59,7 +61,14 @@ bool LCU::SetLeagueClientInfo()
 
 bool LCU::SetCurrentClientRiotInfo()
 {
-	return SetRiotClientInfo(Auth::GetClientInfo(LCU::leagueProcesses[LCU::indexLeagueProcesses].first, true));
+	if (isCurrentRiotInfoSet)
+		return true;
+
+	bool isSet = SetRiotClientInfo(Auth::GetClientInfo(LCU::leagueProcesses[LCU::indexLeagueProcesses].first, true));
+	if (isSet)
+		isCurrentRiotInfoSet = true;
+
+	return isSet;
 }
 
 void LCU::GetLeagueProcesses()

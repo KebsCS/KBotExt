@@ -23,4 +23,7 @@ public:
 	static inline size_t indexLeagueProcesses = 0; // currently selected process
 	static void GetLeagueProcesses();
 	static bool IsProcessGood();
+
+private:
+	static inline bool isCurrentRiotInfoSet = false;
 };
