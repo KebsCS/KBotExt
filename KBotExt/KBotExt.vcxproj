@@ -170,7 +170,6 @@
     <ClCompile Include="Auth.cpp" />
     <ClCompile Include="DirectX.cpp" />
     <ClCompile Include="imgui\imgui.cpp" />
-    <ClCompile Include="imgui\imgui_demo.cpp" />
     <ClCompile Include="imgui\imgui_draw.cpp" />
     <ClCompile Include="imgui\imgui_impl_dx11.cpp" />
     <ClCompile Include="imgui\imgui_impl_win32.cpp" />
@@ -201,7 +200,6 @@
     <ClInclude Include="imgui\imstb_truetype.h" />
     <ClInclude Include="Includes.h" />
     <ClInclude Include="InfoTab.h" />
-    <ClInclude Include="InvokeTab.h" />
     <ClInclude Include="json\allocator.h" />
     <ClInclude Include="json\assertions.h" />
     <ClInclude Include="json\config.h" />

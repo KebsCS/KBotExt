@@ -39,6 +39,8 @@ struct Settings
 		std::string method;
 		std::string urlText;
 		std::string requestText;
+		std::string port;
+		std::string header;
 	}customTab;
 
 	struct
@@ -109,13 +111,18 @@ public:
 				root["loginTab"]["language"] = S.loginTab.language;
 				root["loginTab"]["leagueArgs"] = S.loginTab.leagueArgs;
 				root["streamProof"] = S.streamProof;
+
 				root["infoTab"]["playerName"] = S.infoTab.playerName;
+
 				root["customTab"]["method"] = S.customTab.method;
 				root["customTab"]["urlText"] = S.customTab.urlText;
 				root["customTab"]["requestText"] = S.customTab.requestText;
+				root["customTab"]["port"] = S.customTab.port;
+				root["customTab"]["header"] = S.customTab.header;
 				root["invokeTab"]["destination"] = S.invokeTab.destination;
 				root["invokeTab"]["method"] = S.invokeTab.method;
 				root["invokeTab"]["args"] = S.invokeTab.args;
+
 				root["gameTab"]["indexFirstRole"] = S.gameTab.indexFirstRole;
 				root["gameTab"]["indexSecondRole"] = S.gameTab.indexSecondRole;
 				root["gameTab"]["indexMultiSearch"] = S.gameTab.indexMultiSearch;
@@ -184,13 +191,19 @@ public:
 				if (auto t = root["loginTab"]["language"]; !t.empty()) S.loginTab.language = t.asString();
 				if (auto t = root["loginTab"]["leagueArgs"]; !t.empty()) S.loginTab.leagueArgs = t.asString();
 				if (auto t = root["streamProof"]; !t.empty()) S.streamProof = t.asBool();
+
 				if (auto t = root["infoTab"]["playerName"]; !t.empty()) S.infoTab.playerName = t.asString();
+
 				if (auto t = root["customTab"]["method"]; !t.empty()) S.customTab.method = t.asString();
 				if (auto t = root["customTab"]["urlText"]; !t.empty()) S.customTab.urlText = t.asString();
 				if (auto t = root["customTab"]["requestText"]; !t.empty()) S.customTab.requestText = t.asString();
+				if (auto t = root["customTab"]["port"]; !t.empty()) S.customTab.port = t.asString();
+				if (auto t = root["customTab"]["header"]; !t.empty()) S.customTab.header = t.asString();
+
 				if (auto t = root["invokeTab"]["destination"]; !t.empty()) S.invokeTab.destination = t.asString();
 				if (auto t = root["invokeTab"]["method"]; !t.empty()) S.invokeTab.method = t.asString();
 				if (auto t = root["invokeTab"]["args"]; !t.empty()) S.invokeTab.args = t.asString();
+
 				if (auto t = root["gameTab"]["indexFirstRole"]; !t.empty()) S.gameTab.indexFirstRole = t.asUInt();
 				if (auto t = root["gameTab"]["indexSecondRole"]; !t.empty()) S.gameTab.indexSecondRole = t.asUInt();
 				if (auto t = root["gameTab"]["indexMultiSearch"]; !t.empty()) S.gameTab.indexMultiSearch = t.asUInt();

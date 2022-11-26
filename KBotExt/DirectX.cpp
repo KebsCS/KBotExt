@@ -6,7 +6,6 @@
 #include "ProfileTab.h"
 #include "MiscTab.h"
 #include "CustomTab.h"
-#include "InvokeTab.h"
 #include "SkinsTab.h"
 #include "ChampsTab.h"
 #include "SettingsTab.h"
@@ -108,8 +107,6 @@ int Direct3D9Render::Render()
 			MiscTab::Render();
 
 			CustomTab::Render();
-
-			InvokeTab::Render();
 
 			SettingsTab::Render();
 		}
