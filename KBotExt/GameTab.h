@@ -606,7 +606,8 @@ public:
 			{
 				for (Json::Value::ArrayIndex i = 0; i < root.size(); i++)
 				{
-					if (root[i]["freeToPlay"].asBool() == true || root[i]["ownership"]["owned"].asBool() == true)
+					if (root[i]["freeToPlay"].asBool() == true || root[i]["ownership"]["owned"].asBool() == true ||
+						(root[i]["ownership"].isMember("xboxGPReward") && root[i]["ownership"]["xboxGPReward"].asBool() == true))
 					{
 						std::pair<int, std::string > champ = { root[i]["id"].asInt() , root[i]["alias"].asString() };
 						temp.emplace_back(champ);
