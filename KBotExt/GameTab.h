@@ -378,27 +378,38 @@ public:
 
 			if (ImGui::Button("Refund last purchase"))
 			{
-				Json::CharReaderBuilder builder;
-				const std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
-				JSONCPP_STRING err;
-				Json::Value rootSession;
-				Json::Value rootPurchaseHistory;
-
-				std::string storeUrl = LCU::Request("GET", "https://127.0.0.1/lol-store/v1/getStoreUrl");
-				storeUrl = storeUrl.erase(0, 1).erase(storeUrl.size() - 1);
-				std::string session = LCU::Request("GET", "https://127.0.0.1/lol-login/v1/session");
-				if (reader->parse(session.c_str(), session.c_str() + static_cast<int>(session.length()), &rootSession, &err))
+				if (MessageBoxA(0, "Are you sure?", "Refunding last purchase", MB_OKCANCEL) == IDOK)
 				{
-					std::string accountId = rootSession["accountId"].asString();
-					std::string idToken = rootSession["idToken"].asString();
-					std::string authorizationHeader = "Authorization: Bearer " + idToken + "\r\n" +
-						"Accept: application/json" + "\r\n" +
-						"Content-Type: application/json" + "\r\n";
-					std::string purchaseHistory = HTTP::Request("GET", storeUrl + "/storefront/v3/history/purchase", "", authorizationHeader, "", "");
-					if (reader->parse(purchaseHistory.c_str(), purchaseHistory.c_str() + static_cast<int>(purchaseHistory.length()), &rootPurchaseHistory, &err))
+					Json::CharReaderBuilder builder;
+					const std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
+					JSONCPP_STRING err;
+					Json::Value rootSession;
+					Json::Value rootPurchaseHistory;
+
+					std::string storeUrl = LCU::Request("GET", "https://127.0.0.1/lol-store/v1/getStoreUrl");
+					storeUrl = storeUrl.erase(0, 1).erase(storeUrl.size() - 1);
+					std::string session = LCU::Request("GET", "https://127.0.0.1/lol-login/v1/session");
+					if (reader->parse(session.c_str(), session.c_str() + static_cast<int>(session.length()), &rootSession, &err))
 					{
-						std::string transactionId = rootPurchaseHistory["transactions"][0]["transactionId"].asString();
-						result = HTTP::Request("POST", storeUrl + "/storefront/v3/refund", "{\"accountId\":" + accountId + ",\"transactionId\":\"" + transactionId + "\",\"inventoryType\":\"CHAMPION\",\"language\":\"EN_US\"}", authorizationHeader, "", "");
+						std::string accountId = rootSession["accountId"].asString();
+						std::string idToken = rootSession["idToken"].asString();
+						std::string authorizationHeader = "Authorization: Bearer " + idToken + "\r\n" +
+							"Accept: application/json" + "\r\n" +
+							"Content-Type: application/json" + "\r\n";
+						std::string purchaseHistory = HTTP::Request("GET", storeUrl + "/storefront/v3/history/purchase", "", authorizationHeader, "", "");
+						if (reader->parse(purchaseHistory.c_str(), purchaseHistory.c_str() + static_cast<int>(purchaseHistory.length()), &rootPurchaseHistory, &err))
+						{
+							std::string transactionId = rootPurchaseHistory["transactions"][0]["transactionId"].asString();
+							result = HTTP::Request("POST", storeUrl + "/storefront/v3/refund", "{\"accountId\":" + accountId + ",\"transactionId\":\"" + transactionId + "\",\"inventoryType\":\"CHAMPION\",\"language\":\"EN_US\"}", authorizationHeader, "", "");
+						}
+						else
+						{
+							result = purchaseHistory;
+						}
+					}
+					else
+					{
+						result = session;
 					}
 				}
 			}

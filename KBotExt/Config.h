@@ -15,6 +15,7 @@ struct Settings
 	bool autoRename = false;
 	std::string leaguePath = "C:/Riot Games/League of Legends/";
 	std::vector<std::string>vFonts;
+	float fontScale = 1.f;
 	int selectedFont = 0;
 	bool bAddFont = false;
 	bool streamProof = false;
@@ -107,6 +108,7 @@ public:
 				root["debugger"] = S.debugger;
 				root["window"]["width"] = S.Window.width;
 				root["window"]["height"] = S.Window.height;
+				root["fontScale"] = S.fontScale;
 				root["selectedFont"] = S.selectedFont;
 				root["loginTab"]["language"] = S.loginTab.language;
 				root["loginTab"]["leagueArgs"] = S.loginTab.leagueArgs;
@@ -187,6 +189,7 @@ public:
 				if (auto t = root["debugger"]; !t.empty()) S.debugger = t.asBool();
 				if (auto t = root["window"]["width"]; !t.empty()) S.Window.width = t.asInt();
 				if (auto t = root["window"]["height"]; !t.empty()) S.Window.height = t.asInt();
+				if (auto t = root["fontScale"]; !t.empty()) S.fontScale = t.asFloat();
 				if (auto t = root["selectedFont"]; !t.empty()) S.selectedFont = t.asInt();
 				if (auto t = root["loginTab"]["language"]; !t.empty()) S.loginTab.language = t.asString();
 				if (auto t = root["loginTab"]["leagueArgs"]; !t.empty()) S.loginTab.leagueArgs = t.asString();

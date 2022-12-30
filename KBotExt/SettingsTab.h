@@ -114,6 +114,13 @@ public:
 
 			ShowFontSelector("##fontSelector");
 
+			ImGui::Text("Font Scale:");
+			if (ImGui::SliderFloat("##fontScaleSlider", &S.fontScale, 0.4f, 4.f, "%0.1f"))
+			{
+				ImGuiIO& io = ImGui::GetIO();
+				io.FontGlobalScale = S.fontScale;
+			}
+
 			static char buffAddFot[MAX_PATH];
 			std::string tempFont = "C:/Windows/Fonts/";
 			std::copy(tempFont.begin(), tempFont.end(), buffAddFot);

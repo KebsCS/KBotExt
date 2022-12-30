@@ -169,7 +169,7 @@ public:
 
 			if (ImGui::Button("Accept all friend requests"))
 			{
-				if (MessageBoxA(0, "Are you sure?", 0, MB_OKCANCEL) == IDOK)
+				if (MessageBoxA(0, "Are you sure?", "Accepting friend requests", MB_OKCANCEL) == IDOK)
 				{
 					std::string getFriends = LCU::Request("GET", "https://127.0.0.1/lol-chat/v1/friend-requests");
 
@@ -200,7 +200,7 @@ public:
 
 			if (ImGui::Button("Delete all friend requests"))
 			{
-				if (MessageBoxA(0, "Are you sure?", 0, MB_OKCANCEL) == IDOK)
+				if (MessageBoxA(0, "Are you sure?", "Deleting friend requests", MB_OKCANCEL) == IDOK)
 				{
 					std::string getFriends = LCU::Request("GET", "https://127.0.0.1/lol-chat/v1/friend-requests");
 
@@ -237,7 +237,7 @@ public:
 
 			if (ImGui::Button("Remove all friends"))
 			{
-				if (MessageBoxA(0, "Are you sure?", 0, MB_OKCANCEL) == IDOK)
+				if (MessageBoxA(0, "Are you sure?", "Removing friends", MB_OKCANCEL) == IDOK)
 				{
 					std::string getFriends = LCU::Request("GET", "https://127.0.0.1/lol-chat/v1/friends");
 
@@ -355,7 +355,7 @@ public:
 
 				if (reader->parse(getLoot.c_str(), getLoot.c_str() + static_cast<int>(getLoot.length()), &root, &err))
 				{
-					if (MessageBoxA(0, "Are you sure?", 0, MB_OKCANCEL) == IDOK)
+					if (MessageBoxA(0, "Are you sure?", "Disenchanting loot", MB_OKCANCEL) == IDOK)
 					{
 						int i = 0;
 
