@@ -121,27 +121,47 @@ public:
 				}
 			}
 
+			ImGui::SameLine();
+			static char allNamesSeparator[64] = ",";
+			if (ImGui::Button("Copy names to clipboard##skinsTab"))
+			{
+				std::string allNames = "";
+				for (const Skin& skin : ownedSkins)
+				{
+					if (skin.name == "")
+						continue;
+					allNames += skin.name + allNamesSeparator;
+				}
+				Utils::CopyToClipboard(allNames);
+			}
+			ImGui::SameLine();
+
+			const ImVec2 label_size = ImGui::CalcTextSize("W", NULL, true);
+			ImGui::InputTextMultiline("##separatorSkinsTab", allNamesSeparator, IM_ARRAYSIZE(allNamesSeparator),
+				ImVec2(0, label_size.y + ImGui::GetStyle().FramePadding.y * 2.0f), ImGuiInputTextFlags_AllowTabInput);
+
 			ImGui::Separator();
 			ImGui::Text("Skins owned: %d", ownedSkins.size());
 
 			for (const Skin& skin : ownedSkins)
 			{
-				ImGui::Separator();
-				if (!skin.name.empty())
-					ImGui::Text("name: %s", skin.name.c_str());
-				//else if (!champSkins.empty())
-				//	ImGui::Text("name: Chroma"); // todo find a way to get chroma's name
-				ImGui::Text("inventoryType: %s", skin.inventoryType.c_str());
-				ImGui::Text("itemId: %d", skin.itemId);
-				ImGui::Text("ownershipType: %s", skin.ownershipType.c_str());
-				ImGui::Text("isVintage: %d", skin.isVintage);
-
 				char timeBuff[50];
 				strftime(timeBuff, sizeof(timeBuff), "%G-%m-%d %H:%M:%S", &skin.purchaseDate);
-				ImGui::Text("purchaseDate: %s", timeBuff);
 
-				ImGui::Text("quantity: %d", skin.qunatity);
-				ImGui::Text("uuid: %s", skin.uuid.c_str());
+				std::string inputId = "skinInput";
+				inputId.append(std::to_string(skin.itemId));
+				char input[512];
+				strcpy(input, std::format(R"(name: {}
+inventoryType: {}
+itemId: {}
+ownershipType: {}
+isVintage: {}
+purchaseDate: {}
+quantity: {}
+uuid: {})", skin.name, skin.inventoryType, skin.itemId, skin.ownershipType, skin.isVintage, timeBuff, skin.qunatity, skin.uuid).c_str());
+				ImGui::PushID(inputId.c_str());
+				ImGui::InputTextMultiline("", input, IM_ARRAYSIZE(input), ImVec2(ImGui::GetWindowSize().x, 0), ImGuiInputTextFlags_ReadOnly);
+				ImGui::PopID();
 			}
 
 			ImGui::EndTabItem();
