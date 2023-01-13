@@ -193,8 +193,35 @@ public:
 
 			if (ImGui::Button("Empty challenge badges"))
 			{
-				LCU::Request("POST", "https://127.0.0.1/lol-challenges/v1/update-player-preferences/", R"({"challengeIds": []})");
+				std::string playerP = GetPlayerPreferences();
+				Json::CharReaderBuilder builder;
+				const std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
+				JSONCPP_STRING err;
+				Json::Value root;
+				if (reader->parse(playerP.c_str(), playerP.c_str() + static_cast<int>(playerP.length()), &root, &err))
+				{
+					root["challengeIds"] = Json::arrayValue;
+					LCU::Request("POST", "/lol-challenges/v1/update-player-preferences/", root.toStyledString());
+				}
 			}
+
+			ImGui::SameLine();
+			if (ImGui::Button("Invisible banner"))
+			{
+				std::string playerP = GetPlayerPreferences();
+				Json::CharReaderBuilder builder;
+				const std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
+				JSONCPP_STRING err;
+				Json::Value root;
+				if (reader->parse(playerP.c_str(), playerP.c_str() + static_cast<int>(playerP.length()), &root, &err))
+				{
+					root["bannerAccent"] = "2";
+					LCU::Request("POST", "/lol-challenges/v1/update-player-preferences/", root.toStyledString());
+				}
+			}
+
+			ImGui::SameLine();
+			ImGui::HelpMarker("Works if last season's rank is unranked");
 
 			ImGui::Columns(1);
 
@@ -279,5 +306,51 @@ public:
 
 			ImGui::EndTabItem();
 		}
+	}
+
+	static std::string GetPlayerPreferences()
+	{
+		std::string challengesData = LCU::Request("GET", "/lol-challenges/v1/summary-player-data/local-player");
+		Json::CharReaderBuilder builder;
+		const std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
+		JSONCPP_STRING err;
+		Json::Value root;
+		if (reader->parse(challengesData.c_str(), challengesData.c_str() + static_cast<int>(challengesData.length()), &root, &err))
+		{
+			std::string titleId = root["title"]["itemId"].asString();
+			std::string bannerId = root["bannerId"].asString();
+
+			std::string result = "{";
+			for (Json::Value::ArrayIndex i = 0; i < root["topChallenges"].size(); i++)
+			{
+				if (i == 0)
+					result += "\"challengeIds\":[";
+
+				result += root["topChallenges"][i]["id"].asString();
+
+				if (i != root["topChallenges"].size() - 1)
+					result += ",";
+				else
+					result += "]";
+			}
+
+			if (titleId != "-1")
+			{
+				if (result.size() != 1)
+					result += ",";
+				result += "\"title\":\"" + titleId + "\"";
+			}
+
+			if (bannerId != "")
+			{
+				if (result.size() != 1)
+					result += ",";
+				result += "\"bannerAccent\":\"" + bannerId + "\"";
+			}
+			result += "}";
+
+			return result;
+		}
+		return "";
 	}
 };

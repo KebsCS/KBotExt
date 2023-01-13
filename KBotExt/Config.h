@@ -75,6 +75,7 @@ struct Settings
 		int autoBanDelay = 0;
 		bool dodgeOnBan = false;
 		int backupId = 0;
+		bool instantMute = false;
 	}gameTab;
 };
 extern Settings S;
@@ -141,6 +142,7 @@ public:
 				root["gameTab"]["autoBanDelay"] = S.gameTab.autoBanDelay;
 				root["gameTab"]["dodgeOnBan"] = S.gameTab.dodgeOnBan;
 				root["gameTab"]["backupId"] = S.gameTab.backupId;
+				root["gameTab"]["instantMute"] = S.gameTab.instantMute;
 
 				{
 					root["ignoredVersions"] = Json::Value(Json::arrayValue);
@@ -223,6 +225,7 @@ public:
 				if (auto t = root["gameTab"]["autoBanDelay"]; !t.empty()) S.gameTab.autoBanDelay = t.asInt();
 				if (auto t = root["gameTab"]["dodgeOnBan"]; !t.empty()) S.gameTab.dodgeOnBan = t.asBool();
 				if (auto t = root["gameTab"]["backupId"]; !t.empty()) S.gameTab.backupId = t.asInt();
+				if (auto t = root["gameTab"]["instantMute"]; !t.empty()) S.gameTab.instantMute = t.asBool();
 
 				if (root["ignoredVersions"].isArray() && !root["ignoredVersions"].empty())
 				{

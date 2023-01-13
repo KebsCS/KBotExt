@@ -506,12 +506,16 @@ public:
 				}
 			}
 
-			ImGui::Columns(2, 0, false);
+			ImGui::Columns(3, 0, false);
 
 			ImGui::Checkbox("Auto ban", &S.gameTab.autoBanEnabled);
 			ImGui::NextColumn();
 
 			ImGui::SliderInt("Delay##sliderautoBanDelay", &S.gameTab.autoBanDelay, 0, 10000, "%d ms");
+
+			ImGui::NextColumn();
+
+			ImGui::Checkbox("Instant Mute", &S.gameTab.instantMute);
 
 			ImGui::Columns(1);
 
@@ -630,7 +634,7 @@ public:
 		return temp;
 	}
 
-	static void InstantMessage()
+	static void InstantMessage(const bool instantMute = false)
 	{
 		auto start = std::chrono::system_clock::now();
 		while (true)
@@ -666,7 +670,42 @@ public:
 				continue;
 			}
 
-			const std::string request = "https://127.0.0.1/lol-chat/v1/conversations/" + participantsArr[0]["cid"].asString() + "/messages";
+			const std::string cid = participantsArr[0]["cid"].asString();
+
+			if (instantMute)
+			{
+				std::string champSelect = LCU::Request("GET", "/lol-champ-select/v1/session");
+				Json::Value rootCSelect;
+				if (!champSelect.empty() && champSelect.find("RPC_ERROR") == std::string::npos)
+				{
+					if (reader->parse(champSelect.c_str(), champSelect.c_str() + static_cast<int>(champSelect.length()), &rootCSelect, &err))
+					{
+						int localPlayerCellId = rootCSelect["localPlayerCellId"].asInt();
+						for (Json::Value::ArrayIndex i = 0; i < rootCSelect["myTeam"].size(); i++)
+						{
+							Json::Value player = rootCSelect["myTeam"][i];
+							if (player["cellId"].asInt() == localPlayerCellId)
+								continue;
+
+							LCU::Request("POST", "/lol-champ-select/v1/toggle-player-muted",
+								std::format("{{\"summonerId\":{0},\"puuid\":\"{1}\",\"obfuscatedSummonerId\":{2},\"obfuscatedPuuid\":\"{3}\"}}",
+									player["summonerId"].asString(), player["puuid"].asString(), player["obfuscatedSummonerId"].asString(),
+									player["obfuscatedPuuid"].asString()));
+
+							/*	LCU::Request("POST", "/telemetry/v1/events/general_metrics_number",
+									R"({"eventName":"champ_select_toggle_player_muted_clicked","value":"0","spec":"high","isLowSpecModeOn":"false"})");
+
+								LCU::Request("POST", std::format("/lol-chat/v1/conversations/{}/messages", cid),
+									std::format("{{\"body\":\"{} is muted.\",\"type\":\"celebration\"}}", "player"));*/
+						}
+					}
+				}
+
+				if (S.gameTab.instantMessage.empty())
+					return;
+			}
+
+			const std::string request = "https://127.0.0.1/lol-chat/v1/conversations/" + cid + "/messages";
 			const std::string body = R"({"type":"chat", "body":")" + std::string(S.gameTab.instantMessage) + R"("})";
 
 			std::this_thread::sleep_for(std::chrono::milliseconds(S.gameTab.instantMessageDelay));
@@ -735,14 +774,12 @@ public:
 					continue;
 				}
 
-				static bool foundCell = false;
 				static bool sendMessage = true;
 				static int useBackupId = 0;
 				static bool isPicked = false;
 
 				if (rootSearch["searchState"].asString() != "Found") // not found, not in champ select
 				{
-					foundCell = false;
 					sendMessage = true;
 					useBackupId = 0;
 					isPicked = false;
@@ -753,7 +790,6 @@ public:
 				std::string getChampSelect = LCU::Request("GET", "https://127.0.0.1/lol-champ-select/v1/session");
 				if (getChampSelect.find("RPC_ERROR") != std::string::npos) // game found but champ select error means queue pop
 				{
-					foundCell = false;
 					sendMessage = true;
 					useBackupId = 0;
 					isPicked = false;
@@ -771,10 +807,11 @@ public:
 						continue;
 					}
 
-					if (sendMessage && !S.gameTab.instantMessage.empty())
+					if (sendMessage &&
+						(!S.gameTab.instantMessage.empty() || S.gameTab.instantMute))
 					{
 						sendMessage = false;
-						std::thread instantMessageThread(&GameTab::InstantMessage);
+						std::thread instantMessageThread(&GameTab::InstantMessage, S.gameTab.instantMute);
 						instantMessageThread.detach();
 					}
 
@@ -787,102 +824,81 @@ public:
 							continue;
 						}
 
-						static int cellId = 0;
-						if (!foundCell)
+						const int cellId = rootChampSelect["localPlayerCellId"].asInt();
+						for (Json::Value::ArrayIndex j = 0; j < rootChampSelect["actions"].size(); j++)
 						{
-							auto myTeam = rootChampSelect["myTeam"];
-							std::string summId = rootSession["summonerId"].asString();
-							if (myTeam.isArray())
+							auto actions = rootChampSelect["actions"][j];
+							if (!actions.isArray())
 							{
-								// get own cellId
-								for (Json::Value::ArrayIndex i = 0; i < myTeam.size(); i++)
-								{
-									if (myTeam[i]["summonerId"].asString() == summId)
-									{
-										cellId = myTeam[i]["cellId"].asInt();
-										foundCell = true;
-										break;
-									}
-								}
+								continue;
 							}
-						}
-						else
-						{
-							for (Json::Value::ArrayIndex j = 0; j < rootChampSelect["actions"].size(); j++)
+							for (Json::Value::ArrayIndex i = 0; i < actions.size(); i++)
 							{
-								auto actions = rootChampSelect["actions"][j];
-								if (!actions.isArray())
+								// search for own actions
+								if (actions[i]["actorCellId"].asInt() == cellId)
 								{
-									continue;
-								}
-								for (Json::Value::ArrayIndex i = 0; i < actions.size(); i++)
-								{
-									// search for own actions
-									if (actions[i]["actorCellId"].asInt() == cellId)
+									std::string actionType = actions[i]["type"].asString();
+									if (actionType == "pick" && S.gameTab.instalockId && S.gameTab.instalockEnabled)
 									{
-										std::string actionType = actions[i]["type"].asString();
-										if (actionType == "pick" && S.gameTab.instalockId && S.gameTab.instalockEnabled)
+										// if havent picked yet
+										if (actions[i]["completed"].asBool() == false)
 										{
-											// if havent picked yet
-											if (actions[i]["completed"].asBool() == false)
+											if (!isPicked)
 											{
-												if (!isPicked)
-												{
-													std::this_thread::sleep_for(std::chrono::milliseconds(S.gameTab.instalockDelay));
+												std::this_thread::sleep_for(std::chrono::milliseconds(S.gameTab.instalockDelay));
 
-													int currentPick = S.gameTab.instalockId;
-													if (useBackupId)
-														currentPick = useBackupId;
-
-													LCU::Request("PATCH", "https://127.0.0.1/lol-champ-select/v1/session/actions/" + actions[i]["id"].asString(),
-														R"({"completed":true,"championId":)" + std::to_string(currentPick) + "}");
-												}
-											}
-											else
-											{
-												isPicked = true;
-											}
-										}
-										else if (actionType == "ban" && S.gameTab.autoBanId && S.gameTab.autoBanEnabled)
-										{
-											if (actions[i]["completed"].asBool() == false)
-											{
-												std::this_thread::sleep_for(std::chrono::milliseconds(S.gameTab.autoBanDelay));
+												int currentPick = S.gameTab.instalockId;
+												if (useBackupId)
+													currentPick = useBackupId;
 
 												LCU::Request("PATCH", "https://127.0.0.1/lol-champ-select/v1/session/actions/" + actions[i]["id"].asString(),
-													R"({"completed":true,"championId":)" + std::to_string(S.gameTab.autoBanId) + "}");
+													R"({"completed":true,"championId":)" + std::to_string(currentPick) + "}");
 											}
+										}
+										else
+										{
+											isPicked = true;
 										}
 									}
-									// action that isn't our player, if dodge on ban enabled or backup pick
-									else if ((S.gameTab.dodgeOnBan || S.gameTab.backupId) && S.gameTab.instalockEnabled && S.gameTab.instalockId)
+									else if (actionType == "ban" && S.gameTab.autoBanId && S.gameTab.autoBanEnabled)
 									{
-										if (isPicked)
-											break;
-
-										if (actions[i]["actorCellId"].asInt() == cellId)
-											continue;
-
-										if (actions[i]["type"].asString() == "ban" && actions[i]["completed"].asBool() == true)
+										if (actions[i]["completed"].asBool() == false)
 										{
-											if (actions[i]["championId"].asInt() == S.gameTab.instalockId)
-											{
-												if (S.gameTab.dodgeOnBan)
-												{
-													LCU::Request("POST", R"(https://127.0.0.1/lol-login/v1/session/invoke?destination=lcdsServiceProxy&method=call&args=["","teambuilder-draft","quitV2",""])", "");
-												}
-												else if (S.gameTab.backupId)
-												{
-													useBackupId = S.gameTab.backupId;
-												}
-											}
+											std::this_thread::sleep_for(std::chrono::milliseconds(S.gameTab.autoBanDelay));
+
+											LCU::Request("PATCH", "https://127.0.0.1/lol-champ-select/v1/session/actions/" + actions[i]["id"].asString(),
+												R"({"completed":true,"championId":)" + std::to_string(S.gameTab.autoBanId) + "}");
 										}
-										else if (actions[i]["type"].asString() == "pick" && actions[i]["completed"].asBool() == true)
+									}
+								}
+								// action that isn't our player, if dodge on ban enabled or backup pick
+								else if ((S.gameTab.dodgeOnBan || S.gameTab.backupId) && S.gameTab.instalockEnabled && S.gameTab.instalockId)
+								{
+									if (isPicked)
+										break;
+
+									if (actions[i]["actorCellId"].asInt() == cellId)
+										continue;
+
+									if (actions[i]["type"].asString() == "ban" && actions[i]["completed"].asBool() == true)
+									{
+										if (actions[i]["championId"].asInt() == S.gameTab.instalockId)
 										{
-											if (S.gameTab.backupId && actions[i]["championId"].asInt() == S.gameTab.instalockId)
+											if (S.gameTab.dodgeOnBan)
+											{
+												LCU::Request("POST", R"(https://127.0.0.1/lol-login/v1/session/invoke?destination=lcdsServiceProxy&method=call&args=["","teambuilder-draft","quitV2",""])", "");
+											}
+											else if (S.gameTab.backupId)
 											{
 												useBackupId = S.gameTab.backupId;
 											}
+										}
+									}
+									else if (actions[i]["type"].asString() == "pick" && actions[i]["completed"].asBool() == true)
+									{
+										if (S.gameTab.backupId && actions[i]["championId"].asInt() == S.gameTab.instalockId)
+										{
+											useBackupId = S.gameTab.backupId;
 										}
 									}
 								}
