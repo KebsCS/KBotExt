@@ -1,6 +1,6 @@
-![Example](https://i.imgur.com/xcalVGr.png)
+![Example](https://i.imgur.com/ACMxyEC.png)
 
-[More screenshots](https://imgur.com/a/kGXmArZ)
+[More screenshots](https://imgur.com/a/OFgtemU)
 
 
 ## Technologies used
@@ -16,13 +16,15 @@
 * Custom bots difficulty
 * The fastest instalock, auto accept, instant message and auto ban
 * Automatically pick a secondary, or dodge if your champion is banned
+* Instantly mute everyone in champion select
 * Dodge lobbies without closing the client
 * Mass invite all friends to lobby
 * Open multi-search op.gg/u.gg/poro.gg/porofessor.gg with all players in a champion select (works in ranked)
 * Set the best runes for your selected champion
-* Play any champion/skin for free
+* Play any champion/skin for free (Refund exploit)
 * Set custom icon/background/status/rank/mastery visible for everyone
 * Set empty challenge badges (tokens)
+* Set invisible profile/lobby banner
 * Info of any player using his nickname or id
 * List of champions/skins with all info and ability to sort them
 * Force close the client instantly
