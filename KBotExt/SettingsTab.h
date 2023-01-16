@@ -158,6 +158,8 @@ public:
 			ImGui::Text(std::format("{0}x{1}", S.Window.width, S.Window.height).c_str());
 
 			ImGui::Separator();
+			ImGui::Text("Program's version: %s | Latest version: %s",
+				Misc::programVersion.c_str(), Misc::latestVersion.c_str());
 			ImGui::Text("GitHub repository:");
 			ImGui::TextURL("Click me!", "https://github.com/KebsCS/KBotExt");
 

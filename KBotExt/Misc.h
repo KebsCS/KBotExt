@@ -13,6 +13,7 @@ class Misc
 public:
 
 	static inline std::string programVersion = "1.5.2";
+	static inline std::string latestVersion = "";
 
 	static void LaunchLegacyClient()
 	{
@@ -61,6 +62,7 @@ public:
 		if (reader->parse(getLatest.c_str(), getLatest.c_str() + static_cast<int>(getLatest.length()), &root, &err))
 		{
 			std::string latestTag = root["tag_name"].asString();
+			Misc::latestVersion = latestTag;
 
 			std::vector<std::string>latestNameSplit = Utils::StringSplit(latestTag, ".");
 			std::vector<std::string>programVersionSplit = Utils::StringSplit(Misc::programVersion, ".");

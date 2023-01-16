@@ -76,6 +76,7 @@ struct Settings
 		bool dodgeOnBan = false;
 		int backupId = 0;
 		bool instantMute = false;
+		bool sideNotification = false;
 	}gameTab;
 };
 extern Settings S;
@@ -143,6 +144,7 @@ public:
 				root["gameTab"]["dodgeOnBan"] = S.gameTab.dodgeOnBan;
 				root["gameTab"]["backupId"] = S.gameTab.backupId;
 				root["gameTab"]["instantMute"] = S.gameTab.instantMute;
+				root["gameTab"]["sideNotification"] = S.gameTab.sideNotification;
 
 				{
 					root["ignoredVersions"] = Json::Value(Json::arrayValue);
@@ -226,6 +228,7 @@ public:
 				if (auto t = root["gameTab"]["dodgeOnBan"]; !t.empty()) S.gameTab.dodgeOnBan = t.asBool();
 				if (auto t = root["gameTab"]["backupId"]; !t.empty()) S.gameTab.backupId = t.asInt();
 				if (auto t = root["gameTab"]["instantMute"]; !t.empty()) S.gameTab.instantMute = t.asBool();
+				if (auto t = root["gameTab"]["sideNotification"]; !t.empty()) S.gameTab.sideNotification = t.asBool();
 
 				if (root["ignoredVersions"].isArray() && !root["ignoredVersions"].empty())
 				{

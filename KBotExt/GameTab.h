@@ -295,6 +295,11 @@ public:
 				result = ChangeRunesOpgg();
 			}
 
+			ImGui::SameLine();
+			ImGui::Columns(2, 0, false);
+
+			ImGui::Checkbox("Blue/Red Side notification", &S.gameTab.sideNotification);
+
 			ImGui::Columns(1);
 
 			ImGui::Separator();
@@ -634,7 +639,7 @@ public:
 		return temp;
 	}
 
-	static void InstantMessage(const bool instantMute = false)
+	static void InstantMessage(const bool instantMute = false, const bool sideNotification = false)
 	{
 		auto start = std::chrono::system_clock::now();
 		while (true)
@@ -672,7 +677,7 @@ public:
 
 			const std::string cid = participantsArr[0]["cid"].asString();
 
-			if (instantMute)
+			if (instantMute || sideNotification)
 			{
 				std::string champSelect = LCU::Request("GET", "/lol-champ-select/v1/session");
 				Json::Value rootCSelect;
@@ -680,30 +685,48 @@ public:
 				{
 					if (reader->parse(champSelect.c_str(), champSelect.c_str() + static_cast<int>(champSelect.length()), &rootCSelect, &err))
 					{
-						int localPlayerCellId = rootCSelect["localPlayerCellId"].asInt();
-						for (Json::Value::ArrayIndex i = 0; i < rootCSelect["myTeam"].size(); i++)
+						if (instantMute)
 						{
-							Json::Value player = rootCSelect["myTeam"][i];
-							if (player["cellId"].asInt() == localPlayerCellId)
-								continue;
+							int localPlayerCellId = rootCSelect["localPlayerCellId"].asInt();
+							for (Json::Value::ArrayIndex i = 0; i < rootCSelect["myTeam"].size(); i++)
+							{
+								Json::Value player = rootCSelect["myTeam"][i];
+								if (player["cellId"].asInt() == localPlayerCellId)
+									continue;
 
-							LCU::Request("POST", "/lol-champ-select/v1/toggle-player-muted",
-								std::format("{{\"summonerId\":{0},\"puuid\":\"{1}\",\"obfuscatedSummonerId\":{2},\"obfuscatedPuuid\":\"{3}\"}}",
-									player["summonerId"].asString(), player["puuid"].asString(), player["obfuscatedSummonerId"].asString(),
-									player["obfuscatedPuuid"].asString()));
+								LCU::Request("POST", "/lol-champ-select/v1/toggle-player-muted",
+									std::format("{{\"summonerId\":{0},\"puuid\":\"{1}\",\"obfuscatedSummonerId\":{2},\"obfuscatedPuuid\":\"{3}\"}}",
+										player["summonerId"].asString(), player["puuid"].asString(), player["obfuscatedSummonerId"].asString(),
+										player["obfuscatedPuuid"].asString()));
 
-							/*	LCU::Request("POST", "/telemetry/v1/events/general_metrics_number",
-									R"({"eventName":"champ_select_toggle_player_muted_clicked","value":"0","spec":"high","isLowSpecModeOn":"false"})");
+								/*	LCU::Request("POST", "/telemetry/v1/events/general_metrics_number",
+										R"({"eventName":"champ_select_toggle_player_muted_clicked","value":"0","spec":"high","isLowSpecModeOn":"false"})");
 
+									LCU::Request("POST", std::format("/lol-chat/v1/conversations/{}/messages", cid),
+										std::format("{{\"body\":\"{} is muted.\",\"type\":\"celebration\"}}", "player"));
+								*/
+							}
+						}
+
+						if (sideNotification)
+						{
+							if (rootCSelect["myTeam"].isArray() && rootCSelect["myTeam"].size() > 0)
+							{
+								std::string notif = "You are on the ";
+								if (rootCSelect["myTeam"][0]["team"].asInt() == 1)
+									notif += "Blue Side";
+								else
+									notif += "Red Side";
 								LCU::Request("POST", std::format("/lol-chat/v1/conversations/{}/messages", cid),
-									std::format("{{\"body\":\"{} is muted.\",\"type\":\"celebration\"}}", "player"));*/
+									"{\"body\":\"" + notif + "\",\"type\":\"celebration\"}");
+							}
 						}
 					}
 				}
-
-				if (S.gameTab.instantMessage.empty())
-					return;
 			}
+
+			if (S.gameTab.instantMessage.empty())
+				return;
 
 			const std::string request = "https://127.0.0.1/lol-chat/v1/conversations/" + cid + "/messages";
 			const std::string body = R"({"type":"chat", "body":")" + std::string(S.gameTab.instantMessage) + R"("})";
@@ -774,13 +797,13 @@ public:
 					continue;
 				}
 
-				static bool sendMessage = true;
+				static bool onChampSelect = true; //false when in champ select
 				static int useBackupId = 0;
 				static bool isPicked = false;
 
 				if (rootSearch["searchState"].asString() != "Found") // not found, not in champ select
 				{
-					sendMessage = true;
+					onChampSelect = true;
 					useBackupId = 0;
 					isPicked = false;
 					std::this_thread::sleep_for(std::chrono::milliseconds(1000));
@@ -790,7 +813,7 @@ public:
 				std::string getChampSelect = LCU::Request("GET", "https://127.0.0.1/lol-champ-select/v1/session");
 				if (getChampSelect.find("RPC_ERROR") != std::string::npos) // game found but champ select error means queue pop
 				{
-					sendMessage = true;
+					onChampSelect = true;
 					useBackupId = 0;
 					isPicked = false;
 					if (S.gameTab.autoAcceptEnabled)
@@ -807,12 +830,15 @@ public:
 						continue;
 					}
 
-					if (sendMessage &&
-						(!S.gameTab.instantMessage.empty() || S.gameTab.instantMute))
+					if (onChampSelect)
 					{
-						sendMessage = false;
-						std::thread instantMessageThread(&GameTab::InstantMessage, S.gameTab.instantMute);
-						instantMessageThread.detach();
+						onChampSelect = false;
+
+						if (!S.gameTab.instantMessage.empty() || S.gameTab.instantMute || S.gameTab.sideNotification)
+						{
+							std::thread instantMessageThread(&GameTab::InstantMessage, S.gameTab.instantMute, S.gameTab.sideNotification);
+							instantMessageThread.detach();
+						}
 					}
 
 					if ((S.gameTab.instalockEnabled || S.gameTab.autoBanId) && !isPicked)
