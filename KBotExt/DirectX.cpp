@@ -78,11 +78,25 @@ void Direct3D9Render::EndFrame()
 
 int Direct3D9Render::Render()
 {
-	char buf[255];
-	std::string connectedTo = "";
-	if (LCU::IsProcessGood())
-		connectedTo = "| Connected to: " + LCU::leagueProcesses[LCU::indexLeagueProcesses].second;
-	sprintf_s(buf, ("KBotExt by kebs - %s %s \t %s ###AnimatedTitle"), gamePatch.c_str(), connectedTo.c_str(), champSkins.empty() ? "Fetching skin data..." : "");
+	static char buf[255];
+	static std::string connectedTo = "";
+	static std::string currentInfo = "";
+	if (gamePatch == "0.0.0")
+	{
+		currentInfo = "Failed to connect, most likely blocked by antivirus or firewall";
+	}
+	else
+	{
+		if (LCU::IsProcessGood())
+			connectedTo = "| Connected to: " + LCU::leagueProcesses[LCU::indexLeagueProcesses].second;
+
+		if (champSkins.empty())
+			currentInfo = "Fetching skin data...";
+		else
+			currentInfo = "";
+	}
+
+	sprintf_s(buf, ("KBotExt by kebs - %s %s \t %s ###AnimatedTitle"), gamePatch.c_str(), connectedTo.c_str(), currentInfo.c_str());
 
 	ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiCond_FirstUseEver);
 	ImGui::SetNextWindowSize(ImVec2(685, 462), ImGuiCond_FirstUseEver);
