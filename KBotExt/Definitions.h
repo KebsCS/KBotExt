@@ -86,6 +86,7 @@ enum QueueID : const int
 	TFTRanked = 1100,
 	TFTTutorial = 1110,
 	TFTHyperRoll = 1130,
+	TFTDoubleUp = 1160,
 	NexusBlitz = 1300,
 	Tutorial1 = 2000,
 	Tutorial2 = 2010,

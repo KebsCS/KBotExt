@@ -63,10 +63,13 @@ public:
 			if (ImGui::Button("TFT Hyper Roll"))
 				gameID = TFTHyperRoll;
 
-			if (ImGui::Button("TFT Tutorial"))
-				gameID = TFTTutorial;
+			if (ImGui::Button("TFT Double Up"))
+				gameID = TFTDoubleUp;
 
 			ImGui::NextColumn();
+
+			if (ImGui::Button("TFT Tutorial"))
+				gameID = TFTTutorial;
 
 			if (ImGui::Button("Practice Tool"))
 			{
