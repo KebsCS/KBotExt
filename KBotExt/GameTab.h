@@ -182,9 +182,16 @@ public:
 
 			if (ImGui::Button("Add bot##addBot"))
 			{
-				std::string team = botTeam ? R"(,"teamId":"200"})" : R"(,"teamId":"100"})";
-				std::string body = R"({"botDifficulty":")" + difficulties[indexDifficulty] + R"(","championId":)" + std::to_string(botChamps[indexBots].first) + team;
-				result = LCU::Request("POST", "https://127.0.0.1/lol-lobby/v1/lobby/custom/bots", body);
+				if (botChamps.empty())
+				{
+					MessageBoxA(0, "Pick the bot's champion first", "Adding bots failed", MB_OK);
+				}
+				else
+				{
+					std::string team = botTeam ? R"(,"teamId":"200"})" : R"(,"teamId":"100"})";
+					std::string body = R"({"botDifficulty":")" + difficulties[indexDifficulty] + R"(","championId":)" + std::to_string(botChamps[indexBots].first) + team;
+					result = LCU::Request("POST", "https://127.0.0.1/lol-lobby/v1/lobby/custom/bots", body);
+				}
 			}
 			ImGui::SameLine();
 			ImGui::RadioButton("Blue", &botTeam, 0); ImGui::SameLine();

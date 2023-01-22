@@ -340,7 +340,7 @@ public:
 			static std::vector<std::pair<std::string, std::string>>itemsDisenchant = {
 	{"Champion shards","CHAMPION_RENTAL"}, {"Champion pernaments","CHAMPION"},
 	{"Skin shards","CHAMPION_SKIN_RENTAL"}, {"Skin pernaments", "CHAMPION_SKIN"},
-	{"Eternals","STATSTONE_SHARD"},{"Wards","WARDSKIN_RENTAL"}
+	{"Eternals","STATSTONE_SHARD"},{"Ward shards","WARD_SKIN_RENTAL"},{"Ward pernaments","WARD_SKIN"}
 			};
 			static size_t itemIndexDisenchant = 0;
 			const char* comboDisenchant = itemsDisenchant[itemIndexDisenchant].first.c_str();
@@ -366,10 +366,7 @@ public:
 							if (std::regex_match(name, regexStr))
 							{
 								std::string disenchantCase = itemsDisenchant[itemIndexDisenchant].second == "STATSTONE_SHARD" ? "DISENCHANT" : "disenchant";
-
-								std::string disenchantName = itemsDisenchant[itemIndexDisenchant].second;
-								if (itemsDisenchant[itemIndexDisenchant].second == "CHAMPION_SKIN_RENTAL")
-									disenchantName = "SKIN_RENTAL";
+								std::string disenchantName = root[name]["type"].asString();
 
 								std::string disenchantUrl = std::format("https://127.0.0.1/lol-loot/v1/recipes/{0}_{1}/craft?repeat=1", disenchantName, disenchantCase);
 								std::string disenchantBody = std::format(R"(["{}"])", name).c_str();
