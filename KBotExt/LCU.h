@@ -24,6 +24,7 @@ public:
 	static void GetLeagueProcesses();
 	static bool IsProcessGood();
 
+	static std::string GetStoreHeader();
 private:
 	static inline bool isCurrentRiotInfoSet = false;
 };
