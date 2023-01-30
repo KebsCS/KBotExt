@@ -161,8 +161,10 @@ public:
 			ImGui::Text("Program's version: %s | Latest version: %s",
 				Misc::programVersion.c_str(), Misc::latestVersion.c_str());
 			ImGui::Text("GitHub repository:");
-			ImGui::TextURL("Click me!", "https://github.com/KebsCS/KBotExt");
+			ImGui::TextURL("Click me!", "https://github.com/KebsCS/KBotExt", 1, 0);
 
+			if (!result.empty())
+				ImGui::Separator();
 			ImGui::TextWrapped(result.c_str());
 
 			ImGui::EndTabItem();
