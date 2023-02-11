@@ -218,3 +218,94 @@ bool Utils::HideFile(std::string file)
 	}
 	return false;
 }
+
+bool Utils::RunAsUser(LPCWSTR lpApplicationName, LPWSTR lpCommandLine)
+{
+	HANDLE hProcessToken = 0;
+	if (!OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES, &hProcessToken))
+	{
+		// fails if current process isn't elevated
+		CloseHandle(hProcessToken);
+		return false;
+	}
+
+	TOKEN_PRIVILEGES tkp = { 0 };
+	tkp.PrivilegeCount = 1;
+	if (!LookupPrivilegeValueW(NULL, SE_INCREASE_QUOTA_NAME, &tkp.Privileges[0].Luid))
+	{
+		CloseHandle(hProcessToken);
+		return false;
+	}
+
+	DWORD returnLength = 0;
+	tkp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
+	if (!AdjustTokenPrivileges(hProcessToken, FALSE, &tkp, 0, NULL, &returnLength))
+	{
+		CloseHandle(hProcessToken);
+		return false;
+	}
+
+	HWND hwnd = GetShellWindow();
+	if (!hwnd)
+	{
+		CloseHandle(hProcessToken);
+		return false;
+	}
+
+	DWORD pid = 0;
+	GetWindowThreadProcessId(hwnd, &pid);
+	if (!pid)
+	{
+		CloseHandle(hProcessToken);
+		return false;
+	}
+
+	HANDLE hShellProcess = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, pid);
+	if (!hShellProcess)
+	{
+		CloseHandle(hProcessToken);
+		return false;
+	}
+
+	HANDLE hShellProcessToken = 0;
+	if (!OpenProcessToken(hShellProcess, TOKEN_DUPLICATE, &hShellProcessToken))
+	{
+		CloseHandle(hProcessToken);
+		CloseHandle(hShellProcess);
+		CloseHandle(hShellProcessToken);
+		return false;
+	}
+
+	HANDLE hPrimaryToken = 0;
+	if (!DuplicateTokenEx(hShellProcessToken, TOKEN_ALL_ACCESS, NULL, SecurityImpersonation, TokenPrimary, &hPrimaryToken))
+	{
+		CloseHandle(hProcessToken);
+		CloseHandle(hShellProcess);
+		CloseHandle(hShellProcessToken);
+		CloseHandle(hPrimaryToken);
+		return false;
+	}
+
+	PROCESS_INFORMATION pi = { 0 };
+	STARTUPINFOW si = { 0 };
+	si.cb = sizeof(si);
+	si.wShowWindow = SW_SHOWNORMAL;
+	si.dwFlags = STARTF_USESHOWWINDOW;
+	if (!CreateProcessWithTokenW(hPrimaryToken, 0, lpApplicationName, lpCommandLine, 0/*DETACHED_PROCESS - error 87*/, NULL, NULL, &si, &pi))
+	{
+		//printf("%d",GetLastError());
+		CloseHandle(hProcessToken);
+		CloseHandle(hShellProcess);
+		CloseHandle(hShellProcessToken);
+		CloseHandle(hPrimaryToken);
+		CloseHandle(pi.hProcess);
+		return false;
+	}
+
+	CloseHandle(hProcessToken);
+	CloseHandle(hShellProcess);
+	CloseHandle(hShellProcessToken);
+	CloseHandle(hPrimaryToken);
+	CloseHandle(pi.hProcess);
+	return true;
+}

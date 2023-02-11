@@ -15,6 +15,18 @@ public:
 	static inline std::string programVersion = "1.5.2";
 	static inline std::string latestVersion = "";
 
+	static bool LaunchClient(const std::string args)
+	{
+		const std::string path = std::format("{}LeagueClient.exe", S.leaguePath).c_str();
+		if (S.noAdmin)
+		{
+			if (Utils::RunAsUser(Utils::StringToWstring(path).c_str(), &(Utils::StringToWstring(args))[0]))
+				return true;
+		}
+		ShellExecuteA(NULL, "open", path.c_str(), args.c_str(), NULL, SW_SHOWNORMAL);
+		return false;
+	}
+
 	static void LaunchLegacyClient()
 	{
 		if (!std::filesystem::exists(std::format("{}LoL Companion", S.leaguePath)))
@@ -212,6 +224,9 @@ public:
 		return "";
 	}
 
+	// Terminate all league related processes,
+	// remove read only and hidden property from files
+	// and delete them
 	static std::string ClearLogs()
 	{
 		std::string result = "";

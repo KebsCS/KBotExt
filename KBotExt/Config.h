@@ -10,7 +10,10 @@
 struct Settings
 {
 	Settings() {};
+	HWND hwnd;
 	const std::string settingsFile = "config.JSON";
+	std::string currentDebugger; // debugger path
+	std::vector<std::string>ignoredVersions;
 
 	bool autoRename = false;
 	std::string leaguePath = "C:/Riot Games/League of Legends/";
@@ -20,14 +23,12 @@ struct Settings
 	bool bAddFont = false;
 	bool streamProof = false;
 	bool debugger = false;
-	std::string currentDebugger;
-	std::vector<std::string>ignoredVersions;
+	bool noAdmin = false;
 
 	struct
 	{
 		int width = 730;
 		int height = 530;
-		bool resize = false;
 	}Window;
 
 	struct
@@ -115,6 +116,7 @@ public:
 				root["loginTab"]["language"] = S.loginTab.language;
 				root["loginTab"]["leagueArgs"] = S.loginTab.leagueArgs;
 				root["streamProof"] = S.streamProof;
+				root["noAdmin"] = S.noAdmin;
 
 				root["infoTab"]["playerName"] = S.infoTab.playerName;
 
@@ -198,6 +200,7 @@ public:
 				if (auto t = root["loginTab"]["language"]; !t.empty()) S.loginTab.language = t.asString();
 				if (auto t = root["loginTab"]["leagueArgs"]; !t.empty()) S.loginTab.leagueArgs = t.asString();
 				if (auto t = root["streamProof"]; !t.empty()) S.streamProof = t.asBool();
+				if (auto t = root["noAdmin"]; !t.empty()) S.noAdmin = t.asBool();
 
 				if (auto t = root["infoTab"]["playerName"]; !t.empty()) S.infoTab.playerName = t.asString();
 

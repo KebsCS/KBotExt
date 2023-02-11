@@ -38,4 +38,6 @@ public:
 
 	// adds the "Hidden" attribute to a file
 	static bool HideFile(std::string file);
+
+	static bool RunAsUser(LPCWSTR lpApplicationName, LPWSTR lpCommandLine);
 };

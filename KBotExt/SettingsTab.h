@@ -60,6 +60,7 @@ public:
 					else if (regQuery == ERROR_FILE_NOT_FOUND)
 					{
 						S.currentDebugger = "Nothing";
+						S.debugger = false;
 					}
 					else
 					{
@@ -76,23 +77,75 @@ public:
 			ImGui::SameLine();
 			ImGui::HelpMarker("Automatically renames the program on launch");
 
-			ImGui::Checkbox("Stream Proof", &S.streamProof);
+			if (ImGui::Checkbox("Stream proof", &S.streamProof))
+			{
+				if (S.streamProof)
+					SetWindowDisplayAffinity(S.hwnd, WDA_EXCLUDEFROMCAPTURE);
+				else
+					SetWindowDisplayAffinity(S.hwnd, WDA_NONE);
+			}
 			ImGui::SameLine();
 			ImGui::HelpMarker("Hides the program in recordings and screenshots");
 
-			ImGui::Checkbox("Register debugger IFEO", &S.debugger);
+			ImGui::Checkbox("Launch client without admin", &S.noAdmin);
+
+			if (ImGui::Checkbox("Register debugger IFEO", &S.debugger))
+			{
+				HKEY hkResult;
+				LSTATUS regCreate = RegCreateKeyExA(HKEY_LOCAL_MACHINE,
+					"Software\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\LeagueClientUx.exe",
+					0, 0, 0, KEY_SET_VALUE | KEY_QUERY_VALUE | KEY_CREATE_SUB_KEY, 0, &hkResult, 0);
+				if (regCreate == ERROR_SUCCESS)
+				{
+					char* buffer[MAX_PATH];
+					DWORD bufferLen = sizeof(buffer);
+
+					char filePath[MAX_PATH + 1];
+					GetModuleFileNameA(NULL, filePath, MAX_PATH);
+					DWORD len = (DWORD)(strlen(filePath) + 1);
+
+					LSTATUS regQuery = RegQueryValueExA(hkResult, "debugger", 0, 0, (LPBYTE)buffer, &bufferLen);
+					if (regQuery == ERROR_SUCCESS)
+					{
+						if (S.debugger)
+						{
+							if (RegSetValueExA(hkResult, "debugger", 0, REG_SZ, (const BYTE*)filePath, len) == ERROR_SUCCESS)
+							{
+								S.currentDebugger = filePath;
+							}
+						}
+						else
+						{
+							RegDeleteValueA(hkResult, "debugger");
+							S.currentDebugger = "Nothing";
+						}
+					}
+					else if (regQuery == ERROR_FILE_NOT_FOUND && S.debugger) // if key doesnt exist, create it
+					{
+						if (RegSetValueExA(hkResult, "debugger", 0, REG_SZ, (const BYTE*)filePath, len) == ERROR_SUCCESS)
+						{
+							S.currentDebugger = filePath;
+						}
+					}
+					RegCloseKey(hkResult);
+				}
+			}
 			ImGui::SameLine();
 			ImGui::HelpMarker("Allows for client traffic analysis via a web debugging proxy such as Fiddler. Disable before deleting the program. Doesn't work when Auto-rename is enabled.");
 			ImGui::SameLine();
 			ImGui::Text("| Hooked to: %s", S.currentDebugger.c_str());
 
-			// Terminate all league related processes,
-			// remove read only and hidden property from files
-			// and delete them
 			if (ImGui::Button("Clean logs"))
 			{
-				result = Misc::ClearLogs();
+				if (MessageBoxA(0, "Are you sure?", "Cleaning logs", MB_OKCANCEL) == IDOK)
+				{
+					result = Misc::ClearLogs();
+				}
 			}
+
+			ImGui::SameLine();
+			if (ImGui::Button("Force close client"))
+				Misc::TaskKillLeague();
 
 			static char bufLeaguePath[MAX_PATH];
 			std::copy(S.leaguePath.begin(), S.leaguePath.end(), bufLeaguePath);
@@ -151,7 +204,7 @@ public:
 			{
 				S.Window.width = 730;
 				S.Window.height = 530;
-				S.Window.resize = true;
+				::SetWindowPos(S.hwnd, 0, 0, 0, S.Window.width, S.Window.height, SWP_NOMOVE | SWP_NOOWNERZORDER | SWP_NOZORDER);
 				Config::Save();
 			}
 			ImGui::SameLine();

@@ -23,9 +23,11 @@ int WINAPI wWinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/, LPWSTR
 	LPWSTR* szArgList;
 	int argCount;
 	szArgList = CommandLineToArgvW(GetCommandLineW(), &argCount);
+	std::wstring programPath = szArgList[0];
+	std::wstring programName = programPath.substr(programPath.find_last_of(L"/\\") + 1);
 	if (argCount > 1)
 	{
-		std::string applicationName = Utils::WstringToString(szArgList[1]);
+		std::string applicationName = Utils::WstringToString(szArgList[1]); // league
 		std::string cmdLine;
 		for (int i = 2; i < argCount; i++)
 		{
@@ -81,12 +83,7 @@ int WINAPI wWinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/, LPWSTR
 		//Randomize using current time, todo swap with recent c++ random
 		srand(static_cast<unsigned>(time(0)));
 
-		bool oldStreamProof = S.streamProof;
-
 		Config::Load();
-
-		bool oldDebugger = S.debugger;
-
 		std::string sClassName = Utils::RandomString(RandomInt(5, 10));
 		LPCSTR lpszOverlayClassName = sClassName.c_str();
 		//Register window class information
@@ -99,6 +96,7 @@ int WINAPI wWinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/, LPWSTR
 
 		// Create application window
 		hwnd = ::CreateWindowA(sClassName.c_str(), lpszOverlayClassName, WS_OVERLAPPED | WS_SYSMENU | WS_MINIMIZEBOX | WS_SIZEBOX, 100, 100, S.Window.width, S.Window.height, NULL, NULL, wc.hInstance, NULL);
+		S.hwnd = hwnd;
 
 		if (hwnd == NULL)
 		{
@@ -106,6 +104,11 @@ int WINAPI wWinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/, LPWSTR
 			MessageBoxA(0, "Couldn't create window", 0, 0);
 			return 0;
 		}
+
+		if (S.streamProof)
+			SetWindowDisplayAffinity(S.hwnd, WDA_EXCLUDEFROMCAPTURE);
+		else
+			SetWindowDisplayAffinity(S.hwnd, WDA_NONE);
 
 		//Initialize Direct3D
 		if (!Direct3D9.DirectXInit(hwnd))
@@ -151,67 +154,6 @@ int WINAPI wWinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/, LPWSTR
 			}
 			if (done)
 				break;
-
-			// pressed button to reset to original size
-			if (S.Window.resize)
-			{
-				S.Window.resize = false;
-				::SetWindowPos(hwnd, 0, 0, 0, S.Window.width, S.Window.height, SWP_NOMOVE | SWP_NOOWNERZORDER | SWP_NOZORDER);
-			}
-
-			if (oldStreamProof != S.streamProof)
-			{
-				oldStreamProof = S.streamProof;
-				if (oldStreamProof)
-					SetWindowDisplayAffinity(hwnd, WDA_EXCLUDEFROMCAPTURE);
-				else
-					SetWindowDisplayAffinity(hwnd, WDA_NONE);
-			}
-
-			if (oldDebugger != S.debugger)
-			{
-				oldDebugger = S.debugger;
-				HKEY hkResult;
-				LSTATUS regCreate = RegCreateKeyExA(HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\LeagueClientUx.exe", 0, 0, 0, KEY_SET_VALUE | KEY_QUERY_VALUE | KEY_CREATE_SUB_KEY, 0, &hkResult, 0);
-				if (regCreate == ERROR_SUCCESS)
-				{
-					char* buffer[MAX_PATH];
-					DWORD bufferLen;
-
-					char filePath[MAX_PATH + 1];
-					GetModuleFileNameA(NULL, filePath, MAX_PATH);
-					DWORD len = (DWORD)(strlen(filePath) + 1);
-
-					LSTATUS regQuery = RegQueryValueExA(hkResult, "debugger", 0, 0, (LPBYTE)buffer, &bufferLen);
-					if (regQuery == ERROR_SUCCESS)
-					{
-						if (oldDebugger)
-						{
-							if (RegSetValueExA(hkResult, "debugger", 0, REG_SZ, (const BYTE*)filePath, len) == ERROR_SUCCESS)
-							{
-								std::cout << "changed key " << std::endl;
-								S.currentDebugger = filePath;
-							}
-							else
-								std::cout << "failed change" << std::endl;
-						}
-						else
-						{
-							std::cout << "delete key" << RegDeleteValueA(hkResult, "debugger") << std::endl;
-							S.currentDebugger = "Nothing";
-						}
-					}
-					else if (regQuery == ERROR_FILE_NOT_FOUND && oldDebugger) // if key doesnt exist, create it
-					{
-						if (RegSetValueExA(hkResult, "debugger", 0, REG_SZ, (const BYTE*)filePath, len) == ERROR_SUCCESS)
-						{
-							std::cout << "created key " << std::endl;
-							S.currentDebugger = filePath;
-						}
-					}
-					RegCloseKey(hkResult);
-				}
-			}
 
 			//Start rendering
 			Direct3D9.StartFrame();

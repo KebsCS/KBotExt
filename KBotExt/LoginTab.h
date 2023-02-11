@@ -35,7 +35,7 @@ private:
 		{
 			if (std::filesystem::exists(S.leaguePath))
 			{
-				ShellExecuteA(NULL, NULL, std::format("{}LeagueClient.exe", S.leaguePath).c_str(), NULL, NULL, SW_SHOWNORMAL);
+				Misc::LaunchClient("");
 				std::thread t(LoginOnClientOpen, username, password);
 				t.detach();
 				return "Launching client...";
@@ -89,7 +89,7 @@ public:
 				{"Romanian","ro_RO"},{"Hungarian","hu_HU"},{"English (UK)","en_GB"},{"Italian","it_IT"},
 				{"Spanish (Mexico)","es_MX"},{"Spanish (Argentina)","es_AR"},{"English (Australia)","en_AU"},
 				{"Malay","ms_MY"},{"English (Philippines)","en_PH"},{"English (Singapore)","en_SG"},{"Thai","th_TH"},
-				{"Vietnamese","vn_VN"},{"Indonesian","id_ID"},{"Chinese (Malaysia)","zh_MY"},{"Chinese (Taiwan)","zh_TW"}
+				{"Vietnamese","vi_VN"},{"Indonesian","id_ID"},{"Tagalog","tl_PH"},{"Chinese (Malaysia)","zh_MY"},{"Chinese (Taiwan)","zh_TW"}
 			};
 			// find saved lang from cfg file
 			auto findLang = std::find_if(langs.begin(), langs.end(), [](std::pair<std::string, std::string>k) { return k.second == S.loginTab.language; });
@@ -104,7 +104,7 @@ public:
 				}
 				else
 				{
-					ShellExecuteA(NULL, NULL, std::format("{}LeagueClient.exe", S.leaguePath).c_str(), sArgs.c_str(), NULL, SW_SHOWNORMAL);
+					Misc::LaunchClient(sArgs);
 					result = S.leaguePath + "LeagueClient.exe " + sArgs;
 				}
 			}
