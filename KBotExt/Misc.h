@@ -108,7 +108,7 @@ public:
 
 	static std::string GetCurrentPatch()
 	{
-		std::string result = HTTP::Request("GET", "https://ddragon.leagueoflegends.com/api/versions.json");
+		std::string result = HTTP::Request("GET", "http://ddragon.leagueoflegends.com/api/versions.json");
 		Json::CharReaderBuilder builder;
 		const std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
 		JSONCPP_STRING err;
