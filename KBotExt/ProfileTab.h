@@ -191,21 +191,6 @@ public:
 
 			ImGui::NextColumn();
 
-			if (ImGui::Button("Empty challenge badges"))
-			{
-				std::string playerP = GetPlayerPreferences();
-				Json::CharReaderBuilder builder;
-				const std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
-				JSONCPP_STRING err;
-				Json::Value root;
-				if (reader->parse(playerP.c_str(), playerP.c_str() + static_cast<int>(playerP.length()), &root, &err))
-				{
-					root["challengeIds"] = Json::arrayValue;
-					LCU::Request("POST", "/lol-challenges/v1/update-player-preferences/", root.toStyledString());
-				}
-			}
-
-			ImGui::SameLine();
 			if (ImGui::Button("Invisible banner"))
 			{
 				std::string playerP = GetPlayerPreferences();
@@ -225,25 +210,59 @@ public:
 
 			ImGui::Columns(1);
 
-			ImGui::Text("Glitched challenge badges:");
+			ImGui::Separator();
+
+			static int sendChangeBadges = -99;
+			ImGui::Text("Challenge badges:");
 			ImGui::SameLine();
-			static int sendGlitchedBages = 0;
+
+			if (ImGui::Button("Empty"))
+			{
+				sendChangeBadges = -1;
+			}
+
+			ImGui::SameLine();
+
+			if (ImGui::Button("Copy 1st to all 3"))
+			{
+				sendChangeBadges = -2;
+			}
+
+			ImGui::SameLine();
+			ImGui::Text("Glitched:");
+			ImGui::SameLine();
+
+			if (ImGui::Button("0##glitchedBadges"))
+			{
+				sendChangeBadges = 0;
+			}
+			ImGui::SameLine();
 			if (ImGui::Button("1##glitchedBadges"))
 			{
-				sendGlitchedBages = 1;
+				sendChangeBadges = 1;
 			}
 			ImGui::SameLine();
 			if (ImGui::Button("2##glitchedBadges"))
 			{
-				sendGlitchedBages = 2;
+				sendChangeBadges = 2;
 			}
 			ImGui::SameLine();
 			if (ImGui::Button("3##glitchedBadges"))
 			{
-				sendGlitchedBages = 3;
+				sendChangeBadges = 3;
+			}
+			ImGui::SameLine();
+			if (ImGui::Button("4##glitchedBadges"))
+			{
+				sendChangeBadges = 4;
+			}
+			ImGui::SameLine();
+			if (ImGui::Button("5##glitchedBadges"))
+			{
+				sendChangeBadges = 5;
 			}
 
-			if (sendGlitchedBages != 0)
+			if (sendChangeBadges != -99)
 			{
 				std::string playerP = GetPlayerPreferences();
 				Json::CharReaderBuilder builder;
@@ -253,26 +272,27 @@ public:
 				if (reader->parse(playerP.c_str(), playerP.c_str() + static_cast<int>(playerP.length()), &root, &err))
 				{
 					Json::Value jsonArray;
-					for (size_t i = 0; i < 3; i++)
+					if (sendChangeBadges != -1)
 					{
-						switch (sendGlitchedBages)
+						for (size_t i = 0; i < 3; i++)
 						{
-						case 1:
-							jsonArray.append(0);
-							break;
-						case 2:
-							jsonArray.append(2);
-							break;
-						case 3:
-							jsonArray.append(5);
-							break;
+							if (sendChangeBadges == -2)
+							{
+								if (root["challengeIds"].isArray() && root["challengeIds"].size() >= 1)
+								{
+									jsonArray.append(root["challengeIds"][0]);
+								}
+							}
+							else
+							{
+								jsonArray.append(sendChangeBadges);
+							}
 						}
 					}
-
 					root["challengeIds"] = jsonArray;
 					LCU::Request("POST", "/lol-challenges/v1/update-player-preferences/", root.toStyledString());
 				}
-				sendGlitchedBages = 0;
+				sendChangeBadges = -99;
 			}
 
 			ImGui::Separator();
