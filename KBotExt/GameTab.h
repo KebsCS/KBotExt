@@ -982,6 +982,7 @@ public:
 						}
 					}
 
+					//	Ranked Lobby Reveal
 					if (isRanked)
 					{
 						summNames = L"";

@@ -13,6 +13,28 @@ public:
 
 	static void Render()
 	{
+		typedef LSTATUS(WINAPI* tRegCreateKeyExA)(HKEY hKey, LPCSTR lpSubKey, DWORD Reserved, LPSTR lpClass,
+			DWORD dwOptions, REGSAM samDesired, const LPSECURITY_ATTRIBUTES lpSecurityAttributes, PHKEY phkResult, LPDWORD lpdwDisposition);
+		static tRegCreateKeyExA RegCreateKeyExA = (tRegCreateKeyExA)GetProcAddress(LoadLibraryW(L"advapi32.dll"), "RegCreateKeyExA");
+
+		typedef LSTATUS(WINAPI* tRegOpenKeyExA)(HKEY hKey, LPCSTR lpSubKey, DWORD ulOptions,
+			REGSAM samDesired, PHKEY phkResult);
+		static tRegOpenKeyExA RegOpenKeyExA = (tRegOpenKeyExA)GetProcAddress(LoadLibraryW(L"advapi32.dll"), "RegOpenKeyExA");
+
+		typedef LSTATUS(WINAPI* tRegQueryValueExA)(HKEY hKey, LPCSTR lpValueName,
+			LPDWORD lpReserved, LPDWORD lpType, LPBYTE lpData, LPDWORD lpcbDatan);
+		static tRegQueryValueExA RegQueryValueExA = (tRegQueryValueExA)GetProcAddress(LoadLibraryW(L"advapi32.dll"), "RegQueryValueExA");
+
+		typedef LSTATUS(WINAPI* tRegSetValueExA)(HKEY hKey, LPCSTR lpValueName, DWORD Reserved,
+			DWORD dwType, const BYTE* lpData, DWORD cbData);
+		static tRegSetValueExA RegSetValueExA = (tRegSetValueExA)GetProcAddress(LoadLibraryW(L"advapi32.dll"), "RegSetValueExA");
+
+		typedef LSTATUS(WINAPI* tRegDeleteValueA)(HKEY hKey, LPCSTR lpValueName);
+		static tRegDeleteValueA RegDeleteValueA = (tRegDeleteValueA)GetProcAddress(LoadLibraryW(L"advapi32.dll"), "RegDeleteValueA");
+
+		typedef LSTATUS(WINAPI* tRegCloseKey)(HKEY hKe);
+		static tRegCloseKey RegCloseKey = (tRegCloseKey)GetProcAddress(LoadLibraryW(L"advapi32.dll"), "RegCloseKey");
+
 		static bool once = true;
 		if (ImGui::BeginTabItem("Settings"))
 		{
@@ -103,7 +125,8 @@ public:
 				}
 			}
 			ImGui::SameLine();
-			ImGui::HelpMarker("Allows for client traffic analysis via a web debugging proxy such as Fiddler. Disable before deleting the program. Doesn't work when Auto-rename is enabled.");
+			ImGui::HelpMarker("Allows for client traffic analysis via a web debugging proxy such as Fiddler."
+				"Disable before deleting the program. Doesn't work when \"Auto-rename\" or \"Launch client without admin\" are enabled.");
 			ImGui::SameLine();
 			ImGui::Text("| Hooked to: %s", S.currentDebugger.c_str());
 
@@ -132,10 +155,6 @@ public:
 				}*/
 
 			ImGui::Separator();
-
-			ImGui::Text("Font:");
-			ImGui::SameLine();
-			ImGui::HelpMarker("This is the program's font, not League's");
 
 			ImGui::Text("Font Scale:");
 			if (ImGui::SliderFloat("##fontScaleSlider", &S.fontScale, 0.4f, 4.f, "%0.1f"))

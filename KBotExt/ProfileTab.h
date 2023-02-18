@@ -225,6 +225,56 @@ public:
 
 			ImGui::Columns(1);
 
+			ImGui::Text("Glitched challenge badges:");
+			ImGui::SameLine();
+			static int sendGlitchedBages = 0;
+			if (ImGui::Button("1##glitchedBadges"))
+			{
+				sendGlitchedBages = 1;
+			}
+			ImGui::SameLine();
+			if (ImGui::Button("2##glitchedBadges"))
+			{
+				sendGlitchedBages = 2;
+			}
+			ImGui::SameLine();
+			if (ImGui::Button("3##glitchedBadges"))
+			{
+				sendGlitchedBages = 3;
+			}
+
+			if (sendGlitchedBages != 0)
+			{
+				std::string playerP = GetPlayerPreferences();
+				Json::CharReaderBuilder builder;
+				const std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
+				JSONCPP_STRING err;
+				Json::Value root;
+				if (reader->parse(playerP.c_str(), playerP.c_str() + static_cast<int>(playerP.length()), &root, &err))
+				{
+					Json::Value jsonArray;
+					for (size_t i = 0; i < 3; i++)
+					{
+						switch (sendGlitchedBages)
+						{
+						case 1:
+							jsonArray.append(0);
+							break;
+						case 2:
+							jsonArray.append(2);
+							break;
+						case 3:
+							jsonArray.append(5);
+							break;
+						}
+					}
+
+					root["challengeIds"] = jsonArray;
+					LCU::Request("POST", "/lol-challenges/v1/update-player-preferences/", root.toStyledString());
+				}
+				sendGlitchedBages = 0;
+			}
+
 			ImGui::Separator();
 			static int masteryLvl;
 			ImGui::Text("Mastery:");
@@ -267,7 +317,7 @@ public:
 				}
 			}
 
-			static int backgroundID;
+			/*static int backgroundID;
 			ImGui::Text("Background:");
 
 			ImGui::InputInt("##inputBackground", &backgroundID, 1, 100);
@@ -276,7 +326,7 @@ public:
 			{
 				std::string body = R"({"key":"backgroundSkinId","value":)" + std::to_string(backgroundID) + "}";
 				std::string result = LCU::Request("POST", "https://127.0.0.1/lol-summoner/v1/current-summoner/summoner-profile/", body);
-			}
+			}*/
 
 			if (ImGui::CollapsingHeader("Backgrounds"))
 			{

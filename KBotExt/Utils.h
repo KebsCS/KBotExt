@@ -27,7 +27,7 @@ public:
 
 	static void CopyToClipboard(std::string text);
 
-	static bool DownloadFile(std::string fileName, std::string directory = "Data", std::string url = "https://raw.githubusercontent.com/y3541599/test/main/");
+	static bool DownloadFile(std::string fileName, std::string directory, std::string url);
 
 	static bool ContainsOnlyASCII(std::string buff);
 

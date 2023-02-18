@@ -239,6 +239,9 @@ bool Utils::HideFile(std::string file)
 
 bool Utils::RunAsUser(LPCWSTR lpApplicationName, LPWSTR lpCommandLine)
 {
+	typedef BOOL(WINAPI* tOpenProcessToken)(HANDLE ProcessHandle, DWORD DesiredAccess, PHANDLE TokenHandle);
+	static tOpenProcessToken OpenProcessToken = (tOpenProcessToken)GetProcAddress(LoadLibraryW(L"advapi32.dll"), "OpenProcessToken");
+
 	HANDLE hProcessToken = 0;
 	if (!OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES, &hProcessToken))
 	{
@@ -246,6 +249,9 @@ bool Utils::RunAsUser(LPCWSTR lpApplicationName, LPWSTR lpCommandLine)
 		CloseHandle(hProcessToken);
 		return false;
 	}
+
+	typedef BOOL(WINAPI* tLookupPrivilegeValueW)(LPCWSTR lpSystemName, LPCWSTR lpName, PLUID lpLuid);
+	static tLookupPrivilegeValueW LookupPrivilegeValueW = (tLookupPrivilegeValueW)GetProcAddress(LoadLibraryW(L"advapi32.dll"), "LookupPrivilegeValueW");
 
 	TOKEN_PRIVILEGES tkp = { 0 };
 	tkp.PrivilegeCount = 1;
@@ -255,6 +261,10 @@ bool Utils::RunAsUser(LPCWSTR lpApplicationName, LPWSTR lpCommandLine)
 		return false;
 	}
 
+	typedef BOOL(WINAPI* tAdjustTokenPrivileges)(HANDLE TokenHandle, BOOL DisableAllPrivileges,
+		PTOKEN_PRIVILEGES NewState, DWORD BufferLength, PTOKEN_PRIVILEGES PreviousState, PDWORD ReturnLength);
+	static tAdjustTokenPrivileges AdjustTokenPrivileges = (tAdjustTokenPrivileges)GetProcAddress(LoadLibraryW(L"advapi32.dll"), "AdjustTokenPrivileges");
+
 	DWORD returnLength = 0;
 	tkp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
 	if (!AdjustTokenPrivileges(hProcessToken, FALSE, &tkp, 0, NULL, &returnLength))
@@ -262,6 +272,9 @@ bool Utils::RunAsUser(LPCWSTR lpApplicationName, LPWSTR lpCommandLine)
 		CloseHandle(hProcessToken);
 		return false;
 	}
+
+	typedef HWND(WINAPI* tGetShellWindow)();
+	static tGetShellWindow GetShellWindow = (tGetShellWindow)GetProcAddress(LoadLibraryW(L"user32.dll"), "GetShellWindow");
 
 	HWND hwnd = GetShellWindow();
 	if (!hwnd)
@@ -294,6 +307,10 @@ bool Utils::RunAsUser(LPCWSTR lpApplicationName, LPWSTR lpCommandLine)
 		return false;
 	}
 
+	typedef BOOL(WINAPI* tDuplicateTokenEx)(HANDLE hExistingToken, DWORD dwDesiredAccess, LPSECURITY_ATTRIBUTES pTokenAttributes,
+		SECURITY_IMPERSONATION_LEVEL ImpersonationLevel, TOKEN_TYPE TokenType, PHANDLE phNewToken);
+	static tDuplicateTokenEx DuplicateTokenEx = (tDuplicateTokenEx)GetProcAddress(LoadLibraryW(L"advapi32.dll"), "DuplicateTokenEx");
+
 	HANDLE hPrimaryToken = 0;
 	if (!DuplicateTokenEx(hShellProcessToken, TOKEN_ALL_ACCESS, NULL, SecurityImpersonation, TokenPrimary, &hPrimaryToken))
 	{
@@ -303,6 +320,11 @@ bool Utils::RunAsUser(LPCWSTR lpApplicationName, LPWSTR lpCommandLine)
 		CloseHandle(hPrimaryToken);
 		return false;
 	}
+
+	typedef BOOL(WINAPI* tCreateProcessWithTokenW)(HANDLE hToken, DWORD dwLogonFlags, LPCWSTR lpApplicationName,
+		LPWSTR lpCommandLine, DWORD dwCreationFlags, LPVOID lpEnvironment, LPCWSTR lpCurrentDirectory,
+		LPSTARTUPINFOW lpStartupInfo, LPPROCESS_INFORMATION lpProcessInformation);
+	static tCreateProcessWithTokenW CreateProcessWithTokenW = (tCreateProcessWithTokenW)GetProcAddress(LoadLibraryW(L"advapi32.dll"), "CreateProcessWithTokenW");
 
 	PROCESS_INFORMATION pi = { 0 };
 	STARTUPINFOW si = { 0 };

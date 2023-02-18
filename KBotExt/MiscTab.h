@@ -336,7 +336,8 @@ public:
 			static std::vector<std::pair<std::string, std::string>>itemsDisenchant = {
 	{"Champion shards","CHAMPION_RENTAL"}, {"Champion pernaments","CHAMPION"},
 	{"Skin shards","CHAMPION_SKIN_RENTAL"}, {"Skin pernaments", "CHAMPION_SKIN"},
-	{"Eternals","STATSTONE_SHARD"},{"Ward shards","WARD_SKIN_RENTAL"},{"Ward pernaments","WARD_SKIN"}
+	{"Eternals","STATSTONE_SHARD"},{"Ward shards","WARD_SKIN_RENTAL"},{"Ward pernaments","WARD_SKIN",},
+	{"Emotes","EMOTE"},{"Icons","SUMMONER_ICON"},{"Companions","COMPANION"}
 			};
 			static size_t itemIndexDisenchant = 0;
 			const char* comboDisenchant = itemsDisenchant[itemIndexDisenchant].first.c_str();
