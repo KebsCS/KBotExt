@@ -12,7 +12,7 @@
 
 Settings S;
 
-Direct3D9Render Direct3D9;
+Direct3D11Render Direct3D11;
 
 LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
@@ -84,23 +84,23 @@ int WINAPI wWinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/, LPWSTR
 		srand(static_cast<unsigned>(time(0)));
 
 		Config::Load();
-		std::string sClassName = Utils::RandomString(RandomInt(5, 10));
-		LPCSTR lpszOverlayClassName = sClassName.c_str();
+		std::wstring sClassName = Utils::RandomWString(RandomInt(5, 10), { 0x2e80, 0xfffff });
+		LPCWSTR lpszOverlayClassName = sClassName.c_str();
 		//Register window class information
-		WNDCLASSEXA wc = { sizeof(WNDCLASSEXA), CS_CLASSDC, WndProc, 0L, 0L, GetModuleHandle(NULL), NULL, NULL, NULL, NULL, sClassName.c_str(), NULL };
+		WNDCLASSEXW wc = { sizeof(WNDCLASSEXW), CS_CLASSDC, WndProc, 0L, 0L, GetModuleHandle(NULL), NULL, NULL, NULL, NULL, sClassName.c_str(), NULL };
 
 		if (S.autoRename)
 			Utils::RenameExe();
 
-		::RegisterClassExA(&wc);
+		::RegisterClassExW(&wc);
 
 		// Create application window
-		hwnd = ::CreateWindowA(sClassName.c_str(), lpszOverlayClassName, WS_OVERLAPPED | WS_SYSMENU | WS_MINIMIZEBOX | WS_SIZEBOX, 100, 100, S.Window.width, S.Window.height, NULL, NULL, wc.hInstance, NULL);
+		hwnd = ::CreateWindowW(sClassName.c_str(), lpszOverlayClassName, WS_OVERLAPPED | WS_SYSMENU | WS_MINIMIZEBOX | WS_SIZEBOX, 100, 100, S.Window.width, S.Window.height, NULL, NULL, wc.hInstance, NULL);
 		S.hwnd = hwnd;
 
 		if (hwnd == NULL)
 		{
-			::UnregisterClassA(wc.lpszClassName, wc.hInstance);
+			::UnregisterClassW(wc.lpszClassName, wc.hInstance);
 			MessageBoxA(0, "Couldn't create window", 0, 0);
 			return 0;
 		}
@@ -111,10 +111,10 @@ int WINAPI wWinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/, LPWSTR
 			SetWindowDisplayAffinity(S.hwnd, WDA_NONE);
 
 		//Initialize Direct3D
-		if (!Direct3D9.DirectXInit(hwnd))
+		if (!Direct3D11.DirectXInit(hwnd))
 		{
-			Direct3D9.Shutdown();
-			::UnregisterClassA(wc.lpszClassName, wc.hInstance);
+			Direct3D11.Shutdown();
+			::UnregisterClassW(wc.lpszClassName, wc.hInstance);
 			MessageBoxA(0, "Couldn't initalize DirectX", 0, 0);
 			return 0;
 		}
@@ -156,18 +156,18 @@ int WINAPI wWinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/, LPWSTR
 				break;
 
 			//Start rendering
-			Direct3D9.StartFrame();
+			Direct3D11.StartFrame();
 
 			//Render UI
-			Direct3D9.Render();
+			Direct3D11.Render();
 
 			//End rendering
-			Direct3D9.EndFrame();
+			Direct3D11.EndFrame();
 
 			// idle if client closed and reconnect to it
 			if (!::FindWindowA("RCLIENT", "League of Legends"))
 			{
-				Direct3D9.closedClient = true;
+				Direct3D11.closedClient = true;
 				closedNow = true;
 				if (!LCU::leagueProcesses.empty())
 					LCU::leagueProcesses.clear();
@@ -188,7 +188,7 @@ int WINAPI wWinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/, LPWSTR
 				LCU::GetLeagueProcesses();
 				LCU::SetLeagueClientInfo();
 
-				Direct3D9.closedClient = false;
+				Direct3D11.closedClient = false;
 				closedNow = false;
 			}
 
@@ -213,9 +213,9 @@ int WINAPI wWinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/, LPWSTR
 #endif
 
 		//Exit
-		Direct3D9.Shutdown();
+		Direct3D11.Shutdown();
 		::DestroyWindow(hwnd);
-		::UnregisterClassA(wc.lpszClassName, wc.hInstance);
+		::UnregisterClassW(wc.lpszClassName, wc.hInstance);
 	}
 	return 0;
 }
@@ -234,9 +234,9 @@ LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	case WM_SIZE:
 		if (g_pd3dDevice != NULL && wParam != SIZE_MINIMIZED)
 		{
-			Direct3D9.CleanupRenderTarget();
+			Direct3D11.CleanupRenderTarget();
 			g_pSwapChain->ResizeBuffers(0, (UINT)LOWORD(lParam), (UINT)HIWORD(lParam), DXGI_FORMAT_UNKNOWN, 0);
-			Direct3D9.CreateRenderTarget();
+			Direct3D11.CreateRenderTarget();
 
 			RECT rect;
 			if (GetWindowRect(hWnd, &rect))
@@ -255,5 +255,5 @@ LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		::PostQuitMessage(0);
 		return 0;
 	}
-	return ::DefWindowProc(hWnd, msg, wParam, lParam);
+	return ::DefWindowProcW(hWnd, msg, wParam, lParam);
 }

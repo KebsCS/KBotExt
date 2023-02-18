@@ -17,10 +17,7 @@ struct Settings
 
 	bool autoRename = false;
 	std::string leaguePath = "C:/Riot Games/League of Legends/";
-	std::vector<std::string>vFonts;
 	float fontScale = 1.f;
-	int selectedFont = 0;
-	bool bAddFont = false;
 	bool streamProof = false;
 	bool debugger = false;
 	bool noAdmin = false;
@@ -112,7 +109,6 @@ public:
 				root["window"]["width"] = S.Window.width;
 				root["window"]["height"] = S.Window.height;
 				root["fontScale"] = S.fontScale;
-				root["selectedFont"] = S.selectedFont;
 				root["loginTab"]["language"] = S.loginTab.language;
 				root["loginTab"]["leagueArgs"] = S.loginTab.leagueArgs;
 				root["streamProof"] = S.streamProof;
@@ -154,20 +150,6 @@ public:
 						root["ignoredVersions"].append(version);
 				}
 
-				if (S.bAddFont)
-				{
-					S.bAddFont = false;
-					if (!root["fonts"].isArray())
-						root["fonts"] = Json::Value(Json::arrayValue);
-					Json::Value fontsArray = root["fonts"];
-
-					// clear so we dont append same fonts again
-					fontsArray.clear();
-					for (const std::string& font : S.vFonts)
-						fontsArray.append(font);
-					root["fonts"] = fontsArray;
-				}
-
 				if (!root.toStyledString().empty())
 				{
 					std::ofstream oFile(S.settingsFile);
@@ -196,7 +178,6 @@ public:
 				if (auto t = root["window"]["width"]; !t.empty()) S.Window.width = t.asInt();
 				if (auto t = root["window"]["height"]; !t.empty()) S.Window.height = t.asInt();
 				if (auto t = root["fontScale"]; !t.empty()) S.fontScale = t.asFloat();
-				if (auto t = root["selectedFont"]; !t.empty()) S.selectedFont = t.asInt();
 				if (auto t = root["loginTab"]["language"]; !t.empty()) S.loginTab.language = t.asString();
 				if (auto t = root["loginTab"]["leagueArgs"]; !t.empty()) S.loginTab.leagueArgs = t.asString();
 				if (auto t = root["streamProof"]; !t.empty()) S.streamProof = t.asBool();
@@ -238,14 +219,6 @@ public:
 					for (Json::Value::ArrayIndex i = 0; i < root["ignoredVersions"].size(); i++)
 					{
 						S.ignoredVersions.emplace_back(root["ignoredVersions"][i].asString());
-					}
-				}
-
-				if (root["fonts"].isArray() && !root["fonts"].empty())
-				{
-					for (Json::Value::ArrayIndex i = 0; i < root["fonts"].size(); i++)
-					{
-						S.vFonts.emplace_back(root["fonts"][i].asString());
 					}
 				}
 			}

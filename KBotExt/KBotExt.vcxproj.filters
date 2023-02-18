@@ -66,6 +66,12 @@
     <ClCompile Include="LCU.cpp">
       <Filter>League</Filter>
     </ClCompile>
+    <ClCompile Include="imgui\imgui_freetype.cpp">
+      <Filter>imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="imgui\imgui_tables.cpp">
+      <Filter>imgui</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="HTTP.h">
@@ -117,9 +123,6 @@
       <Filter>imgui</Filter>
     </ClInclude>
     <ClInclude Include="imgui\imstb_textedit.h">
-      <Filter>imgui</Filter>
-    </ClInclude>
-    <ClInclude Include="imgui\imstb_truetype.h">
       <Filter>imgui</Filter>
     </ClInclude>
     <ClInclude Include="json\allocator.h">
@@ -181,6 +184,9 @@
     </ClInclude>
     <ClInclude Include="LCU.h">
       <Filter>League</Filter>
+    </ClInclude>
+    <ClInclude Include="imgui\imgui_freetype.h">
+      <Filter>imgui</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

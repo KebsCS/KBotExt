@@ -18,7 +18,7 @@ inline ID3D11DeviceContext* g_pd3dDeviceContext = NULL;
 inline ID3D11RenderTargetView* g_pd3dRenderTargetView = NULL;
 inline IDXGISwapChain* g_pSwapChain = NULL;
 
-class Direct3D9Render
+class Direct3D11Render
 {
 private:
 
@@ -26,9 +26,9 @@ private:
 public:
 	bool closedClient = false;
 
-	Direct3D9Render() = default;
+	Direct3D11Render() = default;
 
-	~Direct3D9Render() = default;
+	~Direct3D11Render() = default;
 
 	void StartFrame();
 
@@ -49,6 +49,8 @@ public:
 
 	//initializes imgui
 	void Renderimgui(HWND hWnd);
+
+	void InitializeFonts();
 
 	//initializes imgui styles
 	void MenuInit();

@@ -118,6 +118,24 @@ std::string Utils::RandomString(size_t size)
 	return str;
 }
 
+std::wstring Utils::RandomWString(size_t size, std::pair<unsigned, unsigned>range)
+{
+	std::wstring str = L"";
+
+	if (range.first == 0 && range.second == 0)
+	{
+		for (size_t i = 0; i < size; i++)
+			str += RandomInt(0, 1) ? RandomInt(48, 57) : RandomInt(97, 122);
+	}
+	else
+	{
+		for (size_t i = 0; i < size; i++)
+			str += RandomInt(range.first, range.second);
+	}
+
+	return str;
+}
+
 void Utils::CopyToClipboard(std::string text)
 {
 	if (!::OpenClipboard(NULL))

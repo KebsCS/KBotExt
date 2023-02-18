@@ -10,7 +10,7 @@
 #include "ChampsTab.h"
 #include "SettingsTab.h"
 
-bool Direct3D9Render::DirectXInit(HWND hWnd)
+bool Direct3D11Render::DirectXInit(HWND hWnd)
 {
 	// Setup swap chain
 	DXGI_SWAP_CHAIN_DESC sd;
@@ -54,7 +54,7 @@ bool Direct3D9Render::DirectXInit(HWND hWnd)
 	return true;
 }
 
-void Direct3D9Render::StartFrame()
+void Direct3D11Render::StartFrame()
 {
 	// Start the Dear ImGui frame
 	ImGui_ImplDX11_NewFrame();
@@ -62,7 +62,7 @@ void Direct3D9Render::StartFrame()
 	ImGui::NewFrame();
 }
 
-void Direct3D9Render::EndFrame()
+void Direct3D11Render::EndFrame()
 {
 	// Rendering
 	ImVec4 clear_color = ImVec4(0, 0, 0, 255.f);
@@ -76,7 +76,7 @@ void Direct3D9Render::EndFrame()
 	//g_pSwapChain->Present(0, 0); // Present without vsync
 }
 
-int Direct3D9Render::Render()
+int Direct3D11Render::Render()
 {
 	static char buf[255];
 	static std::string connectedTo = "";
@@ -138,7 +138,7 @@ int Direct3D9Render::Render()
 	return 1;
 }
 
-void Direct3D9Render::Shutdown()
+void Direct3D11Render::Shutdown()
 {
 	CleanupRenderTarget();
 	if (g_pSwapChain) { g_pSwapChain->Release(); g_pSwapChain = NULL; }
@@ -146,7 +146,7 @@ void Direct3D9Render::Shutdown()
 	if (g_pd3dDevice) { g_pd3dDevice->Release(); g_pd3dDevice = NULL; }
 }
 
-bool Direct3D9Render::CreateRenderTarget()
+bool Direct3D11Render::CreateRenderTarget()
 {
 	ID3D11Texture2D* pBackBuffer;
 	if (S_OK != g_pSwapChain->GetBuffer(0, IID_PPV_ARGS(&pBackBuffer)))
@@ -157,12 +157,12 @@ bool Direct3D9Render::CreateRenderTarget()
 	return true;
 }
 
-void Direct3D9Render::CleanupRenderTarget()
+void Direct3D11Render::CleanupRenderTarget()
 {
 	if (g_pd3dRenderTargetView) { g_pd3dRenderTargetView->Release(); g_pd3dRenderTargetView = NULL; }
 }
 
-void Direct3D9Render::Renderimgui(HWND hWnd)
+void Direct3D11Render::Renderimgui(HWND hWnd)
 {
 	// Setup Dear ImGui context
 	IMGUI_CHECKVERSION();
@@ -176,45 +176,59 @@ void Direct3D9Render::Renderimgui(HWND hWnd)
 	ImGui_ImplDX11_Init(g_pd3dDevice, g_pd3dDeviceContext);
 }
 
-void Direct3D9Render::MenuInit()
+void Direct3D11Render::InitializeFonts()
+{
+	ImGuiIO& io = ImGui::GetIO(); (void)io;
+
+	static const ImWchar ranges[] = { 0x1, 0x1FFFF, 0 };
+	static ImFontConfig cfg;
+	cfg.OversampleH = cfg.OversampleV = 1;
+	cfg.FontBuilderFlags |= ImGuiFreeTypeBuilderFlags_LoadColor;
+
+	io.Fonts->AddFontDefault(&cfg);
+
+	cfg.MergeMode = true;
+
+	typedef HRESULT(WINAPI* tSHGetFolderPathW)(HWND hwnd, int csidl, HANDLE hToken, DWORD dwFlags, LPWSTR pszPath);
+	tSHGetFolderPathW SHGetFolderPathW = (tSHGetFolderPathW)GetProcAddress(LoadLibraryW(L"shell32.dll"), "SHGetFolderPathW");
+
+	TCHAR szPath[MAX_PATH];
+	if (SUCCEEDED(SHGetFolderPathW(NULL, 0x0024/*CSIDL_WINDOWS*/, NULL, 0, szPath)))
+	{
+		std::filesystem::path fontsPath(szPath);
+		fontsPath = fontsPath / "Fonts";
+
+		if (std::filesystem::is_directory(fontsPath))
+		{
+			const std::vector<std::string> fonts = {
+				"seguiemj.ttf", // emojis
+				"segoeuib.ttf", // cyrillic
+				"malgunbd.ttf", // korean
+				"YuGothB.ttc", // japanese
+				"simsun.ttc", // simplified chinese
+				"msjh.ttc", // traditional chinese
+				"seguisym.ttf", // symbols
+			};
+
+			for (const auto& f : fonts)
+			{
+				const std::filesystem::path path = fontsPath / f;
+				if (std::filesystem::exists(path))
+				{
+					io.Fonts->AddFontFromFileTTF(path.string().c_str(), 13.0f, &cfg, ranges);
+				}
+			}
+		}
+	}
+}
+
+void Direct3D11Render::MenuInit()
 {
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
 	io.IniFilename = nullptr;
 	io.LogFilename = nullptr;
 
-	static const ImWchar ranges[] =
-	{
-		0x0020, 0x00FF, // Basic Latin + Latin Supplement
-		0x2000, 0x206F, // General Punctuation
-		0x3000, 0x30FF, // CJK Symbols and Punctuations, Hiragana, Katakana
-		0x31F0, 0x31FF, // Katakana Phonetic Extensions
-		0xFF00, 0xFFEF, // Half-width characters
-		0x4e00, 0x9FAF, // CJK Ideograms
-		0x3131, 0x3163, // Korean alphabets
-		0xAC00, 0xD7A3, // Korean characters
-		0x0400, 0x052F, // Cyrillic + Cyrillic Supplement
-		0x2DE0, 0x2DFF, // Cyrillic Extended-A
-		0xA640, 0xA69F, // Cyrillic Extended-B
-		0x2010, 0x205E, // Punctuations
-		0x0E00, 0x0E7F, // Thai
-		0x0102, 0x0103,
-		0x0110, 0x0111,
-		0x0128, 0x0129,
-		0x0168, 0x0169,
-		0x01A0, 0x01A1,
-		0x01AF, 0x01B0,
-		0x1EA0, 0x1EF9,
-		0,
-	};
-
-	io.Fonts->AddFontDefault();
-
-	for (const std::string& font : S.vFonts)
-	{
-		io.Fonts->AddFontFromFileTTF(font.c_str(), 13.0f, NULL, ranges);
-	}
-	if (S.selectedFont < io.Fonts->Fonts.size())
-		io.FontDefault = io.Fonts->Fonts[S.selectedFont];
+	InitializeFonts();
 
 	ImGuiStyle& style = ImGui::GetStyle();
 
