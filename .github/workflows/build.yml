@@ -1,38 +1,50 @@
 on:
   push:
-    branches: 
+    branches:
       - main
 
 jobs:
   build:
     permissions:
       id-token: write
-      contents: read
+      contents: write
     runs-on: windows-2022
 
     steps:
       - uses: actions/checkout@main
-     
+
       - uses: actions/checkout@master
         with:
           repository: microsoft/vcpkg
           path: vcpkg
-          
+
       - name: Get short SHA
         run: echo "SHORT_SHA=$("${{ github.sha }}".SubString(0, 8))" >> $env:GITHUB_ENV
-        
+
       - uses: microsoft/setup-msbuild@v1.1
-      
+
       - run: .\vcpkg\bootstrap-vcpkg.bat
       - run: .\vcpkg\vcpkg integrate install
       - run: .\vcpkg\vcpkg install freetype:x86-windows-static
-      
+
       - name: Build solution
-        run: msbuild KBotExt.sln /p:Platform="x86" /p:Configuration=Release
-        
+        run: msbuild KBotExt.sln /p:Platform="x86" /p:Configuration=Release -m
+
       - name: Upload build outputs
         uses: actions/upload-artifact@v3
         with:
           name: KBotExt-${{ env.SHORT_SHA }}
           path: Release/KBotExt.exe
-      
+
+      - name: Create Release
+        uses: ncipollo/release-action@v1.12.0
+        with:
+          artifacts: "D:/a/KBotExt/KBotExt/Release/KBotExt.exe"
+          token: ${{ secrets.GITHUB_TOKEN }}
+          tag: prerelease
+          name: KBotExt-${{ env.SHORT_SHA }}
+          allowUpdates: true
+          generateReleaseNotes: true
+          makeLatest: true
+          prerelease: true
+          updateOnlyUnreleased: true # Only update the latest release if it is not marked as released. Set it to true if needed.
