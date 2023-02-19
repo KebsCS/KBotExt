@@ -1,0 +1,38 @@
+on:
+  push:
+    branches: 
+      - main
+
+jobs:
+  build:
+    permissions:
+      id-token: write
+      contents: read
+    runs-on: windows-2022
+
+    steps:
+      - uses: actions/checkout@main
+     
+      - uses: actions/checkout@master
+        with:
+          repository: microsoft/vcpkg
+          path: vcpkg
+          
+      - name: Get short SHA
+        run: echo "SHORT_SHA=$("${{ github.sha }}".SubString(0, 8))" >> $env:GITHUB_ENV
+        
+      - uses: microsoft/setup-msbuild@v1.1
+      
+      - run: .\vcpkg\bootstrap-vcpkg.bat
+      - run: .\vcpkg\vcpkg integrate install
+      - run: .\vcpkg\vcpkg install freetype:x86-windows-static
+      
+      - name: Build solution
+        run: msbuild KBotExt.sln /p:Platform="x86" /p:Configuration=Release
+        
+      - name: Upload build outputs
+        uses: actions/upload-artifact@v3
+        with:
+          name: KBotExt-${{ env.SHORT_SHA }}
+          path: Release/KBotExt.exe
+      
