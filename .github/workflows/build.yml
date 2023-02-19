@@ -35,6 +35,15 @@ jobs:
         with:
           name: KBotExt-${{ env.SHORT_SHA }}
           path: Release/KBotExt.exe
+      
+      - name: Tag Repo
+        uses: richardsimko/update-tag@v1
+        with:
+          tag_name: prerelease
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+            
 
       - name: Create Release
         uses: ncipollo/release-action@v1.12.0
