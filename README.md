@@ -4,7 +4,7 @@
 
 ## Download
 - [Stable release](https://github.com/KebsCS/KBotExt/releases/latest) (You will be notified when there's a new release)
-- [Prerelease](https://github.com/KebsCS/KBotExt/actions)
+- [Prerelease](https://github.com/KebsCS/KBotExt/releases/tag/prerelease)
 
 ## Features
 * Works every patch
@@ -17,7 +17,7 @@
 * Instantly mute everyone in champion select
 * Dodge lobbies without closing the client
 * Mass invite all friends to lobby
-* Multi-search op.gg/u.gg/poro.gg/porofessor.gg with all players in a champion select (works in ranked - lobby reveal)
+* Multi-search op.gg/u.gg/poro.gg etc. with all players in a champ select (works in ranked - lobby reveal)
 * Set the best runes for your selected champion from op.gg (works even when runes aren't unlocked)
 * Play any champion/skin for free (Refund exploit)
 * Shows which map side you are on, in all gamemodes
