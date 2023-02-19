@@ -23,6 +23,10 @@ public:
 
 		static bool isCustomOpen = false;
 
+		static std::string ledgeUrl;
+		static std::string storeUrl;
+		static std::string localhostUrl = "https://127.0.0.1";
+
 		if (once)
 		{
 			once = false;
@@ -31,6 +35,10 @@ public:
 			std::copy(S.customTab.requestText.begin(), S.customTab.requestText.end(), requestText);
 			std::copy(S.customTab.port.begin(), S.customTab.port.end(), inputPort);
 			std::copy(S.customTab.header.begin(), S.customTab.header.end(), inputHeader);
+
+			ledgeUrl = GetLedgeUrl();
+			storeUrl = LCU::Request("GET", "/lol-store/v1/getStoreUrl");
+			storeUrl.erase(std::remove(storeUrl.begin(), storeUrl.end(), '"'), storeUrl.end());
 		}
 
 		if (onOpen)
@@ -63,9 +71,10 @@ public:
 
 			if (ImGui::Button("LCU"))
 			{
-				if (strlen(urlText) == 0)
+				if (strlen(urlText) == 0 || strcmp(urlText, localhostUrl.c_str()) == 0
+					|| strcmp(urlText, storeUrl.c_str()) == 0 || strcmp(urlText, ledgeUrl.c_str()) == 0)
 				{
-					std::strcpy(urlText, "https://127.0.0.1");
+					std::strcpy(urlText, localhostUrl.c_str());
 				}
 				std::strcpy(inputPort, std::to_string(LCU::league.port).c_str());
 				std::strcpy(inputHeader, LCU::league.header.c_str());
@@ -75,9 +84,10 @@ public:
 			if (ImGui::Button("Riot"))
 			{
 				LCU::SetCurrentClientRiotInfo();
-				if (strlen(urlText) == 0)
+				if (strlen(urlText) == 0 || strcmp(urlText, localhostUrl.c_str()) == 0
+					|| strcmp(urlText, storeUrl.c_str()) == 0 || strcmp(urlText, ledgeUrl.c_str()) == 0)
 				{
-					std::strcpy(urlText, "https://127.0.0.1");
+					std::strcpy(urlText, localhostUrl.c_str());
 				}
 				std::strcpy(inputPort, std::to_string(LCU::riot.port).c_str());
 				std::strcpy(inputHeader, LCU::riot.header.c_str());
@@ -93,15 +103,58 @@ public:
 					{
 						std::strcpy(method, Utils::ToUpper(std::string(method)).c_str());
 					}
-					if (strlen(urlText) == 0 || strcmp(urlText, "https://127.0.0.1") == 0)
+					if (strlen(urlText) == 0 || strcmp(urlText, localhostUrl.c_str()) == 0
+						|| strcmp(urlText, storeUrl.c_str()) == 0 || strcmp(urlText, ledgeUrl.c_str()) == 0)
 					{
-						std::string storeUrl = LCU::Request("GET", "/lol-store/v1/getStoreUrl");
+						storeUrl = LCU::Request("GET", "/lol-store/v1/getStoreUrl");
 						storeUrl.erase(std::remove(storeUrl.begin(), storeUrl.end(), '"'), storeUrl.end());
 						std::strcpy(urlText, storeUrl.c_str());
 					}
 					std::strcpy(inputPort, "443");
 					std::strcpy(inputHeader, storeHeader.c_str());
 				}
+			}
+
+			ImGui::SameLine();
+
+			if (ImGui::Button("Ledge"))
+			{
+				std::string ledgeHeader = "";
+
+				ledgeUrl = GetLedgeUrl();
+				if (ledgeUrl != "")
+				{
+					std::string ledgeHost = "";
+					auto n = ledgeUrl.find("https://");
+					if (n != std::string::npos)
+					{
+						ledgeHost = ledgeUrl.substr(n + strlen("https://"));
+					}
+					ledgeHeader += "Host: " + ledgeHost + "\r\n";
+
+					if (strlen(urlText) == 0 || strcmp(urlText, localhostUrl.c_str()) == 0
+						|| strcmp(urlText, storeUrl.c_str()) == 0 || strcmp(urlText, ledgeUrl.c_str()) == 0)
+					{
+						std::strcpy(urlText, ledgeUrl.c_str());
+					}
+				}
+
+				std::string sessionToken = LCU::Request("GET", "/lol-league-session/v1/league-session-token");
+				sessionToken.erase(std::remove(sessionToken.begin(), sessionToken.end(), '\"'), sessionToken.end());
+
+				ledgeHeader += "Accept-Encoding: deflate, "/*gzip, */"zstd\r\n";
+				ledgeHeader += "user-agent: LeagueOfLegendsClient/" + LCU::league.version + "\r\n";
+				ledgeHeader += "Authorization: Bearer " + sessionToken + "\r\n";
+				ledgeHeader += "Content-type: application/json\r\n";
+				ledgeHeader += "Accept: application/json\r\n";
+
+				if (strlen(method) != 0)
+				{
+					std::strcpy(method, Utils::ToUpper(std::string(method)).c_str());
+				}
+
+				std::strcpy(inputPort, "443");
+				std::strcpy(inputHeader, ledgeHeader.c_str());
 			}
 
 			ImGui::Text("Header:");
@@ -290,5 +343,40 @@ public:
 		{
 			onOpen = true;
 		}
+	}
+
+private:
+
+	static std::string GetLedgeUrl()
+	{
+		Json::CharReaderBuilder builder;
+		const std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
+		JSONCPP_STRING err;
+		Json::Value rootRegion;
+		std::string region = "";
+		std::string getRegion = LCU::Request("GET", "/riotclient/get_region_locale");
+		if (reader->parse(getRegion.c_str(), getRegion.c_str() + static_cast<int>(getRegion.length()), &rootRegion, &err))
+		{
+			region = rootRegion["webRegion"].asString();
+		}
+
+		if (region != "")
+		{
+			std::ifstream systemYaml(S.leaguePath + "system.yaml");
+			std::string line;
+			while (std::getline(systemYaml, line))
+			{
+				if (line.find("league_edge_url: ") != std::string::npos
+					&& line.find(region) != std::string::npos)
+				{
+					std::string league_edge_url = line;
+					league_edge_url = league_edge_url.substr(league_edge_url.find("league_edge_url: ") + strlen("league_edge_url: "));
+					systemYaml.close();
+					return league_edge_url;
+				}
+			}
+			systemYaml.close();
+		}
+		return "";
 	}
 };

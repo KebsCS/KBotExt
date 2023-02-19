@@ -130,7 +130,7 @@ std::wstring Utils::RandomWString(size_t size, std::pair<unsigned, unsigned>rang
 	else
 	{
 		for (size_t i = 0; i < size; i++)
-			str += RandomInt(range.first, range.second);
+			str += (wchar_t)RandomInt(range.first, range.second);
 	}
 
 	return str;

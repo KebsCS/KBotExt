@@ -12,43 +12,43 @@ public:
 
 	static std::string LevenshteinDistance(std::vector<std::string>vec, std::string str2)
 	{
-		int max = 999;
+		size_t max = 999;
 		std::string bestMatch;
 
 		for (const std::string& str1 : vec)
 		{
-			int l_string_length1 = str1.length();
-			int l_string_length2 = str2.length();
-			int d[50 + 1][50 + 1];
+			size_t str1Len = str1.length();
+			size_t str2Len = str2.length();
+			size_t d[50 + 1][50 + 1];
 
-			int i;
-			int j;
-			int l_cost;
+			size_t i;
+			size_t j;
+			size_t cost;
 
-			for (i = 0; i <= l_string_length1; i++)
+			for (i = 0; i <= str1Len; i++)
 			{
 				d[i][0] = i;
 			}
-			for (j = 0; j <= l_string_length2; j++)
+			for (j = 0; j <= str2Len; j++)
 			{
 				d[0][j] = j;
 			}
-			for (i = 1; i <= l_string_length1; i++)
+			for (i = 1; i <= str1Len; i++)
 			{
-				for (j = 1; j <= l_string_length2; j++)
+				for (j = 1; j <= str2Len; j++)
 				{
 					if (str1[i - 1] == str2[j - 1])
 					{
-						l_cost = 0;
+						cost = 0;
 					}
 					else
 					{
-						l_cost = 1;
+						cost = 1;
 					}
 					d[i][j] = (std::min)(
 						d[i - 1][j] + 1,                  // delete
 						(std::min)(d[i][j - 1] + 1,         // insert
-							d[i - 1][j - 1] + l_cost)           // substitution
+							d[i - 1][j - 1] + cost)           // substitution
 						);
 					if ((i > 1) &&
 						(j > 1) &&
@@ -58,15 +58,15 @@ public:
 					{
 						d[i][j] = (std::min)(
 							d[i][j],
-							d[i - 2][j - 2] + l_cost   // transposition
+							d[i - 2][j - 2] + cost   // transposition
 							);
 					}
 				}
 			}
 
-			if (d[l_string_length1][l_string_length2] <= max)
+			if (d[str1Len][str2Len] <= max)
 			{
-				max = d[l_string_length1][l_string_length2];
+				max = d[str1Len][str2Len];
 				bestMatch = str1;
 			}
 		}

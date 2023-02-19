@@ -183,10 +183,10 @@ void Direct3D11Render::InitializeFonts()
 	static const ImWchar ranges[] = { 0x1, 0x1FFFF, 0 };
 	static ImFontConfig cfg;
 	cfg.OversampleH = cfg.OversampleV = 1;
-	cfg.FontBuilderFlags |= ImGuiFreeTypeBuilderFlags_LoadColor;
 
 	io.Fonts->AddFontDefault(&cfg);
 
+	cfg.FontBuilderFlags |= ImGuiFreeTypeBuilderFlags_LoadColor;
 	cfg.MergeMode = true;
 
 	typedef HRESULT(WINAPI* tSHGetFolderPathW)(HWND hwnd, int csidl, HANDLE hToken, DWORD dwFlags, LPWSTR pszPath);

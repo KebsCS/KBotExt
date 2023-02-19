@@ -323,12 +323,15 @@ namespace ImGui
 		}
 	}
 
+#pragma warning( push )
+#pragma warning( disable : 4505 ) //  warning C4505: 'ImGui::ArrowButtonDisabled': unreferenced function with internal linkage has been removed
 	static void ArrowButtonDisabled(const char* id, ImGuiDir dir)
 	{
 		ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
 		ImGui::ArrowButton(id, dir);
 		ImGui::PopStyleVar();
 	}
+#pragma warning( pop )
 
 	static void AddUnderLine(ImColor col)
 	{

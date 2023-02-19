@@ -50,20 +50,23 @@ public:
 	static std::string RequestWithCookies(std::string method, std::string url, std::string requestData, std::string header,
 		std::string cookies, std::string& returnCookies, int port = -1)
 	{
-		if (header.find(("User-Agent:")) == std::string::npos)header.append(("User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36 Edge/16.16299\r\n"));
-		if (header.find(("Accept:")) == std::string::npos)header.append(("Accept: */*\r\n"));
-		if (header.find(("Accept-Language:")) == std::string::npos)header.append(("Accept-Language: en-US\r\n"));
-		if (header.find(("Content-Type:")) == std::string::npos)header.append(("Content-Type: application/x-www-form-urlencoded\r\n"));
 		if (header.find(("Host:")) == std::string::npos) {
 			header.append(("Host: "));
 			header.append(GetHost(url));
 			header.append(("\r\n"));
 		}
-		if (header.find(("Referer:")) == std::string::npos) {
-			header.append(("Referer: "));
-			header.append(url);
-			header.append(("\r\n"));
-		}
+
+		//if (header.find(("User-Agent:")) == std::string::npos)header.append(("User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36 Edge/16.16299\r\n"));
+		//if (header.find(("Accept:")) == std::string::npos)header.append(("Accept: */*\r\n"));
+		//if (header.find(("Accept-Language:")) == std::string::npos)header.append(("Accept-Language: en-US\r\n"));
+		//if (header.find(("Content-Type:")) == std::string::npos)header.append(("Content-Type: application/x-www-form-urlencoded\r\n"));
+		//
+		//if (header.find(("Referer:")) == std::string::npos) {
+		//	header.append(("Referer: "));
+		//	header.append(url);
+		//	header.append(("\r\n"));
+		//}
+
 		if (!cookies.empty()) {
 			if (header.find(("Cookies:")) == std::string::npos) {
 				header.append(("Cookies: "));
