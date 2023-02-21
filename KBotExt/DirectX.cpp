@@ -227,6 +227,7 @@ void Direct3D11Render::MenuInit()
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
 	io.IniFilename = nullptr;
 	io.LogFilename = nullptr;
+	io.FontGlobalScale = S.fontScale;
 
 	InitializeFonts();
 

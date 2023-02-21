@@ -99,26 +99,32 @@ public:
 					DWORD len = (DWORD)(strlen(filePath) + 1);
 
 					LSTATUS regQuery = RegQueryValueExA(hkResult, "debugger", 0, 0, (LPBYTE)buffer, &bufferLen);
-					if (regQuery == ERROR_SUCCESS)
+					if (regQuery == ERROR_SUCCESS || regQuery == ERROR_FILE_NOT_FOUND)
 					{
 						if (S.debugger)
 						{
-							if (RegSetValueExA(hkResult, "debugger", 0, REG_SZ, (const BYTE*)filePath, len) == ERROR_SUCCESS)
+							auto messageBoxStatus = IDYES;
+							if (S.autoRename || S.noAdmin)
+								messageBoxStatus = MessageBoxA(0, "Having \"Auto-rename\" or \"Launch client without admin\" "
+									"enabled with \"debugger IFEO\" will prevent League client from starting\n\n"
+									"Do you wish to continue?", "Warning", MB_YESNO | MB_SETFOREGROUND);
+
+							if (messageBoxStatus == IDYES)
 							{
-								S.currentDebugger = filePath;
+								if (RegSetValueExA(hkResult, "debugger", 0, REG_SZ, (const BYTE*)filePath, len) == ERROR_SUCCESS)
+								{
+									S.currentDebugger = filePath;
+								}
+							}
+							else
+							{
+								S.debugger = false;
 							}
 						}
-						else
+						else if (regQuery == ERROR_SUCCESS)
 						{
 							RegDeleteValueA(hkResult, "debugger");
 							S.currentDebugger = "Nothing";
-						}
-					}
-					else if (regQuery == ERROR_FILE_NOT_FOUND && S.debugger) // if key doesnt exist, create it
-					{
-						if (RegSetValueExA(hkResult, "debugger", 0, REG_SZ, (const BYTE*)filePath, len) == ERROR_SUCCESS)
-						{
-							S.currentDebugger = filePath;
 						}
 					}
 					RegCloseKey(hkResult);
