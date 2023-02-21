@@ -23,7 +23,6 @@ public:
 
 			static int gameID = 0;
 
-			ImGui::Text("Games:");
 			ImGui::Columns(4, 0, false);
 
 			if (ImGui::Button("Blind pick"))
@@ -424,6 +423,8 @@ public:
 
 			ImGui::Columns(1);
 
+			ImGui::Separator();
+
 			ImGui::Columns(2, 0, false);
 
 			ImGui::Text("Instant message: ");
@@ -448,6 +449,8 @@ public:
 			ImGui::SliderInt("Delay between msgs##sliderInstantMessageDelayTimes", &S.gameTab.instantMessageDelayTimes, 0, 10000, "%d ms");
 
 			ImGui::Columns(1);
+
+			ImGui::Separator();
 
 			ImGui::Columns(3, 0, false);
 

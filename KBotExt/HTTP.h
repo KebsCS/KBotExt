@@ -135,6 +135,9 @@ public:
 		}
 		if (!sendRequest)
 		{
+			if (GetLastError() == 12158)
+				FixCachingProblem();
+
 			std::string err = "HttpSendRequestA failed. Last error: " + std::to_string(GetLastError());
 			InternetCloseHandle(internetConnect);
 			InternetCloseHandle(internetOpen);
@@ -193,5 +196,58 @@ public:
 		std::string Cookies = TmpCookies;
 		delete[]TmpCookies;
 		return Cookies;
+	}
+
+private:
+
+	// Fixes Wininet error 12158, #80 in GitHub issues
+	static void FixCachingProblem()
+	{
+		typedef LSTATUS(WINAPI* tRegOpenKeyExA)(HKEY hKey, LPCSTR lpSubKey, DWORD ulOptions,
+			REGSAM samDesired, PHKEY phkResult);
+		static tRegOpenKeyExA RegOpenKeyExA = (tRegOpenKeyExA)GetProcAddress(LoadLibraryW(L"advapi32.dll"), "RegOpenKeyExA");
+
+		typedef LSTATUS(WINAPI* tRegQueryValueExA)(HKEY hKey, LPCSTR lpValueName,
+			LPDWORD lpReserved, LPDWORD lpType, LPBYTE lpData, LPDWORD lpcbDatan);
+		static tRegQueryValueExA RegQueryValueExA = (tRegQueryValueExA)GetProcAddress(LoadLibraryW(L"advapi32.dll"), "RegQueryValueExA");
+
+		typedef LSTATUS(WINAPI* tRegSetValueExA)(HKEY hKey, LPCSTR lpValueName, DWORD Reserved,
+			DWORD dwType, const BYTE* lpData, DWORD cbData);
+		static tRegSetValueExA RegSetValueExA = (tRegSetValueExA)GetProcAddress(LoadLibraryW(L"advapi32.dll"), "RegSetValueExA");
+
+		typedef LSTATUS(WINAPI* tRegCloseKey)(HKEY hKe);
+		static tRegCloseKey RegCloseKey = (tRegCloseKey)GetProcAddress(LoadLibraryW(L"advapi32.dll"), "RegCloseKey");
+
+		bool bChanged = false;
+		HKEY hkResult;
+		if (RegOpenKeyExA(HKEY_LOCAL_MACHINE, "Software\\Policies\\Microsoft\\Windows\\CurrentVersion\\Internet Settings", 0, KEY_READ | KEY_WRITE, &hkResult) == ERROR_SUCCESS)
+		{
+			DWORD value;
+			DWORD newValue = 0;
+			DWORD dwSize = sizeof(value);
+			LSTATUS regQuery = RegQueryValueExA(hkResult, "DisableCachingOfSSLPages", 0, NULL, (LPBYTE)&value, &dwSize);
+			if (regQuery == ERROR_SUCCESS)
+			{
+				if (value == 0x1)
+				{
+					RegSetValueExA(hkResult, "DisableCachingOfSSLPages", 0, REG_DWORD, (LPBYTE)&newValue, dwSize);
+					bChanged = true;
+				}
+			}
+			else if (regQuery == ERROR_FILE_NOT_FOUND) // if key doesnt exist, create it
+			{
+				RegSetValueExA(hkResult, "DisableCachingOfSSLPages", 0, REG_DWORD, (LPBYTE)&newValue, dwSize);
+				bChanged = true;
+			}
+			RegCloseKey(hkResult);
+		}
+
+		if (bChanged == true)
+		{
+			MessageBoxA(NULL, "Restart the program\n\nIf this pop-up window keeps showing up: Open \"Internet Options\", "
+				"Go to \"Advanced\" tab and disable \"Do not save encrypted pages to disk\". Press \"Apply\" and \"OK\"",
+				"Updated faulty options", MB_OK);
+			exit(EXIT_SUCCESS);
+		}
 	}
 };

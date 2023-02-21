@@ -155,7 +155,7 @@ void LCU::GetLeagueProcesses()
 								"", currInfo.header, "", "", currInfo.port);
 							if (reader->parse(currSummoner.c_str(), currSummoner.c_str() + static_cast<int>(currSummoner.length()), &root, &err))
 							{
-								LCU::leagueProcesses[currentIndex].second = std::string(root["displayName"].asString());
+								LCU::leagueProcesses[currentIndex].second = std::string(root["displayName"].asString().substr(0, 25));
 								break;
 							}
 						}

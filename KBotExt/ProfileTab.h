@@ -188,6 +188,8 @@ public:
 			{
 				LCU::Request("PUT", "https://127.0.0.1/lol-chat/v1/me", R"({"lol":{"rankedLeagueQueue":"","rankedLeagueTier":"","rankedLeagueDivision":""}})");
 			}
+			ImGui::SameLine();
+			ImGui::HelpMarker("Only in the friend's list, not on profile");
 
 			ImGui::NextColumn();
 

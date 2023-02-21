@@ -16,8 +16,6 @@ Direct3D11Render Direct3D11;
 
 LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
-HWND hwnd;
-
 int WINAPI wWinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/, LPWSTR /*lpCmdLine*/, int /*nCmdShow*/)
 {
 	LPWSTR* szArgList;
@@ -95,10 +93,9 @@ int WINAPI wWinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/, LPWSTR
 		::RegisterClassExW(&wc);
 
 		// Create application window
-		hwnd = ::CreateWindowW(sClassName.c_str(), lpszOverlayClassName, WS_OVERLAPPED | WS_SYSMENU | WS_MINIMIZEBOX | WS_SIZEBOX, 100, 100, S.Window.width, S.Window.height, NULL, NULL, wc.hInstance, NULL);
-		S.hwnd = hwnd;
+		S.hwnd = ::CreateWindowW(sClassName.c_str(), lpszOverlayClassName, WS_OVERLAPPED | WS_SYSMENU | WS_MINIMIZEBOX | WS_SIZEBOX, 100, 100, S.Window.width, S.Window.height, NULL, NULL, wc.hInstance, NULL);
 
-		if (hwnd == NULL)
+		if (S.hwnd == NULL)
 		{
 			::UnregisterClassW(wc.lpszClassName, wc.hInstance);
 			MessageBoxA(0, "Couldn't create window", 0, 0);
@@ -111,7 +108,7 @@ int WINAPI wWinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/, LPWSTR
 			SetWindowDisplayAffinity(S.hwnd, WDA_NONE);
 
 		//Initialize Direct3D
-		if (!Direct3D11.DirectXInit(hwnd))
+		if (!Direct3D11.DirectXInit(S.hwnd))
 		{
 			Direct3D11.Shutdown();
 			::UnregisterClassW(wc.lpszClassName, wc.hInstance);
@@ -120,8 +117,8 @@ int WINAPI wWinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/, LPWSTR
 		}
 
 		// Show the window
-		::ShowWindow(hwnd, SW_SHOWDEFAULT);
-		::UpdateWindow(hwnd);
+		::ShowWindow(S.hwnd, SW_SHOWDEFAULT);
+		::UpdateWindow(S.hwnd);
 
 		LCU::GetLeagueProcesses();
 
@@ -214,7 +211,7 @@ int WINAPI wWinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/, LPWSTR
 
 		//Exit
 		Direct3D11.Shutdown();
-		::DestroyWindow(hwnd);
+		::DestroyWindow(S.hwnd);
 		::UnregisterClassW(wc.lpszClassName, wc.hInstance);
 	}
 	return 0;
