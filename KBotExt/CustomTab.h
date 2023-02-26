@@ -35,16 +35,16 @@ public:
 			std::copy(S.customTab.requestText.begin(), S.customTab.requestText.end(), requestText);
 			std::copy(S.customTab.port.begin(), S.customTab.port.end(), inputPort);
 			std::copy(S.customTab.header.begin(), S.customTab.header.end(), inputHeader);
-
-			ledgeUrl = GetLedgeUrl();
-			storeUrl = LCU::Request("GET", "/lol-store/v1/getStoreUrl");
-			storeUrl.erase(std::remove(storeUrl.begin(), storeUrl.end(), '"'), storeUrl.end());
 		}
 
 		if (onOpen)
 		{
 			customHeader = LCU::league.header;
 			customPort = LCU::league.port;
+
+			ledgeUrl = GetLedgeUrl();
+			storeUrl = LCU::Request("GET", "/lol-store/v1/getStoreUrl");
+			storeUrl.erase(std::remove(storeUrl.begin(), storeUrl.end(), '"'), storeUrl.end());
 		}
 
 		ImGui::Text("Method:");
