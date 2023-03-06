@@ -267,7 +267,7 @@ public:
 			ImGui::SameLine();
 			ImGui::Text(" From folder: ");
 			ImGui::SameLine();
-			ImGui::SetNextItemWidth(100);
+			ImGui::SetNextItemWidth(ImGui::CalcTextSize(std::string(20, 'W').c_str(), NULL, true).x);
 			if (ImGui::BeginCombo("##comboGroups", combo_label, 0))
 			{
 				std::string getGroups = LCU::Request("GET", "https://127.0.0.1/lol-chat/v1/friend-groups");

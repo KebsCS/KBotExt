@@ -13,7 +13,10 @@ public:
 		{
 			static char statusText[1024 * 16];
 			ImGui::Text("Status:");
-			ImGui::InputTextMultiline("##inputStatus", (statusText), IM_ARRAYSIZE(statusText), ImVec2(400, 100), ImGuiInputTextFlags_AllowTabInput);
+			const ImVec2 label_size = ImGui::CalcTextSize("W", NULL, true);
+
+			ImGui::InputTextMultiline("##inputStatus", (statusText), IM_ARRAYSIZE(statusText), ImVec2(S.Window.width - 230.f,
+				(label_size.y + ImGui::GetStyle().FramePadding.y) * 6.f), ImGuiInputTextFlags_AllowTabInput);
 			if (ImGui::Button("Submit status"))
 			{
 				std::string body = "{\"statusMessage\":\"" + std::string(statusText) + "\"}";

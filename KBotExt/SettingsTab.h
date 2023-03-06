@@ -174,6 +174,11 @@ public:
 				S.Window.width = 730;
 				S.Window.height = 530;
 				::SetWindowPos(S.hwnd, 0, 0, 0, S.Window.width, S.Window.height, SWP_NOMOVE | SWP_NOOWNERZORDER | SWP_NOZORDER);
+
+				S.fontScale = 1.f;
+				ImGuiIO& io = ImGui::GetIO();
+				io.FontGlobalScale = S.fontScale;
+
 				Config::Save();
 			}
 			ImGui::SameLine();

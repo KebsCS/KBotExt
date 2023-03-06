@@ -48,14 +48,15 @@ public:
 		}
 
 		ImGui::Text("Method:");
-		ImGui::SetNextItemWidth(600.f);
-		ImGui::InputText("##inputMethod", method, IM_ARRAYSIZE(method));
+		const ImVec2 label_size = ImGui::CalcTextSize("W", NULL, true);
+		ImGui::InputTextEx("##inputMethod", NULL, method, IM_ARRAYSIZE(method), ImVec2(S.Window.width - 130.f, label_size.y + ImGui::GetStyle().FramePadding.y * 2.0f), 0, NULL, NULL);
 
 		ImGui::Text("URL:");
-		ImGui::InputTextMultiline("##inputUrl", urlText, IM_ARRAYSIZE(urlText), ImVec2(600, 20));
+		ImGui::InputTextMultiline("##inputUrl", urlText, IM_ARRAYSIZE(urlText), ImVec2(S.Window.width - 130.f, label_size.y + ImGui::GetStyle().FramePadding.y * 2.0f));
 
 		ImGui::Text("Body:");
-		ImGui::InputTextMultiline("##inputBody", (requestText), IM_ARRAYSIZE(requestText), ImVec2(600, 100), ImGuiInputTextFlags_AllowTabInput);
+		ImGui::InputTextMultiline("##inputBody", (requestText), IM_ARRAYSIZE(requestText), ImVec2(S.Window.width - 130.f,
+			(label_size.y + ImGui::GetStyle().FramePadding.y) * 6.f), ImGuiInputTextFlags_AllowTabInput);
 
 		S.customTab.method = method;
 		S.customTab.urlText = urlText;
@@ -158,7 +159,8 @@ public:
 			}
 
 			ImGui::Text("Header:");
-			ImGui::InputTextMultiline("##inputHeader", (inputHeader), IM_ARRAYSIZE(inputHeader), ImVec2(600, 100), ImGuiInputTextFlags_AllowTabInput);
+			ImGui::InputTextMultiline("##inputHeader", (inputHeader), IM_ARRAYSIZE(inputHeader), ImVec2(S.Window.width - 130.f,
+				(label_size.y + ImGui::GetStyle().FramePadding.y) * 6.f), ImGuiInputTextFlags_AllowTabInput);
 
 			S.customTab.port = inputPort;
 			S.customTab.header = inputHeader;
@@ -176,6 +178,8 @@ public:
 			customHeader = LCU::league.header;
 			customPort = LCU::league.port;
 		}
+
+		ImGui::Columns(2, 0, false);
 
 		static std::string result;
 		if (ImGui::Button("Send custom request##customTab"))
@@ -217,6 +221,16 @@ public:
 			}
 		}
 
+		ImGui::NextColumn();
+
+		ImGui::Text("Endpoints list:");
+		ImGui::TextURL("LCU", "https://lcu.kebs.dev", 1, 0);
+		ImGui::SameLine();
+		ImGui::Text(" | ");
+		ImGui::TextURL("Riot Client", "https://riotclient.kebs.dev", 1, 0);
+
+		ImGui::Columns(1);
+
 		if (!result.empty())
 		{
 			Json::CharReaderBuilder builder;
@@ -235,7 +249,8 @@ public:
 		if (!sResultJson.empty())
 		{
 			cResultJson = &sResultJson[0];
-			ImGui::InputTextMultiline("##customResult", cResultJson, sResultJson.size() + 1, ImVec2(600, 300));
+			ImGui::InputTextMultiline("##customResult", cResultJson, sResultJson.size() + 1, ImVec2(S.Window.width - 130.f,
+				(label_size.y + ImGui::GetStyle().FramePadding.y) * 19.f));
 		}
 	}
 
