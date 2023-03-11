@@ -81,6 +81,7 @@ int Direct3D11Render::Render()
 	static char buf[255];
 	static std::string connectedTo = "";
 	static std::string currentInfo = "";
+	static std::string ownedRP = "| RP:";
 	if (gamePatch == "0.0.0")
 	{
 		currentInfo = "Failed to connect, most likely blocked by antivirus or firewall";
@@ -88,7 +89,18 @@ int Direct3D11Render::Render()
 	else
 	{
 		if (LCU::IsProcessGood())
-			connectedTo = "| Connected to: " + LCU::leagueProcesses[LCU::indexLeagueProcesses].second;
+			connectedTo = "| Connected to: " + LCU::leagueProcesses[LCU::indexLeagueProcesses].second
+			
+			Json::CharReaderBuilder builder;
+			const std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
+			JSONCPP_STRING err;
+			Json::Value root;
+
+			std::string getWallet = LCU::Request("GET", "https://127.0.0.1/lol-inventory/v1/wallet/RP");
+			if (reader->parse(getWallet.c_str(), getWallet.c_str() + static_cast<int>(getWallet.length()), &root, &err))
+			{
+				ownedRP = "| RP: "+std::to_string(root["RP"].asInt());
+			}
 
 		if (champSkins.empty())
 			currentInfo = "Fetching skin data...";
@@ -96,7 +108,7 @@ int Direct3D11Render::Render()
 			currentInfo = "";
 	}
 
-	sprintf_s(buf, ("KBotExt by kebs - %s %s \t %s ###AnimatedTitle"), gamePatch.c_str(), connectedTo.c_str(), currentInfo.c_str());
+	sprintf_s(buf, ("KBotExt by kebs - %s %s %s \t %s ###AnimatedTitle"), gamePatch.c_str(), connectedTo.c_str(), currentInfo.c_str(), ownedRP.c_str());
 
 	ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiCond_FirstUseEver);
 	ImGui::SetNextWindowSize(ImVec2(685, 462), ImGuiCond_FirstUseEver);
