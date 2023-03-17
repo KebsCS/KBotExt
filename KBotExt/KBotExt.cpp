@@ -79,10 +79,10 @@ int WINAPI wWinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/, LPWSTR
 #endif
 
 		//Randomize using current time, todo swap with recent c++ random
-		srand(static_cast<unsigned>(time(0)));
+		//srand(static_cast<unsigned>(time(0)));
 
 		Config::Load();
-		std::wstring sClassName = Utils::RandomWString(RandomInt(5, 10), { 0x2e80, 0xfffff });
+		std::wstring sClassName = Utils::RandomWString(Utils::RandomInt(5, 10), { 0x2e80, 0xfffff });
 		LPCWSTR lpszOverlayClassName = sClassName.c_str();
 		//Register window class information
 		WNDCLASSEXW wc = { sizeof(WNDCLASSEXW), CS_CLASSDC, WndProc, 0L, 0L, GetModuleHandle(NULL), NULL, NULL, NULL, NULL, sClassName.c_str(), NULL };

@@ -7,6 +7,8 @@ public:
 	Utils() = default;
 	~Utils() = default;
 
+	static int RandomInt(int min, int max);
+
 	static std::string ToLower(std::string str);
 	static std::wstring ToLower(std::wstring wstr);
 

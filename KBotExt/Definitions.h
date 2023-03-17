@@ -3,7 +3,7 @@
 #include <vector>
 #include <string>
 
-#define RandomInt(min, max) (rand() % (max - min + 1) + min)
+//#define RandomInt(min, max) (rand() % (max - min + 1) + min)
 
 struct ChampMinimal
 {

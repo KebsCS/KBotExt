@@ -4,12 +4,22 @@
 #include <filesystem>
 #include <array>
 #include <cwctype>
+#include <random>
 //URLDownloadToFileA
 #include <urlmon.h>
 #pragma comment(lib, "urlmon.lib")
 
 #include "Utils.h"
 #include "Definitions.h"
+
+int Utils::RandomInt(int min, int max)
+{
+	std::random_device rd;
+	std::mt19937 gen(rd());
+	std::uniform_int_distribution<> distr(min, max);
+
+	return distr(gen);
+}
 
 std::string Utils::ToLower(std::string str)
 {
