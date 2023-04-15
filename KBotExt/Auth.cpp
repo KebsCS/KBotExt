@@ -151,81 +151,150 @@ std::wstring Auth::GetProcessCommandLine(const DWORD& processId)
 			PULONG ReturnLength
 			);
 
-	typedef struct _PROCESS_BASIC_INFORMATION {
-		LONG ExitStatus;
-		PVOID PebBaseAddress;
-		ULONG_PTR AffinityMask;
-		LONG BasePriority;
-		HANDLE UniqueProcessId;
-		HANDLE InheritedFromUniqueProcessId;
-	} PROCESS_BASIC_INFORMATION;
-
-	typedef struct _UNICODE_STRING
-	{
-		USHORT Length;
-		USHORT MaximumLength;
-		PWSTR Buffer;
-	} UNICODE_STRING, * PUNICODE_STRING;
-	typedef const UNICODE_STRING* PCUNICODE_STRING;
-
 	std::wstring result;
 	HANDLE processHandle = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, 0, processId);
 
-	PROCESS_BASIC_INFORMATION pbi;
-	ZeroMemory(&pbi, sizeof(pbi));
+	SYSTEM_INFO si;
+	GetNativeSystemInfo(&si);
 
-	tNtQueryInformationProcess NtQueryInformationProcess =
-		(tNtQueryInformationProcess)GetProcAddress(GetModuleHandleA("ntdll.dll"), "NtQueryInformationProcess");
-	if (NtQueryInformationProcess(processHandle, 0, &pbi, sizeof(pbi), 0) != 0)
-	{
-		MessageBoxA(0, "NtQueryInformationProcess failed", 0, 0);
-		CloseHandle(processHandle);
-		return {};
-	}
+	BOOL wow;
+	IsWow64Process(GetCurrentProcess(), &wow);
 
-#ifndef _WIN64
-	DWORD ProcessParametersOffset = 0x10;
-	DWORD CommandLineOffset = 0x40;
-#else
-	DWORD ProcessParametersOffset = 0x20;
-	DWORD CommandLineOffset = 0x70;
-#endif
+	DWORD ProcessParametersOffset = si.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_AMD64 ? 0x20 : 0x10;
+	DWORD CommandLineOffset = si.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_AMD64 ? 0x70 : 0x40;
 
 	DWORD pebSize = ProcessParametersOffset + 8; // size until ProcessParameters
 	PBYTE peb = (PBYTE)malloc(pebSize);
 	ZeroMemory(peb, pebSize);
-	if (!ReadProcessMemory(processHandle, pbi.PebBaseAddress, peb, pebSize, NULL))
-	{
-		MessageBoxA(0, "PEB ReadProcessMemory failed", 0, 0);
-		CloseHandle(processHandle);
-		return {};
-	}
 
 	DWORD processParametersSize = CommandLineOffset + 16;
 	PBYTE processParameters = (PBYTE)malloc(processParametersSize);
 	ZeroMemory(processParameters, processParametersSize);
-	PBYTE* parameters = (PBYTE*)*(LPVOID*)(peb + ProcessParametersOffset);
-	if (!ReadProcessMemory(processHandle, parameters, processParameters, processParametersSize, NULL))
+
+	if (wow)
 	{
-		MessageBoxA(0, "processParameters ReadProcessMemory failed", 0, 0);
+		typedef struct _PROCESS_BASIC_INFORMATION_WOW64 {
+			PVOID Reserved1[2];
+			PVOID64 PebBaseAddress;
+			PVOID Reserved2[4];
+			ULONG_PTR UniqueProcessId[2];
+			PVOID Reserved3[2];
+		} PROCESS_BASIC_INFORMATION_WOW64;
+
+		typedef struct _UNICODE_STRING_WOW64 {
+			USHORT Length;
+			USHORT MaximumLength;
+			PVOID64 Buffer;
+		} UNICODE_STRING_WOW64;
+
+		typedef NTSTATUS(NTAPI* tNtWow64ReadVirtualMemory64)(
+			IN HANDLE ProcessHandle,
+			IN PVOID64 BaseAddress,
+			OUT PVOID Buffer,
+			IN ULONG64 Size,
+			OUT PULONG64 NumberOfBytesRead);
+
+		PROCESS_BASIC_INFORMATION_WOW64 pbi;
+		ZeroMemory(&pbi, sizeof(pbi));
+
+		tNtQueryInformationProcess NtQueryInformationProcess =
+			(tNtQueryInformationProcess)GetProcAddress(GetModuleHandleA("ntdll.dll"), "NtWow64QueryInformationProcess64");
+		if (NtQueryInformationProcess(processHandle, 0, &pbi, sizeof(pbi), 0) != 0)
+		{
+			MessageBoxA(0, "NtQueryInformationProcess failed", 0, 0);
+			CloseHandle(processHandle);
+			return {};
+		}
+
+		tNtWow64ReadVirtualMemory64 NtWow64ReadVirtualMemory64 =
+			(tNtWow64ReadVirtualMemory64)GetProcAddress(GetModuleHandleA("ntdll.dll"), "NtWow64ReadVirtualMemory64");
+
+		if (NtWow64ReadVirtualMemory64(processHandle, pbi.PebBaseAddress, peb, pebSize, NULL) != 0)
+		{
+			MessageBoxA(0, "PEB NtWow64ReadVirtualMemory64 failed", 0, 0);
+			CloseHandle(processHandle);
+			return {};
+		}
+
+		PVOID64 parameters = (PVOID64) * ((PVOID64*)(peb + ProcessParametersOffset));
+		if (NtWow64ReadVirtualMemory64(processHandle, parameters, processParameters, processParametersSize, NULL) != 0)
+		{
+			MessageBoxA(0, "processParameters NtWow64ReadVirtualMemory64 failed", 0, 0);
+			CloseHandle(processHandle);
+			return {};
+		}
+
+		UNICODE_STRING_WOW64* pCommandLine = (UNICODE_STRING_WOW64*)(processParameters + CommandLineOffset);
+		PWSTR commandLineCopy = (PWSTR)malloc(pCommandLine->MaximumLength);
+		if (NtWow64ReadVirtualMemory64(processHandle, pCommandLine->Buffer, commandLineCopy, pCommandLine->MaximumLength, NULL) != 0)
+		{
+			MessageBoxA(0, "pCommandLine NtWow64ReadVirtualMemory64 failed", 0, 0);
+			CloseHandle(processHandle);
+			return {};
+		}
+
+		result = std::wstring(commandLineCopy);
 		CloseHandle(processHandle);
-		return {};
+	}
+	else
+	{
+		typedef struct _PROCESS_BASIC_INFORMATION {
+			LONG ExitStatus;
+			PVOID PebBaseAddress;
+			ULONG_PTR AffinityMask;
+			LONG BasePriority;
+			HANDLE UniqueProcessId;
+			HANDLE InheritedFromUniqueProcessId;
+		} PROCESS_BASIC_INFORMATION;
+
+		typedef struct _UNICODE_STRING
+		{
+			USHORT Length;
+			USHORT MaximumLength;
+			PWSTR Buffer;
+		} UNICODE_STRING, * PUNICODE_STRING;
+		typedef const UNICODE_STRING* PCUNICODE_STRING;
+
+		PROCESS_BASIC_INFORMATION pbi;
+		ZeroMemory(&pbi, sizeof(pbi));
+
+		tNtQueryInformationProcess NtQueryInformationProcess =
+			(tNtQueryInformationProcess)GetProcAddress(GetModuleHandleA("ntdll.dll"), "NtQueryInformationProcess");
+		if (NtQueryInformationProcess(processHandle, 0, &pbi, sizeof(pbi), 0) != 0)
+		{
+			MessageBoxA(0, "NtQueryInformationProcess failed", 0, 0);
+			CloseHandle(processHandle);
+			return {};
+		}
+
+		if (!ReadProcessMemory(processHandle, pbi.PebBaseAddress, peb, pebSize, NULL))
+		{
+			MessageBoxA(0, "PEB ReadProcessMemory failed", 0, 0);
+			CloseHandle(processHandle);
+			return {};
+		}
+
+		PBYTE* parameters = (PBYTE*)*(LPVOID*)(peb + ProcessParametersOffset);
+		if (!ReadProcessMemory(processHandle, parameters, processParameters, processParametersSize, NULL))
+		{
+			MessageBoxA(0, "processParameters ReadProcessMemory failed", 0, 0);
+			CloseHandle(processHandle);
+			return {};
+		}
+
+		UNICODE_STRING* pCommandLine = (UNICODE_STRING*)(processParameters + CommandLineOffset);
+		PWSTR commandLineCopy = (PWSTR)malloc(pCommandLine->MaximumLength);
+		if (!ReadProcessMemory(processHandle, pCommandLine->Buffer, commandLineCopy, pCommandLine->MaximumLength, NULL))
+		{
+			MessageBoxA(0, "pCommandLine ReadProcessMemory failed", 0, 0);
+			CloseHandle(processHandle);
+			return {};
+		}
+
+		result = std::wstring(commandLineCopy);
+		CloseHandle(processHandle);
 	}
 
-	UNICODE_STRING* pCommandLine = (UNICODE_STRING*)(processParameters + CommandLineOffset);
-	PWSTR commandLineBuffer = pCommandLine->Buffer;
-	USHORT commandLineLen = pCommandLine->MaximumLength;
-	PWSTR commandLineCopy = (PWSTR)malloc(commandLineLen);
-	if (!ReadProcessMemory(processHandle, commandLineBuffer, commandLineCopy, commandLineLen, NULL))
-	{
-		MessageBoxA(0, "pCommandLine ReadProcessMemory failed", 0, 0);
-		CloseHandle(processHandle);
-		return {};
-	}
-
-	result = std::wstring(commandLineCopy);
-
-	CloseHandle(processHandle);
 	return result;
 }
 
