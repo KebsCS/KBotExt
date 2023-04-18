@@ -1,6 +1,6 @@
-![Example](https://i.imgur.com/ACMxyEC.png)
+![Example](https://i.imgur.com/aLQOwy4.png)
 
-[More screenshots](https://imgur.com/a/OFgtemU)
+[More screenshots](https://imgur.com/a/Z5LRbV0)
 
 ## Download
 - [Stable release](https://github.com/KebsCS/KBotExt/releases/latest) (You will be notified when there's a new release)
@@ -8,6 +8,7 @@
 
 ## Features
 * Works every patch
+* Free ARAM boost
 * Launch multiple clients
 * Language changer
 * Start any lobby/game
@@ -42,7 +43,6 @@
 * Force client to run without admin
 * (Partially patched) Check the email linked to account you're logged on
 * (Patched) Free skin and free champion (Riot Girl Tristana)
-* (Patched) Free ARAM boost
 
 ## Development
 
