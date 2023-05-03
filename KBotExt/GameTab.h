@@ -411,7 +411,7 @@ public:
 						std::string accountId = rootPurchaseHistory["player"]["accountId"].asString();
 						std::string transactionId = rootPurchaseHistory["transactions"][0]["transactionId"].asString();
 						result = cpr::Post(cpr::Url{ storeUrl + "/storefront/v3/refund" }, cpr::Header{ storeHeader },
-							cpr::Body{ "{\"accountId\":" + accountId + ",\"transactionId\":\"" + transactionId + "\",\"inventoryType\":\"CHAMPION\",\"language\":\"EN_US\"}" }).text;
+							cpr::Body{ "{\"accountId\":" + accountId + ",\"transactionId\":\"" + transactionId + "\",\"inventoryType\":\"CHAMPION\",\"language\":\"en_US\"}" }).text;
 					}
 					else
 					{
