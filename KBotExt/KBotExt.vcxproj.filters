@@ -1,9 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="imgui">
-      <UniqueIdentifier>{ed321358-528e-43a8-b1aa-992806430647}</UniqueIdentifier>
-    </Filter>
     <Filter Include="json">
       <UniqueIdentifier>{54db2d2d-b22b-4c3c-b6bd-8802952723b6}</UniqueIdentifier>
     </Filter>
@@ -24,6 +21,9 @@
     </Filter>
     <Filter Include="League">
       <UniqueIdentifier>{888bd346-de16-4def-9ccf-4c21e22c708b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="imgui">
+      <UniqueIdentifier>{ed321358-528e-43a8-b1aa-992806430647}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -74,9 +74,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="HTTP.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="DirectX.h">
       <Filter>Header Files</Filter>
     </ClInclude>

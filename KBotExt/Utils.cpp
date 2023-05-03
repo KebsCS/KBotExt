@@ -103,13 +103,19 @@ std::wstring Utils::StringToWstring(std::string str)
 	}
 }
 
-std::vector<std::string> Utils::StringSplit(std::string str, std::string separator)
+std::vector<std::string> Utils::StringSplit(std::string str, std::string separator, int max)
 {
+	int count = 0;
 	size_t pos = 0;
 	std::string token;
 	std::vector<std::string> vec;
 	while ((pos = str.find(separator)) != std::string::npos)
 	{
+		if (max != -1 && count == max)
+		{
+			break;
+		}
+		count++;
 		token = str.substr(0, pos);
 		vec.emplace_back(token);
 		str.erase(0, pos + separator.length());
@@ -358,4 +364,18 @@ bool Utils::RunAsUser(LPCWSTR lpApplicationName, LPWSTR lpCommandLine)
 	CloseHandle(hPrimaryToken);
 	CloseHandle(pi.hProcess);
 	return true;
+}
+
+cpr::Header Utils::StringToHeader(const std::string& str)
+{
+	cpr::Header header;
+	for (const auto& line : Utils::StringSplit(str, "\r\n"))
+	{
+		auto index = line.find(': ', 0);
+		if (index != std::string::npos)
+		{
+			header.insert({ line.substr(0, index - 1), line.substr(index + 1) });
+		}
+	}
+	return header;
 }

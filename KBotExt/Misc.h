@@ -4,7 +4,6 @@
 #include <thread>
 #include <filesystem>
 #include <tlhelp32.h>
-#include "HTTP.h"
 #include "LCU.h"
 #include "Config.h"
 
@@ -75,7 +74,7 @@ public:
 
 	static void CheckVersion()
 	{
-		std::string getLatest = HTTP::Request("GET", "https://api.github.com/repos/KebsCS/KBotExt/releases/latest");
+		std::string getLatest = cpr::Get(cpr::Url{ "https://api.github.com/repos/KebsCS/KBotExt/releases/latest" }).text;
 
 		Json::CharReaderBuilder builder;
 		const std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
@@ -118,7 +117,7 @@ public:
 
 	static std::string GetCurrentPatch()
 	{
-		std::string result = HTTP::Request("GET", "http://ddragon.leagueoflegends.com/api/versions.json");
+		std::string result = cpr::Get(cpr::Url{ "http://ddragon.leagueoflegends.com/api/versions.json" }).text;
 		Json::CharReaderBuilder builder;
 		const std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
 		JSONCPP_STRING err;
@@ -132,7 +131,7 @@ public:
 
 	static void GetAllChampionSkins()
 	{
-		std::string getSkins = HTTP::Request("GET", "https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/skins.json");
+		std::string getSkins = cpr::Get(cpr::Url{ "https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/skins.json" }).text;
 		Json::CharReaderBuilder builder;
 		const std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
 		JSONCPP_STRING err;

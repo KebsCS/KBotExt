@@ -44,11 +44,18 @@ private:
 				return "Invalid client path, change it in Settings tab";
 		}
 
+		cpr::Session session;
+		session.SetVerifySsl(false);
+		session.SetHeader(Utils::StringToHeader(LCU::riot.header));
+		session.SetUrl(std::format("https://127.0.0.1:{}/rso-auth/v2/authorizations", LCU::riot.port));
+		session.SetBody(R"({"clientId":"riot-client","trustLevels":["always_trusted"]})");
+		session.Post();
 		// refresh session
-		HTTP::Request("POST", "https://127.0.0.1/rso-auth/v2/authorizations", R"({"clientId":"riot-client","trustLevels":["always_trusted"]})", LCU::riot.header, "", "", LCU::riot.port);
 
 		std::string loginBody = R"({"username":")" + username + R"(","password":")" + password + R"(","persistLogin":false})";
-		std::string result = HTTP::Request("PUT", "https://127.0.0.1/rso-auth/v1/session/credentials", loginBody, LCU::riot.header, "", "", LCU::riot.port);
+		session.SetUrl(std::format("https://127.0.0.1:{}/rso-auth/v1/session/credentials", LCU::riot.port));
+		session.SetBody(loginBody);
+		std::string result = session.Put().text;
 
 		Json::CharReaderBuilder builder;
 		const std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
@@ -210,7 +217,82 @@ public:
 			ImGui::SameLine();
 			ImGui::HelpMarker("This part is only, if you want to save your login and pass to config file and login with 1 click. You don't have to do that, you can just log in the usual way in client and launch the tool anytime you want");
 
+			ImGui::SameLine();
+			ImGui::Columns(2, 0, false);
+			ImGui::NextColumn();
+
+			static std::string banCheck = "";
+
+			if (ImGui::Button("Check ban reason"))
+			{
+				Json::Value authData;
+				authData["acr_values"] = "";
+				authData["claims"] = "";
+				authData["client_id"] = "riot-client";
+				authData["nonce"] = Utils::RandomString(22);
+				authData["code_challenge"] = "";
+				authData["code_challenge_method"] = "";
+				authData["redirect_uri"] = "http://localhost/redirect";
+				authData["response_type"] = "token id_token";
+				authData["scope"] = "openid offline_access lol ban profile email phone birthdate summoner link lol_region";
+
+				cpr::Header authHeader = {
+					{"Content-Type", "application/json"},
+					{"Accept-Encoding", "deflate"},
+					{"User-Agent", "RiotClient/64.0.4.4947777.4789131 rso-auth (Windows;10;;Home, x64)"},
+					{"Pragma", "no-cache"},
+					{"Accept-Language", "en-GB,en,*"},
+					{"Accept", "application/json, text/plain, */*"}
+				};
+
+				cpr::Session session;
+				session.SetHeader(authHeader);
+				session.SetBody(authData.toStyledString());
+				session.SetUrl("https://auth.riotgames.com/api/v1/authorization");
+				session.Post();
+
+				Json::Value authData2;
+				authData2["language"] = "en_GB";
+				authData2["password"] = password;
+				authData2["region"] = Json::nullValue;
+				authData2["remember"] = false;
+				authData2["type"] = "auth";
+				authData2["username"] = username;
+
+				session.SetBody(authData2.toStyledString());
+				session.SetUrl("https://auth.riotgames.com/api/v1/authorization");
+				std::string r = session.Put().text;
+
+				Json::CharReaderBuilder builder;
+				const std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
+				JSONCPP_STRING err;
+				Json::Value rootAuth;
+				banCheck = r;
+				if (r.find("\"error\"") == std::string::npos && reader->parse(r.c_str(), r.c_str() + static_cast<int>(r.length()), &rootAuth, &err))
+				{
+					std::string uri = rootAuth["response"]["parameters"]["uri"].asString();
+					size_t startIndex = uri.find("#access_token=") + strlen("#access_token=");
+					size_t endIndex = uri.find("&scope");
+					std::string bearer = uri.substr(startIndex, endIndex - startIndex);
+					session.UpdateHeader(cpr::Header{ { "Authorization", "Bearer " + bearer} });
+
+					session.SetUrl("https://auth.riotgames.com/userinfo");
+					r = session.Get().text;
+					Json::Value rootInfo;
+
+					if (reader->parse(r.c_str(), r.c_str() + static_cast<int>(r.length()), &rootInfo, &err))
+					{
+						banCheck = rootInfo.toStyledString();
+						std::cout << rootInfo.toStyledString();
+					}
+				}
+			}
+
+			ImGui::Columns(1);
+
 			ImGui::Separator();
+
+			ImGui::Columns(2, 0, false);
 
 			Json::Reader reader;
 			Json::Value root;
@@ -249,6 +331,12 @@ public:
 				}
 			}
 			iFile.close();
+
+			ImGui::NextColumn();
+
+			ImGui::TextWrapped(banCheck.c_str());
+
+			ImGui::Columns(1);
 
 			ImGui::TextWrapped(result.c_str());
 

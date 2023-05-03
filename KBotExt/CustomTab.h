@@ -194,10 +194,60 @@ public:
 						sURL.erase(sURL.begin());
 					if (sURL[0] != '/')
 						sURL.insert(0, "/");
-					sURL.insert(0, "https://127.0.0.1");
+					sURL.insert(0, "https://127.0.0.1:" + std::to_string(LCU::league.port));
 				}
 			}
-			result = HTTP::Request(method, sURL, requestText, customHeader, "", "", customPort);
+			else if (sURL.find("https://127.0.0.1:") == std::string::npos && !isCustomOpen)
+			{
+				sURL.insert(strlen("https://127.0.0.1"), ":" + std::to_string(LCU::league.port));
+			}
+			else if (sURL.find("https://") != std::string::npos || sURL.find("https://") != std::string::npos)
+			{
+				if (customPort != 443 && customPort != 80)
+				{
+					sURL.insert(sURL.find("/", strlen("https://")), ":" + std::to_string(customPort));
+				}
+			}
+
+			cpr::Session customSession;
+			customSession.SetVerifySsl(false);
+			customSession.SetHeader(Utils::StringToHeader(customHeader));
+			customSession.SetBody(requestText);
+			customSession.SetUrl(sURL);
+
+			cpr::Response r;
+
+			const std::string upperMethod = Utils::ToUpper(method);
+			if (upperMethod == "GET")
+			{
+				r = customSession.Get();
+			}
+			else if (upperMethod == "POST")
+			{
+				r = customSession.Post();
+			}
+			else if (upperMethod == "OPTIONS")
+			{
+				r = customSession.Options();
+			}
+			else if (upperMethod == "DELETE")
+			{
+				r = customSession.Delete();
+			}
+			else if (upperMethod == "PUT")
+			{
+				r = customSession.Put();
+			}
+			else if (upperMethod == "HEAD")
+			{
+				r = customSession.Head();
+			}
+			else if (upperMethod == "PATCH")
+			{
+				r = customSession.Patch();
+			}
+
+			result = r.text;
 		}
 
 		ImGui::SameLine();

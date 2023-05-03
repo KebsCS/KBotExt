@@ -1,11 +1,15 @@
 #include <json/json.h>
 #include <thread>
+#include "Utils.h"
 
 #include "LCU.h"
-#include "HTTP.h"
+
+static void FixCachingProblem();
 
 std::string LCU::Request(const std::string& method, const std::string& endpoint, const std::string& body)
 {
+	if (league.port == 0)
+		return "Not connected to League";
 	std::string sURL = endpoint;
 	if (sURL.find("https://127.0.0.1") == std::string::npos)
 	{
@@ -15,10 +19,54 @@ std::string LCU::Request(const std::string& method, const std::string& endpoint,
 				sURL.erase(sURL.begin());
 			if (sURL[0] != '/')
 				sURL.insert(0, "/");
-			sURL.insert(0, "https://127.0.0.1");
+			sURL.insert(0, "https://127.0.0.1:" + std::to_string(league.port));
 		}
 	}
-	return HTTP::Request(method, sURL, body, league.header, "", "", league.port);
+	else if (sURL.find("https://127.0.0.1:") == std::string::npos)
+	{
+		sURL.insert(strlen("https://127.0.0.1"), ":" + std::to_string(league.port));
+	}
+
+	/*wrap::Response r = wrap::HttpsRequest(wrap::Method{ method }, wrap::Url{ sURL }, wrap::Body{ body }, wrap::Header{ league.header }, wrap::Port{ league.port },
+		wrap::Timeout{1000});*/
+
+	cpr::Response r;
+
+	LCU::session.SetUrl(sURL);
+	LCU::session.SetBody(body);
+
+	const std::string upperMethod = Utils::ToUpper(method);
+
+	if (upperMethod == "GET")
+	{
+		r = LCU::session.Get();
+	}
+	else if (upperMethod == "POST")
+	{
+		r = LCU::session.Post();
+	}
+	else if (upperMethod == "OPTIONS")
+	{
+		r = LCU::session.Options();
+	}
+	else if (upperMethod == "DELETE")
+	{
+		r = LCU::session.Delete();
+	}
+	else if (upperMethod == "PUT")
+	{
+		r = LCU::session.Put();
+	}
+	else if (upperMethod == "HEAD")
+	{
+		r = LCU::session.Head();
+	}
+	else if (upperMethod == "PATCH")
+	{
+		r = LCU::session.Patch();
+	}
+
+	return r.text;
 }
 
 bool LCU::SetRiotClientInfo(const ClientInfo& info)
@@ -48,6 +96,11 @@ bool LCU::SetLeagueClientInfo(const ClientInfo& info)
 		return false;
 
 	league.header = Auth::MakeLeagueHeader(info);
+
+	session = cpr::Session();
+	session.SetVerifySsl(false);
+
+	session.SetHeader(Utils::StringToHeader(league.header));
 
 	return true;
 }
@@ -125,7 +178,11 @@ void LCU::GetLeagueProcesses()
 				short sessionFailCount = 0;
 				while (true)
 				{
-					std::string procSession = HTTP::Request("GET", "https://127.0.0.1/lol-login/v1/session", "", currInfo.header, "", "", currInfo.port);
+					cpr::Session session;
+					session.SetVerifySsl(false);
+					session.SetHeader(Utils::StringToHeader(currInfo.header));
+					session.SetUrl(std::format("https://127.0.0.1:{}/lol-login/v1/session", currInfo.port));
+					std::string procSession = session.Get().text;
 
 					// probably legacy client
 					if (procSession.find("errorCode") != std::string::npos)
@@ -151,8 +208,9 @@ void LCU::GetLeagueProcesses()
 						// player has summId when client is loaded
 						if (!currSummId.empty())
 						{
-							std::string currSummoner = HTTP::Request("GET", "https://127.0.0.1/lol-summoner/v1/summoners/" + currSummId,
-								"", currInfo.header, "", "", currInfo.port);
+							session.SetUrl(std::format("https://127.0.0.1:{}/lol-summoner/v1/summoners/{}", currInfo.port, currSummId));
+							std::string currSummoner = session.Get().text;
+
 							if (reader->parse(currSummoner.c_str(), currSummoner.c_str() + static_cast<int>(currSummoner.length()), &root, &err))
 							{
 								LCU::leagueProcesses[currentIndex].second = std::string(root["displayName"].asString().substr(0, 25));
@@ -213,4 +271,55 @@ std::string LCU::GetStoreHeader()
 	}
 
 	return "";
+}
+
+// Fixes Wininet error 12158, #80 in GitHub issues
+static void FixCachingProblem()
+{
+	typedef LSTATUS(WINAPI* tRegOpenKeyExA)(HKEY hKey, LPCSTR lpSubKey, DWORD ulOptions,
+		REGSAM samDesired, PHKEY phkResult);
+	static tRegOpenKeyExA RegOpenKeyExA = (tRegOpenKeyExA)GetProcAddress(LoadLibraryW(L"advapi32.dll"), "RegOpenKeyExA");
+
+	typedef LSTATUS(WINAPI* tRegQueryValueExA)(HKEY hKey, LPCSTR lpValueName,
+		LPDWORD lpReserved, LPDWORD lpType, LPBYTE lpData, LPDWORD lpcbDatan);
+	static tRegQueryValueExA RegQueryValueExA = (tRegQueryValueExA)GetProcAddress(LoadLibraryW(L"advapi32.dll"), "RegQueryValueExA");
+
+	typedef LSTATUS(WINAPI* tRegSetValueExA)(HKEY hKey, LPCSTR lpValueName, DWORD Reserved,
+		DWORD dwType, const BYTE* lpData, DWORD cbData);
+	static tRegSetValueExA RegSetValueExA = (tRegSetValueExA)GetProcAddress(LoadLibraryW(L"advapi32.dll"), "RegSetValueExA");
+
+	typedef LSTATUS(WINAPI* tRegCloseKey)(HKEY hKe);
+	static tRegCloseKey RegCloseKey = (tRegCloseKey)GetProcAddress(LoadLibraryW(L"advapi32.dll"), "RegCloseKey");
+
+	bool bChanged = false;
+	HKEY hkResult;
+	if (RegOpenKeyExA(HKEY_LOCAL_MACHINE, "Software\\Policies\\Microsoft\\Windows\\CurrentVersion\\Internet Settings", 0, KEY_READ | KEY_WRITE, &hkResult) == ERROR_SUCCESS)
+	{
+		DWORD value;
+		DWORD newValue = 0;
+		DWORD dwSize = sizeof(value);
+		LSTATUS regQuery = RegQueryValueExA(hkResult, "DisableCachingOfSSLPages", 0, NULL, (LPBYTE)&value, &dwSize);
+		if (regQuery == ERROR_SUCCESS)
+		{
+			if (value == 0x1)
+			{
+				RegSetValueExA(hkResult, "DisableCachingOfSSLPages", 0, REG_DWORD, (LPBYTE)&newValue, dwSize);
+				bChanged = true;
+			}
+		}
+		else if (regQuery == ERROR_FILE_NOT_FOUND) // if key doesnt exist, create it
+		{
+			RegSetValueExA(hkResult, "DisableCachingOfSSLPages", 0, REG_DWORD, (LPBYTE)&newValue, dwSize);
+			bChanged = true;
+		}
+		RegCloseKey(hkResult);
+	}
+
+	if (bChanged == true)
+	{
+		MessageBoxA(NULL, "Restart the program\n\nIf this pop-up window keeps showing up: Open \"Internet Options\", "
+			"Go to \"Advanced\" tab and disable \"Do not save encrypted pages to disk\". Press \"Apply\" and \"OK\"",
+			"Updated faulty options", MB_OK);
+		exit(EXIT_SUCCESS);
+	}
 }

@@ -1,10 +1,15 @@
 #pragma once
 
+#include <cpr/cpr.h>
+
+#include "Definitions.h"
 #include "Auth.h"
 
 class LCU
 {
 public:
+
+	static inline cpr::Session session;
 
 	static inline ClientInfo league;
 	static inline ClientInfo riot;

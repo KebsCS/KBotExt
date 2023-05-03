@@ -1,8 +1,13 @@
-﻿#include <chrono>
+﻿#pragma comment (lib, "cpr.lib")
+//#pragma comment (lib, "libcurl.lib")
+#pragma comment (lib, "Ws2_32.lib")
+#pragma comment (lib, "Wldap32.lib")
+#pragma comment (lib, "Crypt32.lib")
+
+#include <chrono>
 #include <string>
 #include <thread>
 
-#include "HTTP.h"
 #include "Definitions.h"
 #include "Includes.h"
 #include "DirectX.h"

@@ -2,7 +2,6 @@
 
 #include "Definitions.h"
 #include "Includes.h"
-#include "HTTP.h"
 #include "LCU.h"
 #include "Utils.h"
 #include "Misc.h"
@@ -401,18 +400,18 @@ public:
 					JSONCPP_STRING err;
 					Json::Value rootPurchaseHistory;
 
-					std::string storeHeader = LCU::GetStoreHeader();
+					cpr::Header storeHeader = Utils::StringToHeader(LCU::GetStoreHeader());
+
 					std::string storeUrl = LCU::Request("GET", "/lol-store/v1/getStoreUrl");
 					storeUrl.erase(std::remove(storeUrl.begin(), storeUrl.end(), '"'), storeUrl.end());
 
-					std::string purchaseHistory = HTTP::Request("GET", storeUrl + "/storefront/v3/history/purchase", "", storeHeader);
+					std::string purchaseHistory = cpr::Get(cpr::Url{ storeUrl + "/storefront/v3/history/purchase" }, cpr::Header{ storeHeader }).text;
 					if (reader->parse(purchaseHistory.c_str(), purchaseHistory.c_str() + static_cast<int>(purchaseHistory.length()), &rootPurchaseHistory, &err))
 					{
 						std::string accountId = rootPurchaseHistory["player"]["accountId"].asString();
 						std::string transactionId = rootPurchaseHistory["transactions"][0]["transactionId"].asString();
-						result = HTTP::Request("POST", storeUrl + "/storefront/v3/refund",
-							"{\"accountId\":" + accountId + ",\"transactionId\":\"" + transactionId + "\",\"inventoryType\":\"CHAMPION\",\"language\":\"EN_US\"}",
-							storeHeader);
+						result = cpr::Post(cpr::Url{ storeUrl + "/storefront/v3/refund" }, cpr::Header{ storeHeader },
+							cpr::Body{ "{\"accountId\":" + accountId + ",\"transactionId\":\"" + transactionId + "\",\"inventoryType\":\"CHAMPION\",\"language\":\"EN_US\"}" }).text;
 					}
 					else
 					{
@@ -594,7 +593,7 @@ public:
 			ImGui::SeparatorText("Free ARAM Boost");
 
 			static std::string storeToken;
-			static std::string storeHeader;
+			static cpr::Header storeHeader;
 			static std::string accountId;
 			static std::string boosted;
 			static int ownedRP;
@@ -862,21 +861,14 @@ public:
 						if (reader3->parse(authorizations.c_str(), authorizations.c_str() + static_cast<int>(authorizations.length()), &root3, &err3))
 						{
 							storeToken = root3["token"].asString();
-							storeHeader = R"(Connection: keep-alive
-AUTHORIZATION: Bearer )" + storeToken + "\r\n" +
-R"(Content-Type: application/json
-Accept: application/json
-X-Requested-With: XMLHttpRequest
-User-Agent: Mozilla/5.0 (Windows NT 6.2; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) LeagueOfLegendsClient/11.16.390.1945 (CEF 74) Safari/537.36
-Accept-Language: en-US,en;q=0.9
-)";
+							storeHeader = Utils::StringToHeader(LCU::GetStoreHeader());
 							if (bNeedNewJwt)
 							{
 								// buy a champion
 								std::string purchaseBody = R"({"accountId":)" + accountId + R"(,"items":[{"inventoryType":"CHAMPION","itemId":)" + std::to_string(idToBuy)
 									+ R"(,"ipCost":null,"rpCost":)" + std::to_string(priceToBuy) + R"(,"quantity":1}]})";
 								std::string purchaseUrl = getStoreUrl + "/storefront/v3/purchase?language=en_US";
-								std::string purchase = HTTP::Request("POST", purchaseUrl, purchaseBody, storeHeader);
+								std::string purchase = cpr::Post(cpr::Url{ purchaseUrl }, cpr::Body{ purchaseBody }, cpr::Header{ storeHeader }).text;
 								boosted = "Bought " + ChampIdToName(idToBuy) + " - dont play this champion, or you wont be able to refund RP";
 							}
 
@@ -917,18 +909,11 @@ Accept-Language: en-US,en;q=0.9
 				if (reader->parse(authorizations.c_str(), authorizations.c_str() + static_cast<int>(authorizations.length()), &root, &err))
 				{
 					storeToken = root["token"].asString();
-					storeHeader = R"(Connection: keep-alive
-AUTHORIZATION: Bearer )" + storeToken + "\r\n" +
-R"(Content-Type: application/json
-Accept: application/json
-X-Requested-With: XMLHttpRequest
-User-Agent: LeagueOfLegendsClient/11.17.393.0607 (CEF 91)
-Accept-Language: en-US,en;q=0.9
-)";
+					storeHeader = Utils::StringToHeader(LCU::GetStoreHeader());
 				}
 
 				std::string historyUrl = getStoreUrl + "/storefront/v3/history/purchase?language=en_US";
-				std::string getHistory = HTTP::Request("GET", historyUrl, "", storeHeader);
+				std::string getHistory = cpr::Get(cpr::Url{ historyUrl }, cpr::Header{ storeHeader }).text;
 				if (reader->parse(getHistory.c_str(), getHistory.c_str() + static_cast<int>(getHistory.length()), &root, &err))
 				{
 					if (root["transactions"].isArray())
@@ -946,7 +931,7 @@ Accept-Language: en-US,en;q=0.9
 										{
 											std::string refundUrl = getStoreUrl + "/storefront/v3/refund";
 											std::string refundBody = R"({"accountId":)" + accountId + R"(,"transactionId":")" + transaction["transactionId"].asString() + R"(","inventoryType":"CHAMPION","language":"en_US"})";
-											HTTP::Request("POST", refundUrl, refundBody, storeHeader);
+											cpr::Post(cpr::Url{ refundUrl }, cpr::Body{ refundBody }, cpr::Header{ storeHeader });
 											boosted = "Refunded";
 										}
 									}
@@ -1078,8 +1063,8 @@ Accept-Language: en-US,en;q=0.9
 			JSONCPP_STRING err;
 
 			LCU::SetCurrentClientRiotInfo();
-			std::string getChat = HTTP::Request("GET", "https://127.0.0.1/chat/v5/participants/champ-select", "",
-				LCU::riot.header, "", "", LCU::riot.port);
+			std::string getChat = cpr::Get(cpr::Url{ std::format("https://127.0.0.1:{}/chat/v5/participants/champ-select", LCU::riot.port) },
+				cpr::Header{ Utils::StringToHeader(LCU::riot.header) }).text;
 			if (!reader->parse(getChat.c_str(), getChat.c_str() + static_cast<int>(getChat.length()), &root, &err))
 			{
 				continue;
@@ -1211,7 +1196,12 @@ Accept-Language: en-US,en;q=0.9
 				const std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
 				JSONCPP_STRING err;
 
-				std::string getSearchState = LCU::Request("GET", "https://127.0.0.1/lol-lobby/v2/lobby/matchmaking/search-state");
+				cpr::Session session;
+				session.SetVerifySsl(false);
+				session.SetHeader(Utils::StringToHeader(LCU::league.header));
+				session.SetUrl(std::format("https://127.0.0.1:{}/lol-lobby/v2/lobby/matchmaking/search-state", LCU::league.port));
+
+				std::string getSearchState = session.Get().text;
 				if (!reader->parse(getSearchState.c_str(), getSearchState.c_str() + static_cast<int>(getSearchState.length()), &rootSearch, &err))
 				{
 					continue;
@@ -1230,7 +1220,8 @@ Accept-Language: en-US,en;q=0.9
 					continue;
 				}
 
-				std::string getChampSelect = LCU::Request("GET", "https://127.0.0.1/lol-champ-select/v1/session");
+				session.SetUrl(std::format("https://127.0.0.1:{}/lol-champ-select/v1/session", LCU::league.port));
+				std::string getChampSelect = session.Get().text;
 				if (getChampSelect.find("RPC_ERROR") != std::string::npos) // game found but champ select error means queue pop
 				{
 					onChampSelect = true;
@@ -1238,7 +1229,9 @@ Accept-Language: en-US,en;q=0.9
 					isPicked = false;
 					if (S.gameTab.autoAcceptEnabled)
 					{
-						LCU::Request("POST", "https://127.0.0.1/lol-matchmaking/v1/ready-check/accept", "");
+						session.SetUrl(std::format("https://127.0.0.1:{}/lol-matchmaking/v1/ready-check/accept", LCU::league.port));
+						session.SetBody("");
+						session.Post();
 					}
 					std::this_thread::sleep_for(std::chrono::milliseconds(10));
 					continue;
@@ -1264,7 +1257,8 @@ Accept-Language: en-US,en;q=0.9
 					if ((S.gameTab.instalockEnabled || S.gameTab.autoBanId) && !isPicked)
 					{
 						// get own summid
-						std::string getSession = LCU::Request("GET", "https://127.0.0.1/lol-login/v1/session");
+						session.SetUrl(std::format("https://127.0.0.1:{}/lol-login/v1/session", LCU::league.port));
+						std::string getSession = session.Get().text;
 						if (!reader->parse(getSession.c_str(), getSession.c_str() + static_cast<int>(getSession.length()), &rootSession, &err))
 						{
 							continue;
@@ -1297,8 +1291,9 @@ Accept-Language: en-US,en;q=0.9
 												if (useBackupId)
 													currentPick = useBackupId;
 
-												LCU::Request("PATCH", "https://127.0.0.1/lol-champ-select/v1/session/actions/" + actions[i]["id"].asString(),
-													R"({"completed":true,"championId":)" + std::to_string(currentPick) + "}");
+												session.SetUrl(std::format("https://127.0.0.1:{}/lol-champ-select/v1/session/actions/{}", LCU::league.port, actions[i]["id"].asString()));
+												session.SetBody(R"({"completed":true,"championId":)" + std::to_string(currentPick) + "}");
+												session.Patch();
 											}
 										}
 										else
@@ -1312,8 +1307,9 @@ Accept-Language: en-US,en;q=0.9
 										{
 											std::this_thread::sleep_for(std::chrono::milliseconds(S.gameTab.autoBanDelay));
 
-											LCU::Request("PATCH", "https://127.0.0.1/lol-champ-select/v1/session/actions/" + actions[i]["id"].asString(),
-												R"({"completed":true,"championId":)" + std::to_string(S.gameTab.autoBanId) + "}");
+											session.SetUrl(std::format("https://127.0.0.1:{}/lol-champ-select/v1/session/actions/{}", LCU::league.port, actions[i]["id"].asString()));
+											session.SetBody(R"({"completed":true,"championId":)" + std::to_string(S.gameTab.autoBanId) + "}");
+											session.Patch();
 										}
 									}
 								}
@@ -1332,7 +1328,9 @@ Accept-Language: en-US,en;q=0.9
 										{
 											if (S.gameTab.dodgeOnBan)
 											{
-												LCU::Request("POST", R"(https://127.0.0.1/lol-login/v1/session/invoke?destination=lcdsServiceProxy&method=call&args=["","teambuilder-draft","quitV2",""])", "");
+												session.SetUrl(std::format("https://127.0.0.1:{}", LCU::league.port) + R"(/lol-login/v1/session/invoke?destination=lcdsServiceProxy&method=call&args=["","teambuilder-draft","quitV2",""])");
+												session.SetBody("");
+												session.Post();
 											}
 											else if (S.gameTab.backupId)
 											{
@@ -1407,8 +1405,8 @@ Accept-Language: en-US,en;q=0.9
 						summNames = L"";
 
 						LCU::SetCurrentClientRiotInfo();
-						std::string participants = HTTP::Request("GET", "https://127.0.0.1/chat/v5/participants/champ-select", "",
-							LCU::riot.header, "", "", LCU::riot.port);
+						std::string participants = cpr::Get(cpr::Url{ std::format("https://127.0.0.1:{}/chat/v5/participants/champ-select", LCU::riot.port) },
+							cpr::Header{ Utils::StringToHeader(LCU::riot.header) }).text;
 						if (reader->parse(participants.c_str(), participants.c_str() + static_cast<int>(participants.length()), &rootPartcipants, &err))
 						{
 							auto participantsArr = rootPartcipants["participants"];
@@ -1520,7 +1518,7 @@ Accept-Language: en-US,en;q=0.9
 		}
 		std::string currentPageId = rootCurrentPage["id"].asString();
 
-		std::stringstream ssOpgg(HTTP::Request("GET", "https://www.op.gg/champions/" + Utils::ToLower(currentChampionName)));
+		std::stringstream ssOpgg(cpr::Get(cpr::Url{ "https://www.op.gg/champions/" + Utils::ToLower(currentChampionName) }).text);
 		std::vector<std::string>runes;
 		std::string primaryPerk, secondaryPerk;
 

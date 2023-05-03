@@ -70,7 +70,7 @@ std::string Auth::MakeLeagueHeader(const ClientInfo& info)
 		"Sec-Fetch-Dest: empty" + "\r\n" +
 		"Referer: https://127.0.0.1:" + std::to_string(info.port) + "/index.html" + "\r\n" +
 		"Accept-Encoding: gzip, deflate, br" + "\r\n" +
-		"Accept-Language: en-US,en;q=0.9";
+		"Accept-Language: en-US,en;q=0.9\r\n\r\n";
 }
 
 std::string Auth::MakeRiotHeader(const ClientInfo& info)
@@ -91,7 +91,7 @@ std::string Auth::MakeRiotHeader(const ClientInfo& info)
 		"sec-ch-ua: Chromium" + "\r\n" +
 		"Referer: https://127.0.0.1:" + std::to_string(info.port) + "/index.html" + "\r\n" +
 		"Accept-Encoding: gzip, deflate, br" + "\r\n" +
-		"Accept-Language: en-US,en;q=0.9";
+		"Accept-Language: en-US,en;q=0.9\r\n\r\n";
 }
 
 DWORD Auth::GetProcessId(const std::wstring& processName)

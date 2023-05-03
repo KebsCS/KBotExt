@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cpr/cpr.h>
+
 class Utils
 {
 public:
@@ -22,7 +24,7 @@ public:
 	static std::wstring StringToWstring(std::string str);
 	static std::string WstringToString(std::wstring wstr);
 
-	static std::vector<std::string> StringSplit(std::string str, std::string separator);
+	static std::vector<std::string> StringSplit(std::string str, std::string separator, int max = -1);
 
 	static std::string RandomString(size_t size);
 	static std::wstring RandomWString(size_t size, std::pair<unsigned, unsigned>range = { 0,0 });
@@ -43,4 +45,6 @@ public:
 	static bool HideFile(std::string file);
 
 	static bool RunAsUser(LPCWSTR lpApplicationName, LPWSTR lpCommandLine);
+
+	static cpr::Header StringToHeader(const std::string& str);
 };
