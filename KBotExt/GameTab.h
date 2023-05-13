@@ -1064,7 +1064,7 @@ public:
 
 			LCU::SetCurrentClientRiotInfo();
 			std::string getChat = cpr::Get(cpr::Url{ std::format("https://127.0.0.1:{}/chat/v5/participants/champ-select", LCU::riot.port) },
-				cpr::Header{ Utils::StringToHeader(LCU::riot.header) }).text;
+				cpr::Header{ Utils::StringToHeader(LCU::riot.header) }, cpr::VerifySsl{ false }).text;
 			if (!reader->parse(getChat.c_str(), getChat.c_str() + static_cast<int>(getChat.length()), &root, &err))
 			{
 				continue;
@@ -1406,7 +1406,7 @@ public:
 
 						LCU::SetCurrentClientRiotInfo();
 						std::string participants = cpr::Get(cpr::Url{ std::format("https://127.0.0.1:{}/chat/v5/participants/champ-select", LCU::riot.port) },
-							cpr::Header{ Utils::StringToHeader(LCU::riot.header) }).text;
+							cpr::Header{ Utils::StringToHeader(LCU::riot.header) }, cpr::VerifySsl{ false }).text;
 						if (reader->parse(participants.c_str(), participants.c_str() + static_cast<int>(participants.length()), &rootPartcipants, &err))
 						{
 							auto participantsArr = rootPartcipants["participants"];
