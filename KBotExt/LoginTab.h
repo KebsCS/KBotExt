@@ -173,6 +173,10 @@ public:
 			ImGui::Text("Password:");
 			ImGui::InputText("##inputPassword", password, IM_ARRAYSIZE(password), ImGuiInputTextFlags_Password);
 
+			static char accountNote[32];
+			ImGui::Text("Account Note (for save):");
+			ImGui::InputText("##inputNote", accountNote, IM_ARRAYSIZE(accountNote));
+
 			if (ImGui::Button("Login") || ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Enter), false))
 			{
 				if (!std::string(username).empty() && !std::string(password).empty())
@@ -203,7 +207,7 @@ public:
 							root["accounts"] = Json::Value(Json::arrayValue);
 						Json::Value accArray = root["accounts"];
 
-						accArray.append(std::format("{0}:{1}", username, password));
+						accArray.append(std::format("{0}:{1}:{2}", username, password, accountNote));
 						root["accounts"] = accArray;
 
 						std::ofstream oFile(S.settingsFile);
@@ -309,9 +313,17 @@ public:
 						for (Json::Value::ArrayIndex i = 0; i < accArray.size(); ++i)
 						{
 							std::string acc = accArray[i].asString();
-							std::string accUsername = acc.substr(0, acc.find(":"));
-							std::string accPassword = acc.substr(acc.find(":") + 1);
-							if (ImGui::Button(accUsername.c_str()))
+
+							size_t firstColon = acc.find(":");
+							size_t secondColon = acc.find(":", firstColon + 1);
+
+							std::string accUsername = acc.substr(0, firstColon);
+							std::string accPassword = acc.substr(firstColon + 1, secondColon - firstColon - 1);
+							std::string accInfo = acc.substr(secondColon + 1);
+
+							std::string savedAccountButtonName = (accInfo.empty()) ? accUsername : accUsername + " -> " + accInfo;
+
+							if (ImGui::Button(savedAccountButtonName.c_str()))
 							{
 								result = Login(accUsername, accPassword);
 							}
