@@ -1034,7 +1034,11 @@ public:
 					if (root[i]["freeToPlay"].asBool() == true || root[i]["ownership"]["owned"].asBool() == true ||
 						(root[i]["ownership"].isMember("xboxGPReward") && root[i]["ownership"]["xboxGPReward"].asBool() == true))
 					{
-						std::pair<int, std::string > champ = { root[i]["id"].asInt() , root[i]["alias"].asString() };
+						std::string loadScreenPath = root[i]["baseLoadScreenPath"].asString();
+						size_t nameStart = loadScreenPath.find("ASSETS/Characters/") + strlen("ASSETS/Characters/");
+						std::string champName = loadScreenPath.substr(nameStart, loadScreenPath.find("/", nameStart) - nameStart);
+
+						std::pair<int, std::string > champ = { root[i]["id"].asInt() , champName };
 						temp.emplace_back(champ);
 					}
 				}
