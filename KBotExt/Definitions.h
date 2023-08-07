@@ -77,6 +77,7 @@ enum QueueID : const int
 	BlindPick = 430,
 	Flex = 440,
 	ARAM = 450,
+	Arena = 1700,
 	Clash = 700,
 	IntroBots = 830,
 	BeginnerBots = 840,

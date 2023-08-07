@@ -46,11 +46,14 @@ public:
 			if (ImGui::Button("ARURF"))
 				gameID = ARURF;
 
+			/*if (ImGui::Button("URF"))
+				gameID = 318;*/
+
 			if (ImGui::Button("Nexus Blitz"))
 				gameID = NexusBlitz;
 
-			/*if (ImGui::Button("URF"))
-				gameID = 318;*/
+			if (ImGui::Button("Arena"))
+				gameID = Arena;
 
 			ImGui::NextColumn();
 
