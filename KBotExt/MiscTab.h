@@ -440,6 +440,60 @@ public:
 			if (ImGui::Button("Check email of the account"))
 				result = LCU::Request("GET", "https://127.0.0.1/lol-email-verification/v1/email");
 
+			ImGui::Separator();
+
+			if (ImGui::Button("Tournament of Souls - unlock all"))
+			{
+				LCU::Request("POST", "/lol-marketing-preferences/v1/partition/sfm2023", R"({
+	"SmallConspiracyFan" : "True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True",
+	"SmallGwenPykeFan" : "True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True",
+	"SmallJhinFan" : "True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True",
+	"SmallSettFans" : "True,True,True,True,True,True,True,True,True,True,True,True,True,True,True",
+	"SmallShaco" : "True,True",
+	"hasNewAbility" : "False",
+	"hasNewFanLine" : "False",
+	"hasPlayedTutorial" : "True",
+	"hasSeenCelebration_Story" : "True",
+	"hasSeenLoadoutTutorial" : "True",
+	"hasSeenMapTutorial" : "True",
+	"loadout_active_e" : "2",
+	"loadout_active_q" : "1",
+	"loadout_active_r" : "2",
+	"loadout_active_w" : "2",
+	"numNodesUnlocked" : "20",
+	"progress" : "20"
+})");
+
+				Json::Value root;
+				Json::CharReaderBuilder builder;
+				const std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
+				JSONCPP_STRING err;
+				std::string getGrants = LCU::Request("GET", "/lol-rewards/v1/grants");
+
+				if (reader->parse(getGrants.c_str(), getGrants.c_str() + static_cast<int>(getGrants.length()), &root, &err))
+				{
+					if (root.isArray())
+					{
+						for (Json::Value::ArrayIndex i = 0; i < root.size(); i++)
+						{
+							auto grant = root[i];
+							for (Json::Value& reward : grant["rewardGroup"]["rewards"])
+							{
+								Json::Value body;
+								body["rewardGroupId"] = grant["info"]["rewardGroupId"].asString();
+								body["selections"] = {};
+								body["selections"].append(reward["id"].asString());
+
+								result += LCU::Request("POST", std::format("/lol-rewards/v1/grants/{}/select", grant["info"]["id"].asString()), body.toStyledString());
+							}
+						}
+					}
+				}
+			}
+
+			ImGui::SameLine();
+			ImGui::HelpMarker("You need reputation for this to work");
+
 			static Json::StreamWriterBuilder wBuilder;
 			static std::string sResultJson;
 			static char* cResultJson;
