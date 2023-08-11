@@ -288,6 +288,64 @@ public:
 				}
 			}
 
+			ImGui::SameLine();
+
+			if (ImGui::Button("Get email"))
+			{
+				cpr::Session session;
+				cpr::Header authHeader = {
+					{"Content-Type", "application/json"},
+					{"Accept-Encoding", "deflate"},
+					{"Upgrade-Insecure-Requests", "1"},
+					{"sec-ch-ua", R"("Not/A)Brand";v="99", "Google Chrome";v="115", "Chromium";v="115")"},
+					{"sec-ch-ua-platform", "\"Windows\""},
+					{"sec-ch-ua-mobile", "?0"},
+					{"User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36"},
+					{"Sec-Fetch-Site", "cross-site"},
+					{"Sec-Fetch-Mode", "navigate"},
+					{"Sec-Fetch-Dest", "document"},
+					{"Accept-Language", "en-US,en;q=0.9"},
+					{"Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7"},
+					{"Referer", "https://riotgames.zendesk.com/"},
+				};
+				session.SetHeader(authHeader);
+
+				session.SetUrl("https://auth.riotgames.com/authorize?redirect_uri=https://login.playersupport.riotgames.com/login_callback&client_id=player-support-zendesk&ui_locales=en-us%20en-us&response_type=code&scope=openid%20email");
+				session.Get();
+
+				Json::Value authData2;
+				authData2["language"] = "en_GB";
+				authData2["password"] = password;
+				authData2["region"] = Json::nullValue;
+				authData2["remember"] = false;
+				authData2["type"] = "auth";
+				authData2["username"] = username;
+
+				session.SetBody(authData2.toStyledString());
+				session.SetUrl("https://auth.riotgames.com/api/v1/authorization");
+				std::string r = session.Put().text;
+
+				Json::CharReaderBuilder builder;
+				const std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
+				JSONCPP_STRING err;
+				Json::Value rootAuth;
+				banCheck = r;
+				if (r.find("\"error\"") == std::string::npos && reader->parse(r.c_str(), r.c_str() + static_cast<int>(r.length()), &rootAuth, &err))
+				{
+					session.SetUrl(rootAuth["response"]["parameters"]["uri"].asString());
+					session.Get().text;
+
+					session.SetUrl("https://support-leagueoflegends.riotgames.com/hc/en-us/requests");
+					std::string support = session.Get().text;
+					std::regex regexStr("\"email\":(.*?),");
+					std::smatch m;
+					if (std::regex_search(support, m, regexStr))
+					{
+						banCheck = m.str();
+					}
+				}
+			}
+
 			ImGui::Columns(1);
 
 			ImGui::Separator();
