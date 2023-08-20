@@ -254,7 +254,7 @@ public:
 				std::smatch m;
 				if (std::regex_search(valoApi, m, regexStr))
 				{
-					session.UpdateHeader(cpr::Header{ { "User-Agent", m[1].str()} });
+					session.UpdateHeader(cpr::Header{ { "User-Agent", "RiotClient/" + m[1].str() + " rso-auth (Windows;10;;Home, x64)"}});
 				}
 
 				session.SetBody(authData.toStyledString());
