@@ -198,45 +198,45 @@ void direct_3d11_render::render_imgui(const HWND h_wnd)
 
 void direct_3d11_render::initialize_fonts()
 {
-	const ImGuiIO& io = ImGui::GetIO();
-	(void)io;
+    const ImGuiIO& io = ImGui::GetIO();
+    (void)io;
 
-	static constexpr ImWchar ranges[] = {0x1, 0x1FFFF, 0};
-	static ImFontConfig cfg;
-	cfg.OversampleH = cfg.OversampleV = 1;
+    static constexpr ImWchar ranges[] = {0x1, 0x1FFFF, 0};
+    static ImFontConfig cfg;
+    cfg.OversampleH = cfg.OversampleV = 1;
 
-	io.Fonts->AddFontDefault(&cfg);
+    io.Fonts->AddFontDefault(&cfg);
 
-	cfg.FontBuilderFlags |= ImGuiFreeTypeBuilderFlags_LoadColor;
-	cfg.MergeMode = true;
+    cfg.FontBuilderFlags |= ImGuiFreeTypeBuilderFlags_LoadColor;
+    cfg.MergeMode = true;
 
-	using t_sh_get_folder_path_w = HRESULT(WINAPI*)(HWND hwnd, int csidl, HANDLE h_token, DWORD dw_flags, LPWSTR psz_path);
+    using t_sh_get_folder_path_w = HRESULT(WINAPI*)(HWND hwnd, int csidl, HANDLE h_token, DWORD dw_flags, LPWSTR psz_path);
 	const auto sh_get_folder_path_w = reinterpret_cast<t_sh_get_folder_path_w>(GetProcAddress(LoadLibraryW(L"shell32.dll"), "SHGetFolderPathW"));
 
-	if (TCHAR sz_path[MAX_PATH]; SUCCEEDED(sh_get_folder_path_w(NULL, 0x0024/*CSIDL_WINDOWS*/, NULL, 0, sz_path)))
-	{
-		std::filesystem::path fonts_path(sz_path);
-		fonts_path = fonts_path / "Fonts";
+            if (TCHAR sz_path[MAX_PATH]; SUCCEEDED(sh_get_folder_path_w(NULL, 0x0024/*CSIDL_WINDOWS*/, NULL, 0, sz_path)))
+            {
+                std::filesystem::path fonts_path(sz_path);
+                fonts_path = fonts_path / "Fonts";
 
-		if (is_directory(fonts_path))
-		{
-			for (const std::vector<std::string> fonts = {
-				     "seguiemj.ttf", // emojis
-				     "segoeuib.ttf", // cyrillic
-				     "malgunbd.ttf", // korean
-				     "YuGothB.ttc", // japanese
-				     "simsun.ttc", // simplified chinese
-				     "msjh.ttc", // traditional chinese
-				     "seguisym.ttf", // symbols
-			     }; const auto& f : fonts)
-			{
-				if (const std::filesystem::path path = fonts_path / f; exists(path))
-				{
-					io.Fonts->AddFontFromFileTTF(path.string().c_str(), 13.0f, &cfg, ranges);
-				}
-			}
-		}
-	}
+                if (is_directory(fonts_path))
+                {
+                    for (const std::vector<std::string> fonts = {
+                             "seguiemj.ttf", // emojis
+                             "segoeuib.ttf", // cyrillic
+                             "malgunbd.ttf", // korean
+                             "YuGothB.ttc", // japanese
+                             "simsun.ttc", // simplified chinese
+                             "msjh.ttc", // traditional chinese
+                             "seguisym.ttf", // symbols
+                         }; const auto& f : fonts)
+                    {
+                        if (const std::filesystem::path path = fonts_path / f; exists(path))
+                        {
+                            io.Fonts->AddFontFromFileTTF(path.string().c_str(), 13.0f, &cfg, ranges);
+                        }
+                    }
+                }
+            }
 }
 
 void direct_3d11_render::menu_init()

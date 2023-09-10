@@ -11,15 +11,11 @@ struct champ_minimal
 	std::string base_load_screen_path;
 	bool bot_enabled;
 	std::string choose_vo_path;
-	//disabledQueues
 	bool free_to_play;
 	int id;
 	std::string name;
-
-	//ownership
 	bool free_to_play_reward;
 	int owned;
-
 	std::string purchased;
 	bool ranked_play_enabled;
 	std::pair<std::string, std::string> roles;
@@ -30,6 +26,9 @@ struct champ_minimal
 
 struct champ_mastery
 {
+	/**
+	 * \brief Variable 'champ_mastery::champion_id' is uninitialized. Always initialize a member variable (type.6)
+	 */
 	int champion_id;
 	int champion_level;
 	int champion_points = 0;
@@ -58,6 +57,9 @@ struct skin
 {
 	std::string name;
 	std::string inventory_type;
+	/**
+	 * \brief Variable 'skin::item_id' is uninitialized. Always initialize a member variable (type.6).
+	 */
 	int item_id;
 	std::string ownership_type;
 	bool is_vintage;
@@ -93,6 +95,9 @@ enum queue_id
 
 struct champ
 {
+	/**
+	 * \brief Variable 'champ::key' is uninitialized. Always initialize a member variable
+	 */
 	int key;
 	std::string name;
 	std::vector<std::pair<std::string, std::string>> skins;

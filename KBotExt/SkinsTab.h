@@ -54,9 +54,10 @@ public:
 							skin.is_vintage = i["payload"]["isVintage"].asBool();
 
 							std::string purchase = i["purchaseDate"].asString();
+							int _;
 							if (purchase.find('-') == std::string::npos && purchase.find(':') == std::string::npos)
 							{
-								sscanf(purchase.c_str(), "%04d%02d%02dT%02d%02d%02d",
+								_ = sscanf(purchase.c_str(), "%04d%02d%02dT%02d%02d%02d",
 								       &skin.purchase_date.tm_year, &skin.purchase_date.tm_mon,
 								       &skin.purchase_date.tm_mday,
 								       &skin.purchase_date.tm_hour, &skin.purchase_date.tm_min,
@@ -64,7 +65,7 @@ public:
 							}
 							else
 							{
-								sscanf(purchase.c_str(), "%04d-%02d-%02dT%02d:%02d:%02d",
+								_ = sscanf(purchase.c_str(), "%04d-%02d-%02dT%02d:%02d:%02d",
 								       &skin.purchase_date.tm_year, &skin.purchase_date.tm_mon,
 								       &skin.purchase_date.tm_mday,
 								       &skin.purchase_date.tm_hour, &skin.purchase_date.tm_min,
@@ -85,7 +86,7 @@ public:
 									{
 										if (skin.item_id == std::stoi(fst))
 										{
-											skin.name = snd.c_str();
+											skin.name = snd;
 											found = true;
 											break;
 										}

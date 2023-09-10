@@ -207,7 +207,7 @@ public:
 			{
 				s_url.insert(strlen("https://127.0.0.1"), ":" + std::to_string(lcu::league.port));
 			}
-			else if (s_url.find("https://") != std::string::npos || s_url.find("https://") != std::string::npos)
+			else if (s_url.find("https://") != std::string::npos)
 			{
 				if (custom_port != 443 && custom_port != 80)
 				{

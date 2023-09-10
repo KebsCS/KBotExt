@@ -1664,91 +1664,104 @@ public:
 	// TODO: rewrite and move these to config file
 	static std::string get_old_jwt(const std::string& acc_id, int& old_timestamp)
 	{
-		char* p_roaming;
-		size_t roaming_len;
-		_dupenv_s(&p_roaming, &roaming_len, "APPDATA");
-		std::string roaming = p_roaming;
-		std::string file_path = roaming + "\\tempar.json";
-
-		std::fstream file(file_path, std::ios_base::in);
-		if (file.good())
-		{
-			std::string config;
-			std::string temp;
-			while (std::getline(file, temp))
-			{
-				config += temp + "\n";
-			}
-
-			Json::Value root;
-			Json::CharReaderBuilder builder;
-			const std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
-			JSONCPP_STRING jsoncpp_string;
-
-			if (reader->parse(config.c_str(), config.c_str() + static_cast<int>(config.length()), &root, &jsoncpp_string))
-			{
-				if (auto t = root[acc_id]; !t.empty())
-				{
-					std::string old_jwt;
-					if (auto t2 = root[acc_id]["time"]; !t2.empty())
-						old_timestamp = t2.asUInt();
-					if (auto t2 = root[acc_id]["jwt"]; !t2.empty())
-						old_jwt = t2.asString();
-					file.close();
-					return old_jwt;
-				}
-			}
-		}
-		file.close();
-		return {};
+	    char* p_roaming;
+	    size_t roaming_len;
+	    
+	    if (_dupenv_s(&p_roaming, &roaming_len, "APPDATA") == 0 && p_roaming != nullptr)
+	    {
+	        std::string roaming = p_roaming;
+	        std::string file_path = roaming + "\\tempar.json";
+	        
+	        std::fstream file(file_path, std::ios_base::in);
+	        if (file.good())
+	        {
+	            std::string config;
+	            std::string temp;
+	            while (std::getline(file, temp))
+	            {
+	                config += temp + "\n";
+	            }
+	            
+	            Json::Value root;
+	            Json::CharReaderBuilder builder;
+	            const std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
+	            JSONCPP_STRING jsoncpp_string;
+	            
+	            if (reader->parse(config.c_str(), config.c_str() + static_cast<int>(config.length()), &root, &jsoncpp_string))
+	            {
+	                if (auto t = root[acc_id]; !t.empty())
+	                {
+	                    std::string old_jwt;
+	                    if (auto t2 = root[acc_id]["time"]; !t2.empty())
+	                        old_timestamp = static_cast<int>(t2.asUInt());
+	                    if (auto t2 = root[acc_id]["jwt"]; !t2.empty())
+	                        old_jwt = t2.asString();
+	                    file.close();
+	                    return old_jwt;
+	                }
+	            }
+	        }
+	        file.close();
+	        return {};
+	    }
+	    // You can log an error or return a default value as needed.
+	    return {}; // For simplicity, returning an empty string in case of failure.
 	}
 
 	static bool check_jwt(const std::string& acc_id)
 	{
-		char* p_roaming;
-		size_t roaming_len;
-		_dupenv_s(&p_roaming, &roaming_len, "APPDATA");
-		std::string roaming = p_roaming;
-		std::string file_path = roaming + "\\tempar.json";
-		unsigned timestamp = 0;
+	    char* p_roaming;
+	    size_t roaming_len;
+	    
+	    // Check the return value of _dupenv_s.
+	    if (_dupenv_s(&p_roaming, &roaming_len, "APPDATA") != 0 || p_roaming == nullptr)
+	    {
+		    return false;
+	    }
 
-		std::fstream file(file_path, std::ios_base::in);
-		if (file.good())
-		{
-			std::string config;
-			std::string temp;
-			while (std::getline(file, temp))
-			{
-				config += temp + "\n";
-			}
+	    // Successfully retrieved the "APPDATA" environment variable.
+	    std::string roaming = p_roaming;
+	    std::string file_path = roaming + "\\tempar.json";
+	    unsigned timestamp = 0;
 
-			Json::Value root;
-			Json::CharReaderBuilder builder;
-			const std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
-			JSONCPP_STRING err;
+	    std::fstream file(file_path, std::ios_base::in);
+	    if (file.good())
+	    {
+		    std::string config;
+		    std::string temp;
+		    while (std::getline(file, temp))
+		    {
+			    config += temp + "\n";
+		    }
 
-			if (reader->parse(config.c_str(), config.c_str() + static_cast<int>(config.length()), &root, &err))
-			{
-				if (auto t = root[acc_id]; !t.empty())
-				{
-					std::string old_jwt; // CppEntityAssignedButNoRead
-					if (auto t2 = root[acc_id]["time"]; !t2.empty())
-						timestamp = t2.asUInt();
-					if (auto t2 = root[acc_id]["jwt"]; !t2.empty())
-						old_jwt = t2.asString();
-				}
-				else
-					return true;
-			}
-		}
-		file.close();
+		    Json::Value root;
+		    Json::CharReaderBuilder builder;
+		    const std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
+		    JSONCPP_STRING err;
 
-		if (timestamp + 60 * 60 * 24 > time(nullptr))
-		{
-			return false;
-		}
-		return true;
+		    if (reader->parse(config.c_str(), config.c_str() + static_cast<int>(config.length()), &root, &err))
+		    {
+			    if (auto t = root[acc_id]; !t.empty())
+			    {
+				    std::string old_jwt; // CppEntityAssignedButNoRead
+				    if (auto t2 = root[acc_id]["time"]; !t2.empty())
+					    timestamp = t2.asUInt();
+				    if (auto t2 = root[acc_id]["jwt"]; !t2.empty())
+					    old_jwt = t2.asString();
+			    }
+			    else
+				    return true;
+		    }
+	    }
+	    file.close();
+
+	    if (static_cast<long long>(timestamp) + static_cast<long long>(60 * 60) * 24 > time(nullptr))
+	    {
+		    return false;
+	    }
+	    return true;
 	}
+
 
 #pragma warning ( push )
 #pragma warning (disable : 4996)
@@ -1756,35 +1769,36 @@ public:
 	{
 		char* p_roaming;
 		size_t roaming_len;
-		_dupenv_s(&p_roaming, &roaming_len, "APPDATA");
-		std::string roaming = p_roaming;
-		std::string file_path = roaming + "\\tempar.json";
-		// if file doesn't exist, create new one with {} so it can be parsed
-		if (!std::filesystem::exists(file_path))
+		if (_dupenv_s(&p_roaming, &roaming_len, "APPDATA") == 0 && p_roaming != nullptr)
 		{
-			std::ofstream file(file_path);
-			file << "{}";
-			file.close();
-		}
-
-		std::ifstream i_file(file_path);
-		if (i_file.good())
-		{
-			Json::Value root;
-			if (Json::Reader reader; reader.parse(i_file, root, false))
+			std::string roaming = p_roaming;
+			std::string file_path = roaming + "\\tempar.json";
+			// if file doesn't exist, create new one with {} so it can be parsed
+			if (!std::filesystem::exists(file_path))
 			{
-				root[acc_id]["jwt"] = jwt;
-				root[acc_id]["time"] = timestamp;
+				std::ofstream file(file_path);
+				file << "{}";
+				file.close();
+			}
 
-				if (!root.toStyledString().empty())
+			if (std::ifstream i_file(file_path); i_file.good())
+			{
+				Json::Value root;
+				if (Json::Reader reader; reader.parse(i_file, root, false))
 				{
-					std::ofstream o_file(file_path);
-					o_file << root.toStyledString() << std::endl;
-					o_file.close();
+					root[acc_id]["jwt"] = jwt;
+					root[acc_id]["time"] = timestamp;
+
+					if (!root.toStyledString().empty())
+					{
+						std::ofstream o_file(file_path);
+						o_file << root.toStyledString() << std::endl;
+						o_file.close();
+					}
 				}
+				i_file.close();
 			}
 		}
-		i_file.close();
 	}
 #pragma warning( pop )
 };

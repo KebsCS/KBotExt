@@ -75,11 +75,11 @@ public:
 								champ.free_to_play_reward = ownership_obj["freeToPlayReward"].asBool();
 								champ.owned = ownership_obj["owned"].asInt();
 								if (champ.owned)
-									i_champs_owned++;
+i_champs_owned++;
 								if (champ.free_to_play && !champ.owned)
-									champ.purchased = "0";
+champ.purchased = "0";
 								else
-									champ.purchased = champ_obj["purchased"].asString();
+champ.purchased = champ_obj["purchased"].asString();
 								champ.ranked_play_enabled = champ_obj["rankedPlayEnabled"].asBool();
 								// auto rolesObj = champObj.GetObject("roles"); // TODO
 								champ.square_portrait_path = champ_obj["squarePortraitPath"].asString();
@@ -176,7 +176,7 @@ public:
 			static char all_names_separator[64] = ",";
 			if (ImGui::Button("Copy names to clipboard##champsTab"))
 			{
-				std::string all_names = "";
+				std::string all_names;
 				for (const auto& [min, mas] : champs_all)
 				{
 					if (!min.owned)
@@ -196,33 +196,25 @@ public:
 			ImGui::Text("Champions owned: %d", i_champs_owned);
 			for (const auto& [min, mas] : champs_all)
 			{
-				if (!min.owned)
-					continue;
+			    if (!min.owned) continue;
 
-				int64_t t = std::stoll(min.purchased);
-				t /= 1000;
-				char buffer[50];
-				strftime(buffer, 100, "%Y-%m-%d %H:%M:%S", localtime(&t));
+			    int64_t purchase_timestamp = std::stoll(min.purchased) / 1000;
+			    std::tm purchase_time_tm;
+			    localtime_s(&purchase_time_tm, &purchase_timestamp);
+			    char purchase_time_str[100];
+			    std::strftime(purchase_time_str, sizeof(purchase_time_str), "%Y-%m-%d %H:%M:%S", &purchase_time_tm);
+			    std::string general_info = std::format(R"(name: {} purchased: {} id: {})", min.name, purchase_time_str, min.id);
 
-				std::string input_id = "champInput";
-				input_id.append(std::to_string(min.id));
-				char input[768];
+			    if (!mas.last_play_time.empty())
+			    {
+			        int64_t last_play_timestamp = std::stoll(mas.last_play_time) / 1000;
+			        std::tm last_play_time_tm;
+			        localtime_s(&last_play_time_tm, &last_play_timestamp);
+			        char last_play_time_str[100];
+			        std::strftime(last_play_time_str, sizeof(last_play_time_str), "%Y-%m-%d %H:%M:%S", &last_play_time_tm);
 
-				float text_height = (label_size.y + ImGui::GetStyle().FramePadding.y) * 3.f;
-				std::string text = std::format(R"(name: {}
-purchased: {}
-id: {})", min.name, buffer, min.id);
-
-				if (!mas.last_play_time.empty())
-				{
-					text_height = (label_size.y + ImGui::GetStyle().FramePadding.y) * 12.f;
-
-					t = std::stoll(mas.last_play_time);
-					t /= 1000;
-					strftime(buffer, 100, "%Y-%m-%d %H:%M:%S", localtime(&t));
-
-					text += std::format(R"(
-championLevel: {}
+			        std::string additional_info = std::format(
+R"(championLevel: {}
 championPoints: {}
 championPointsSinceLastLevel: {}
 championPointsUntilNextLevel: {}
@@ -232,19 +224,25 @@ formattedMasteryGoal: {}
 highestGrade: {}
 lastPlayTime: {}
 playerId: {}
-tokensEarned: {})", mas.champion_level, mas.champion_points, mas.champion_points_since_last_level,
-					                    mas.champion_points_until_next_level, mas.chest_granted,
-					                    mas.formatted_champion_points, mas.formatted_mastery_goal,
-					                    mas.highest_grade, buffer, mas.player_id, mas.tokens_earned);
-				}
+tokensEarned: {})",
+			            mas.champion_level, mas.champion_points, mas.champion_points_since_last_level, mas.champion_points_until_next_level,
+			            mas.chest_granted, mas.formatted_champion_points, mas.formatted_mastery_goal, mas.highest_grade, last_play_time_str,
+			            mas.player_id, mas.tokens_earned);
 
-				strcpy(input, text.c_str());
-				ImGui::PushID(input_id.c_str());
-				ImGui::InputTextMultiline("", input, IM_ARRAYSIZE(input), ImVec2(ImGui::GetWindowSize().x, text_height),
-				                          ImGuiInputTextFlags_ReadOnly);
-				ImGui::PopID();
+			        general_info += "\n" + additional_info;
+			    }
+
+			    std::string input_id = "champInput" + std::to_string(min.id);
+
+			    char input[768];
+			    strcpy(input, general_info.c_str());
+
+			    float text_height = (label_size.y + ImGui::GetStyle().FramePadding.y) * (mas.last_play_time.empty() ? 3.f : 12.f);
+
+			    ImGui::PushID(input_id.c_str());
+			    ImGui::InputTextMultiline("", input, IM_ARRAYSIZE(input), ImVec2(ImGui::GetWindowSize().x, text_height), ImGuiInputTextFlags_ReadOnly);
+			    ImGui::PopID();
 			}
-
 			ImGui::EndTabItem();
 		}
 		else

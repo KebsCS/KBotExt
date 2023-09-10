@@ -46,7 +46,7 @@ std::string auth::get_token(const std::string& cmd_line, bool riot_client)
 	{
 		std::string token = "riot:" + m[1].str();
 		char* token_array = token.data();
-		return base64_.encode(reinterpret_cast<unsigned char*>(token_array), token.size()).c_str();
+		return base64_.encode(reinterpret_cast<unsigned char*>(token_array), token.size());
 	}
 
 	return "";
@@ -168,10 +168,17 @@ std::wstring auth::get_process_command_line(const DWORD& process_id)
 
 	const DWORD peb_size = process_parameters_offset + 8; // size until ProcessParameters
 	const auto peb = static_cast<PBYTE>(malloc(peb_size));
+	if (peb == nullptr) {
+	    throw std::bad_alloc();
+	}
 	ZeroMemory(peb, peb_size);
 
 	const DWORD process_parameters_size = command_line_offset + 16;
 	const auto process_parameters = static_cast<PBYTE>(malloc(process_parameters_size));
+	if (process_parameters == nullptr) {
+	    free(peb);
+	    throw std::bad_alloc();
+	}
 	ZeroMemory(process_parameters, process_parameters_size);
 
 	if (wow)
@@ -207,9 +214,9 @@ std::wstring auth::get_process_command_line(const DWORD& process_id)
 			                                                                "NtWow64QueryInformationProcess64")); nt_query_information_process(
 			process_handle, 0, &pbi, sizeof(pbi), nullptr) != 0)
 		{
-			MessageBoxA(nullptr, "NtQueryInformationProcess failed", nullptr, 0);
-			CloseHandle(process_handle);
-			return {};
+		    MessageBoxA(nullptr, "NtWow64QueryInformationProcess64 failed", nullptr, 0);
+		    CloseHandle(process_handle);
+		    return {};
 		}
 
 		const auto nt_wow64_read_virtual_memory64 =
@@ -233,12 +240,19 @@ std::wstring auth::get_process_command_line(const DWORD& process_id)
 
 		const auto p_command_line = reinterpret_cast<unicode_string_wow64*>(process_parameters + command_line_offset);
 		const auto command_line_copy = static_cast<PWSTR>(malloc(p_command_line->maximum_length));
+		if (command_line_copy == nullptr)
+		{
+		    MessageBoxA(nullptr, "Memory allocation failed", nullptr, 0);
+		    CloseHandle(process_handle);
+		    return {};
+		}
+
 		if (nt_wow64_read_virtual_memory64(process_handle, p_command_line->buffer, command_line_copy,
 		                                   p_command_line->maximum_length, nullptr) != 0)
 		{
-			MessageBoxA(nullptr, "pCommandLine NtWow64ReadVirtualMemory64 failed", nullptr, 0);
-			CloseHandle(process_handle);
-			return {};
+		    MessageBoxA(nullptr, "pCommandLine NtWow64ReadVirtualMemory64 failed", nullptr, 0);
+		    CloseHandle(process_handle);
+		    return {};
 		}
 
 		result = std::wstring(command_line_copy);
@@ -246,7 +260,7 @@ std::wstring auth::get_process_command_line(const DWORD& process_id)
 	}
 	else
 	{
-		using process_basic_information = struct PROCESS_BASIC_INFORMATION
+		using process_basic_information = struct process_basic_information
 		{
 			LONG exit_status;
 			PVOID peb_base_address;
@@ -268,11 +282,11 @@ std::wstring auth::get_process_command_line(const DWORD& process_id)
 
 		if (const auto nt_query_information_process =
 				reinterpret_cast<t_nt_query_information_process>(GetProcAddress(GetModuleHandleA("ntdll.dll"), "NtQueryInformationProcess"));
-			nt_query_information_process(process_handle, 0, &pbi, sizeof(pbi), nullptr) != 0)
+		    nt_query_information_process(process_handle, 0, &pbi, sizeof(pbi), nullptr) != 0)
 		{
-			MessageBoxA(nullptr, "NtQueryInformationProcess failed", nullptr, 0);
-			CloseHandle(process_handle);
-			return {};
+		    MessageBoxA(nullptr, "NtQueryInformationProcess failed", nullptr, 0);
+		    CloseHandle(process_handle);
+		    return {};
 		}
 
 		if (!ReadProcessMemory(process_handle, pbi.peb_base_address, peb, peb_size, nullptr))
@@ -292,12 +306,19 @@ std::wstring auth::get_process_command_line(const DWORD& process_id)
 
 		const auto p_command_line = reinterpret_cast<unicode_string*>(process_parameters + command_line_offset);
 		const auto command_line_copy = static_cast<PWSTR>(malloc(p_command_line->maximum_length));
-		if (!ReadProcessMemory(process_handle, p_command_line->buffer, command_line_copy, p_command_line->maximum_length,
-		                       nullptr))
+		if (!command_line_copy)
+		{
+		    // Handle memory allocation failure
+		    MessageBoxA(nullptr, "Memory allocation for command_line_copy failed", nullptr, 0);
+		    CloseHandle(process_handle);
+		    return {};
+		}
+
+		if (!ReadProcessMemory(process_handle, p_command_line->buffer, command_line_copy, p_command_line->maximum_length, nullptr))
 		{
 			MessageBoxA(nullptr, "pCommandLine ReadProcessMemory failed", nullptr, 0);
-			CloseHandle(process_handle);
-			return {};
+		    CloseHandle(process_handle);
+		    return {};
 		}
 
 		result = std::wstring(command_line_copy);

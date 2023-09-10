@@ -241,7 +241,7 @@ bool utils::rename_exe()
 
 bool utils::hide_file(const std::string& file)
 {
-	if (const int attr = GetFileAttributesA(file.c_str()); (attr & FILE_ATTRIBUTE_HIDDEN) == 0)
+	if (const DWORD attr = GetFileAttributesA(file.c_str()); (attr & FILE_ATTRIBUTE_HIDDEN) == 0)
 	{
 		SetFileAttributesA(file.c_str(), attr | FILE_ATTRIBUTE_HIDDEN);
 		return true;
@@ -355,8 +355,7 @@ bool utils::run_as_user(const LPCWSTR lp_application_name, const LPWSTR lp_comma
 	create_process_with_token_w = reinterpret_cast<t_create_process_with_token_w>(GetProcAddress(
 		LoadLibraryW(L"advapi32.dll"), "CreateProcessWithTokenW"));
 
-	PROCESS_INFORMATION pi = {nullptr};
-	STARTUPINFOW si = {0};
+	PROCESS_INFORMATION pi = {nullptr};	STARTUPINFOW si = {0};
 	si.cb = sizeof(si);
 	si.wShowWindow = SW_SHOWNORMAL;
 	si.dwFlags = STARTF_USESHOWWINDOW;
@@ -384,9 +383,9 @@ cpr::Header utils::string_to_header(const std::string& str)
 	cpr::Header header;
 	for (const auto& line : string_split(str, "\r\n"))
 	{
-		if (const auto index = line.find(': ', 0); index != std::string::npos)
+		if (const auto index = line.find(": ", 0); index != std::string::npos)
 		{
-			header.insert({line.substr(0, index - 1), line.substr(index + 1)});
+			header.insert({line.substr(0, index), line.substr(static_cast<int>(index) + 2)});
 		}
 	}
 	return header;

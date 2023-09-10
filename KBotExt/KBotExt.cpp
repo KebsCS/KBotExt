@@ -20,7 +20,7 @@ direct_3d11_render direct_3d11;
 
 LRESULT WINAPI wnd_proc(HWND h_wnd, UINT msg, WPARAM w_param, LPARAM l_param);
 
-int WINAPI wWinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/, LPWSTR /*lpCmdLine*/, int /*nCmdShow*/)
+int WINAPI wWinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/, LPWSTR /*lpCmdLine*/, int /*nCmdShow*/ )
 {
 	LPWSTR* sz_arg_list;
 	int arg_count;
@@ -40,7 +40,8 @@ int WINAPI wWinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/, LPWSTR
 
 		AllocConsole();
 		FILE* f;
-		freopen_s(&f, "CONOUT$", "w", stdout);
+		errno_t _;
+		_ = freopen_s(&f, "CONOUT$", "w", stdout);
 
 		STARTUPINFOA startup_info = {};
 		startup_info.cb = sizeof(startup_info);
@@ -58,7 +59,9 @@ int WINAPI wWinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/, LPWSTR
 		{
 			CloseHandle(process_information.hProcess);
 			CloseHandle(process_information.hThread);
-			fclose(f);
+		    if (f && fclose(f) != 0) {
+		        perror("Error closing file");
+		    }
 			FreeConsole();
 			return 0;
 		}
@@ -70,7 +73,9 @@ int WINAPI wWinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/, LPWSTR
 		CloseHandle(process_information.hProcess);
 		CloseHandle(process_information.hThread);
 		std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-		fclose(f);
+    if (f && fclose(f) != 0) {
+        perror("Error closing file");
+    }
 		FreeConsole();
 	}
 	else
@@ -78,7 +83,8 @@ int WINAPI wWinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/, LPWSTR
 #ifndef NDEBUG
 		AllocConsole();
 		FILE* f;
-		freopen_s(&f, "CONOUT$", "w", stdout);
+		errno_t _;
+		_ = freopen_s(&f, "CONOUT$", "w", stdout);
 #endif
 
 		config::load();
@@ -203,7 +209,9 @@ int WINAPI wWinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/, LPWSTR
 		ImGui::DestroyContext();
 
 #ifndef NDEBUG
-		fclose(f);
+		if (fclose(f) != 0) {
+		    perror("Error closing file");
+		}
 		FreeConsole();
 #endif
 

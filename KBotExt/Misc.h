@@ -437,9 +437,9 @@ namespace ImGui
 
 		const ImGuiID popup_id = window->GetID(label);
 		bool popup_is_already_opened = IsPopupOpen(popup_id, 0); //ImGuiPopupFlags_AnyPopupLevel);
-		const char* s_activeidx_value1 = nullptr;
-		items_getter(&data, *current_item, &s_activeidx_value1);
-		const bool popup_needs_to_be_opened = (input[0] != 0) && (s_activeidx_value1 && strcmp(input, s_activeidx_value1));
+		const char* s_active_idx_value1 = nullptr;
+		items_getter(&data, *current_item, &s_active_idx_value1);
+		const bool popup_needs_to_be_opened = (input[0] != 0) && (s_active_idx_value1 && strcmp(input, s_active_idx_value1));
 		bool popup_just_opened = false;
 
 		IM_ASSERT(
@@ -448,10 +448,10 @@ namespace ImGui
 
 		const ImGuiStyle& style = g.Style;
 
-		const float arrow_size = (flags & ImGuiComboFlags_NoArrowButton) ? 0.0f : GetFrameHeight();
+		const float arrow_size = flags & ImGuiComboFlags_NoArrowButton ? 0.0f : GetFrameHeight();
 		const ImVec2 label_size = CalcTextSize(label, nullptr, true);
 		const float expected_w = CalcItemWidth();
-		const float w = (flags & ImGuiComboFlags_NoPreview) ? arrow_size : expected_w;
+		const float w = flags & ImGuiComboFlags_NoPreview ? arrow_size : expected_w;
 		const ImRect frame_bb(window->DC.CursorPos,
 		                      ImVec2(window->DC.CursorPos.x + w,
 		                             window->DC.CursorPos.y + label_size.y + style.FramePadding.y * 2.0f));
@@ -678,9 +678,9 @@ namespace ImGui
 
 		if (arrow_scroll && *current_item > -1)
 		{
-			const char* s_activeidx_value2 = nullptr;
-			items_getter(&data, *current_item, &s_activeidx_value2);
-			strncpy(input, s_activeidx_value2, input_len);
+			const char* s_active_idx_value2 = nullptr;
+			items_getter(&data, *current_item, &s_active_idx_value2);
+			strncpy(input, s_active_idx_value2, input_len);
 			ImGuiWindow* wnd = FindWindowByName(name);
 			const ImGuiID id = wnd->GetID("##inputText");
 			ImGuiInputTextState* state = GetInputTextState(id);
@@ -694,9 +694,9 @@ namespace ImGui
 		EndChild();
 		EndPopup();
 
-		const char* s_activeidx_value3 = nullptr;
-		items_getter(&data, *current_item, &s_activeidx_value3);
-		const bool ret1 = (selection_changed && (s_activeidx_value3 && !strcmp(s_activeidx_value3, input)));
+		const char* s_active_idx_value3 = nullptr;
+		items_getter(&data, *current_item, &s_active_idx_value3);
+		const bool ret1 = selection_changed && (s_active_idx_value3 && !strcmp(s_active_idx_value3, input));
 
 		const bool widget_ret = done || done2 || ret1;
 
