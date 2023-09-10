@@ -4,82 +4,88 @@
 #include "Includes.h"
 #include "LCU.h"
 
-class SkinsTab
+class skins_tab
 {
 public:
-	static void Render()
+	static void render()
 	{
-		static bool bOnOpen = true;
-		static bool bSortOnOpen = false;
+		static bool b_on_open = true;
+		static bool b_sort_on_open = false;
 
 		if (ImGui::BeginTabItem("Skins"))
 		{
 			ImGui::Text("Sort by: ");
 			ImGui::SameLine();
 
-			static int iSort = 0;
-			static int iLastSort = -1;
-			ImGui::RadioButton("Alphabetically", &iSort, 0);
+			static int i_sort = 0;
+			static int i_last_sort = -1;
+			ImGui::RadioButton("Alphabetically", &i_sort, 0);
 			ImGui::SameLine();
-			ImGui::RadioButton("Purchase date", &iSort, 1);
+			ImGui::RadioButton("Purchase date", &i_sort, 1);
 			ImGui::SameLine();
-			ImGui::RadioButton("ID", &iSort, 2);
+			ImGui::RadioButton("ID", &i_sort, 2);
 
-			if (bOnOpen)
+			if (b_on_open)
 			{
-				bOnOpen = false;
-				bSortOnOpen = true;
-				ownedSkins.clear();
+				b_on_open = false;
+				b_sort_on_open = true;
+				owned_skins.clear();
 
 				static Json::Value root;
 				static Json::CharReaderBuilder builder;
 				static const std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
 				static JSONCPP_STRING err;
 
-				std::string getSkins = LCU::Request("GET", "https://127.0.0.1/lol-inventory/v2/inventory/CHAMPION_SKIN");
+				std::string get_skins =
+					lcu::request("GET", "https://127.0.0.1/lol-inventory/v2/inventory/CHAMPION_SKIN");
 
-				if (reader->parse(getSkins.c_str(), getSkins.c_str() + static_cast<int>(getSkins.length()), &root, &err))
+				if (reader->parse(get_skins.c_str(), get_skins.c_str() + static_cast<int>(get_skins.length()), &root,
+				                  &err))
 				{
 					if (root.isArray())
 					{
-						for (Json::Value::ArrayIndex i = 0; i < root.size(); ++i)
+						for (auto& i : root)
 						{
-							Skin skin;
+							skin skin;
 
-							skin.inventoryType = root[i]["inventoryType"].asString().c_str();;
-							skin.itemId = root[i]["itemId"].asInt();
-							skin.ownershipType = root[i]["ownershipType"].asString().c_str();
-							skin.isVintage = root[i]["payload"]["isVintage"].asBool();
+							skin.inventory_type = i["inventoryType"].asString();
+							skin.item_id = i["itemId"].asInt();
+							skin.ownership_type = i["ownershipType"].asString();
+							skin.is_vintage = i["payload"]["isVintage"].asBool();
 
-							std::string purchase = root[i]["purchaseDate"].asString().c_str();
-							if (purchase.find("-") == std::string::npos && purchase.find(":") == std::string::npos)
+							std::string purchase = i["purchaseDate"].asString();
+							if (purchase.find('-') == std::string::npos && purchase.find(':') == std::string::npos)
 							{
 								sscanf(purchase.c_str(), "%04d%02d%02dT%02d%02d%02d",
-									&skin.purchaseDate.tm_year, &skin.purchaseDate.tm_mon, &skin.purchaseDate.tm_mday,
-									&skin.purchaseDate.tm_hour, &skin.purchaseDate.tm_min, &skin.purchaseDate.tm_sec);
+								       &skin.purchase_date.tm_year, &skin.purchase_date.tm_mon,
+								       &skin.purchase_date.tm_mday,
+								       &skin.purchase_date.tm_hour, &skin.purchase_date.tm_min,
+								       &skin.purchase_date.tm_sec);
 							}
 							else
 							{
 								sscanf(purchase.c_str(), "%04d-%02d-%02dT%02d:%02d:%02d",
-									&skin.purchaseDate.tm_year, &skin.purchaseDate.tm_mon, &skin.purchaseDate.tm_mday,
-									&skin.purchaseDate.tm_hour, &skin.purchaseDate.tm_min, &skin.purchaseDate.tm_sec);
+								       &skin.purchase_date.tm_year, &skin.purchase_date.tm_mon,
+								       &skin.purchase_date.tm_mday,
+								       &skin.purchase_date.tm_hour, &skin.purchase_date.tm_min,
+								       &skin.purchase_date.tm_sec);
 							}
-							skin.purchaseDate.tm_year -= 1901;
-							skin.purchaseDate.tm_mon -= 1;
+							skin.purchase_date.tm_year -= 1901;
+							skin.purchase_date.tm_mon -= 1;
 
-							skin.qunatity = root[i]["quantity"].asInt();
-							skin.uuid = root[i]["uuid"].asString().c_str();
+							skin.quantity = i["quantity"].asInt();
+							skin.uuid = i["uuid"].asString();
 
-							if (!champSkins.empty())
+							if (!champ_skins.empty())
 							{
 								bool found = false;
-								for (const auto& champ : champSkins)
+								for (const auto& [key, name, skins] : champ_skins)
 								{
-									for (const auto& s : champ.skins)
+									for (const auto& [fst, snd] : skins)
 									{
-										if (skin.itemId == std::stoi(s.first))
+										if (skin.item_id == std::stoi(fst))
 										{
-											skin.name = s.second.c_str();
+											skin.name = snd.c_str();
 											found = true;
 											break;
 										}
@@ -88,68 +94,69 @@ public:
 										break;
 								}
 							}
-							ownedSkins.emplace_back(skin);
+							owned_skins.emplace_back(skin);
 						}
 					}
 				}
 			}
 
-			if ((iLastSort != iSort) || bSortOnOpen)
+			if (i_last_sort != i_sort || b_sort_on_open)
 			{
-				bSortOnOpen = false;
-				iLastSort = iSort;
-				switch (iSort)
+				b_sort_on_open = false;
+				i_last_sort = i_sort;
+				switch (i_sort)
 				{
-					// alphabetically
 				case 0:
-					std::sort(ownedSkins.begin(), ownedSkins.end(), [](const Skin& lhs, const Skin& rhs) {
+					std::ranges::sort(owned_skins, [](const skin& lhs, const skin& rhs) {
 						return lhs.name < rhs.name;
-						});
+					});
 					break;
-					// purchase date
 				case 1:
-					std::sort(ownedSkins.begin(), ownedSkins.end(), [](Skin lhs, Skin rhs) {
-						return mktime(&lhs.purchaseDate) < mktime(&rhs.purchaseDate);
-						});
+					std::ranges::sort(owned_skins, [](skin lhs, skin rhs) {
+						return mktime(&lhs.purchase_date) < mktime(&rhs.purchase_date);
+					});
 					break;
-					// id
 				case 2:
-					std::sort(ownedSkins.begin(), ownedSkins.end(), [](const Skin& lhs, const Skin& rhs) {
-						return lhs.itemId < rhs.itemId;
-						});
+					std::ranges::sort(owned_skins, [](const skin& lhs, const skin& rhs) {
+						return lhs.item_id < rhs.item_id;
+					});
 					break;
+				default: ;
 				}
 			}
 
 			ImGui::SameLine();
-			static char allNamesSeparator[64] = ",";
+			static char all_names_separator[64] = ",";
 			if (ImGui::Button("Copy names to clipboard##skinsTab"))
 			{
-				std::string allNames = "";
-				for (const Skin& skin : ownedSkins)
+				std::string all_names;
+				for (const auto& [name, inventoryType, itemId, ownershipType, isVintage, purchaseDate, quantity, uuid] :
+				     owned_skins)
 				{
-					if (skin.name == "")
+					if (name.empty())
 						continue;
-					allNames += skin.name + allNamesSeparator;
+					all_names += name + all_names_separator;
 				}
-				Utils::CopyToClipboard(allNames);
+				utils::copy_to_clipboard(all_names);
 			}
 			ImGui::SameLine();
 
-			const ImVec2 label_size = ImGui::CalcTextSize("W", NULL, true);
-			ImGui::InputTextMultiline("##separatorSkinsTab", allNamesSeparator, IM_ARRAYSIZE(allNamesSeparator),
-				ImVec2(0, label_size.y + ImGui::GetStyle().FramePadding.y * 2.0f), ImGuiInputTextFlags_AllowTabInput);
+			const ImVec2 label_size = ImGui::CalcTextSize("W", nullptr, true);
+			ImGui::InputTextMultiline("##separatorSkinsTab", all_names_separator, IM_ARRAYSIZE(all_names_separator),
+			                          ImVec2(0, label_size.y + ImGui::GetStyle().FramePadding.y * 2.0f),
+			                          ImGuiInputTextFlags_AllowTabInput);
 
 			ImGui::Separator();
-			ImGui::Text("Skins owned: %d", ownedSkins.size());
+			ImGui::Text("Skins owned: %d", owned_skins.size());
 
-			for (const Skin& skin : ownedSkins)
+			for (const auto& [name, inventoryType, itemId, ownershipType, isVintage, purchaseDate, quantity, uuid] :
+			     owned_skins)
 			{
-				char timeBuff[50];
-				strftime(timeBuff, sizeof(timeBuff), "%G-%m-%d %H:%M:%S", &skin.purchaseDate);
+				char time_buff[50];
+				strftime(time_buff, sizeof(time_buff), "%G-%m-%d %H:%M:%S", &purchaseDate);
 
-				std::string inputId = "skinInput";
-				inputId.append(std::to_string(skin.itemId));
+				std::string input_id = "skinInput";
+				input_id.append(std::to_string(itemId));
 				char input[512];
 				strcpy(input, std::format(R"(name: {}
 inventoryType: {}
@@ -158,15 +165,16 @@ ownershipType: {}
 isVintage: {}
 purchaseDate: {}
 quantity: {}
-uuid: {})", skin.name, skin.inventoryType, skin.itemId, skin.ownershipType, skin.isVintage, timeBuff, skin.qunatity, skin.uuid).c_str());
-				ImGui::PushID(inputId.c_str());
-				ImGui::InputTextMultiline("", input, IM_ARRAYSIZE(input), ImVec2(ImGui::GetWindowSize().x, 0), ImGuiInputTextFlags_ReadOnly);
+uuid: {})", name, inventoryType, itemId, ownershipType, isVintage, time_buff, quantity, uuid).c_str());
+				ImGui::PushID(input_id.c_str());
+				ImGui::InputTextMultiline("", input, IM_ARRAYSIZE(input), ImVec2(ImGui::GetWindowSize().x, 0),
+				                          ImGuiInputTextFlags_ReadOnly);
 				ImGui::PopID();
 			}
 
 			ImGui::EndTabItem();
 		}
 		else
-			bOnOpen = true;
+			b_on_open = true;
 	}
 };

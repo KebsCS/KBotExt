@@ -5,94 +5,92 @@
 #include <array>
 #include <cwctype>
 #include <random>
-//URLDownloadToFileA
 #include <urlmon.h>
 #pragma comment(lib, "urlmon.lib")
 
 #include "Utils.h"
 #include "Definitions.h"
 
-int Utils::RandomInt(int min, int max)
+int utils::random_int(const int min, const int max)
 {
 	std::random_device rd;
 	std::mt19937 gen(rd());
-	std::uniform_int_distribution<> distr(min, max);
+	std::uniform_int_distribution dist(min, max);
 
-	return distr(gen);
+	return dist(gen);
 }
 
-std::string Utils::ToLower(std::string str)
+std::string utils::to_lower(std::string str)
 {
-	std::transform(str.begin(), str.end(), str.begin(),
-		[](unsigned char c) {return static_cast<char>(std::tolower(c)); });
+	std::ranges::transform(str, str.begin(),
+	                       [](const unsigned char c) { return static_cast<char>(std::tolower(c)); });
 	return str;
 }
 
-std::wstring Utils::ToLower(std::wstring wstr)
+std::wstring utils::to_lower(std::wstring wstr)
 {
-	std::transform(wstr.begin(), wstr.end(), wstr.begin(), std::towlower);
+	std::ranges::transform(wstr, wstr.begin(), std::towlower);
 	return wstr;
 }
 
-std::string Utils::ToUpper(std::string str)
+std::string utils::to_upper(std::string str)
 {
-	std::transform(str.begin(), str.end(), str.begin(),
-		[](unsigned char c) {return static_cast<char>(std::toupper(c)); });
+	std::ranges::transform(str, str.begin(),
+	                       [](const unsigned char c) { return static_cast<char>(std::toupper(c)); });
 	return str;
 }
 
-std::wstring Utils::ToUpper(std::wstring wstr)
+std::wstring utils::to_upper(std::wstring wstr)
 {
-	std::transform(wstr.begin(), wstr.end(), wstr.begin(), std::towupper);
+	std::ranges::transform(wstr, wstr.begin(), std::towupper);
 	return wstr;
 }
 
-bool Utils::StringContains(std::string strA, std::string strB, bool ignoreCase)
+bool utils::string_contains(std::string str_a, std::string str_b, const bool ignore_case)
 {
-	if (strA.empty() || strB.empty())
+	if (str_a.empty() || str_b.empty())
 		return true;
 
-	if (ignoreCase)
+	if (ignore_case)
 	{
-		strA = ToLower(strA);
-		strB = ToLower(strB);
+		str_a = to_lower(str_a);
+		str_b = to_lower(str_b);
 	}
 
-	if (strA.find(strB) != std::string::npos)
+	if (str_a.find(str_b) != std::string::npos)
 		return true;
 
 	return false;
 }
 
-bool Utils::StringContains(std::wstring wstrA, std::wstring wstrB, bool ignoreCase)
+bool utils::string_contains(std::wstring wstr_a, std::wstring wstr_b, const bool ignore_case)
 {
-	if (wstrA.empty() || wstrB.empty())
+	if (wstr_a.empty() || wstr_b.empty())
 		return true;
 
-	if (ignoreCase)
+	if (ignore_case)
 	{
-		wstrA = ToLower(wstrA);
-		wstrB = ToLower(wstrB);
+		wstr_a = to_lower(wstr_a);
+		wstr_b = to_lower(wstr_b);
 	}
 
-	if (wstrA.find(wstrB) != std::wstring::npos)
+	if (wstr_a.find(wstr_b) != std::wstring::npos)
 		return true;
 
 	return false;
 }
 
-std::string Utils::WstringToString(std::wstring wstr)
+std::string utils::wstring_to_string(const std::wstring& wstr)
 {
-	std::wstring_convert<std::codecvt_utf8<wchar_t>, wchar_t> converter;
+	std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
 	return converter.to_bytes(wstr);
 }
 
-std::wstring Utils::StringToWstring(std::string str)
+std::wstring utils::string_to_wstring(const std::string& str)
 {
-	std::wstring_convert<std::codecvt_utf8<wchar_t>, wchar_t> converter;
-
 	try
 	{
+		std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
 		return converter.from_bytes(str);
 	}
 	catch (std::range_error)
@@ -103,11 +101,10 @@ std::wstring Utils::StringToWstring(std::string str)
 	}
 }
 
-std::vector<std::string> Utils::StringSplit(std::string str, std::string separator, int max)
+std::vector<std::string> utils::string_split(std::string str, const std::string& separator, const int max)
 {
 	int count = 0;
-	size_t pos = 0;
-	std::string token;
+	size_t pos;
 	std::vector<std::string> vec;
 	while ((pos = str.find(separator)) != std::string::npos)
 	{
@@ -116,7 +113,7 @@ std::vector<std::string> Utils::StringSplit(std::string str, std::string separat
 			break;
 		}
 		count++;
-		token = str.substr(0, pos);
+		std::string token = str.substr(0, pos);
 		vec.emplace_back(token);
 		str.erase(0, pos + separator.length());
 	}
@@ -124,128 +121,127 @@ std::vector<std::string> Utils::StringSplit(std::string str, std::string separat
 	return vec;
 }
 
-std::string Utils::RandomString(size_t size)
+std::string utils::random_string(const size_t size)
 {
-	std::string str = "";
+	std::string str;
 
 	for (size_t i = 0; i < size; i++)
-		str += RandomInt(0, 1) ? RandomInt(48, 57) : RandomInt(97, 122);
+		str += std::to_string(random_int(0, 1) ? random_int(48, 57) : random_int(97, 122));
 
 	return str;
 }
 
-std::wstring Utils::RandomWString(size_t size, std::pair<unsigned, unsigned>range)
+std::wstring utils::random_w_string(const size_t size, const std::pair<unsigned, unsigned> range)
 {
-	std::wstring str = L"";
+	std::wstring str;
 
 	if (range.first == 0 && range.second == 0)
 	{
 		for (size_t i = 0; i < size; i++)
-			str += RandomInt(0, 1) ? RandomInt(48, 57) : RandomInt(97, 122);
+			str += std::to_wstring(random_int(0, 1) ? random_int(48, 57) : random_int(97, 122));
 	}
 	else
 	{
 		for (size_t i = 0; i < size; i++)
-			str += (wchar_t)RandomInt(range.first, range.second);
+			str += static_cast<wchar_t>(random_int(range.first, range.second));
 	}
 
 	return str;
 }
 
-void Utils::CopyToClipboard(std::string text)
+void utils::copy_to_clipboard(const std::string& text)
 {
-	if (!::OpenClipboard(NULL))
+	if (!OpenClipboard(nullptr))
 		return;
-	const int wbufLen = ::MultiByteToWideChar(CP_UTF8, 0, text.c_str(), -1, NULL, 0);
-	HGLOBAL wbufHandle = ::GlobalAlloc(GMEM_MOVEABLE, (SIZE_T)wbufLen * sizeof(WCHAR));
-	if (wbufHandle == NULL)
+	const int wbuf_len = MultiByteToWideChar(CP_UTF8, 0, text.c_str(), -1, nullptr, 0);
+	const HGLOBAL wbuf_handle = GlobalAlloc(GMEM_MOVEABLE, static_cast<SIZE_T>(wbuf_len) * sizeof(WCHAR));
+	if (wbuf_handle == nullptr)
 	{
-		::CloseClipboard();
+		CloseClipboard();
 		return;
 	}
-	WCHAR* wbufGlobal = (WCHAR*)::GlobalLock(wbufHandle);
-	::MultiByteToWideChar(CP_UTF8, 0, text.c_str(), -1, wbufGlobal, wbufLen);
-	::GlobalUnlock(wbufHandle);
-	::EmptyClipboard();
-	if (::SetClipboardData(CF_UNICODETEXT, wbufHandle) == NULL)
-		::GlobalFree(wbufHandle);
-	::CloseClipboard();
+	const auto wbuf_global = static_cast<WCHAR*>(GlobalLock(wbuf_handle));
+	MultiByteToWideChar(CP_UTF8, 0, text.c_str(), -1, wbuf_global, wbuf_len);
+	GlobalUnlock(wbuf_handle);
+	EmptyClipboard();
+	if (SetClipboardData(CF_UNICODETEXT, wbuf_handle) == nullptr)
+		GlobalFree(wbuf_handle);
+	CloseClipboard();
 }
 
-bool Utils::DownloadFile(std::string fileName, std::string directory, std::string url)
+bool utils::download_file(std::string file_name, const std::string& directory, const std::string& url)
 {
 	// Create folder if it doesn't exists
 	if (!std::filesystem::exists(directory))
 		std::filesystem::create_directory(directory);
-	if (fileName[0] == '\\')
-		fileName.erase(0);
-	std::string file = directory + "\\" + fileName;
+	if (file_name[0] == '\\')
+		file_name.erase(0);
+	const std::string file = directory + "\\" + file_name;
 
 	// Don't download if file already exists
 	if (std::filesystem::exists(file))
 		return true;
 
-	std::string fullPath = std::filesystem::current_path().string() + "\\" + file;
-	std::string toDownload = url + fileName;
+	const std::string full_path = std::filesystem::current_path().string() + "\\" + file;
+	const std::string to_download = url + file_name;
 
 	// Download file
-	HRESULT result = URLDownloadToFileA(NULL, toDownload.c_str(), fullPath.c_str(), 0, NULL);
 
-	if (result != S_OK)
+	if (const HRESULT result = URLDownloadToFileA(nullptr, to_download.c_str(), full_path.c_str(), 0, nullptr); result != S_OK)
 		return false;
 	return true;
 }
 
-bool Utils::ContainsOnlyASCII(std::string buff)
+bool utils::contains_only_ascii(const std::string& buff)
 {
-	for (size_t i = 0; i < buff.size(); ++i)
+	for (const char i : buff)
 	{
-		if (buff[i] == 0)
+		if (i == 0)
 			return true;
-		if ((unsigned char)buff[i] > 127)
+		if (static_cast<unsigned char>(i) > 127)
 			return false;
 	}
 	return true;
 }
 
-std::string Utils::Utf8Encode(const std::wstring& wstr)
+std::string utils::utf8_encode(const std::wstring& wstr)
 {
 	std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> conv;
 	return conv.to_bytes(wstr);
 }
 
-std::string Utils::Exec(const char* cmd)
+std::string utils::exec(const char* cmd)
 {
 	std::array<char, 128> buffer;
 	std::string result;
-	std::unique_ptr<FILE, decltype(&_pclose)> pipe(_popen(cmd, "r"), _pclose);
-	if (!pipe) {
+	const std::unique_ptr<FILE, decltype(&_pclose)> pipe(_popen(cmd, "r"), _pclose);
+	if (!pipe)
+	{
 		throw std::runtime_error("popen() failed!");
 	}
-	while (fgets(buffer.data(), static_cast<int>(buffer.size()), pipe.get()) != nullptr) {
+	while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr)
+	{
 		result += buffer.data();
 	}
 	return result;
 }
 
-bool Utils::RenameExe()
+bool utils::rename_exe()
 {
-	char szExeFileName[MAX_PATH];
-	GetModuleFileNameA(NULL, szExeFileName, MAX_PATH);
-	std::string path = std::string(szExeFileName);
-	std::string exe = path.substr(path.find_last_of("\\") + 1, path.size());
-	std::string newname;
-	newname = Utils::RandomString(RandomInt(5, 10));
-	newname += ".exe";
-	if (!rename(exe.c_str(), newname.c_str()))
+	char sz_exe_file_name[MAX_PATH];
+	GetModuleFileNameA(nullptr, sz_exe_file_name, MAX_PATH);
+	const auto path = std::string(sz_exe_file_name);
+	const std::string exe = path.substr(path.find_last_of("\\") + 1, path.size());
+	std::string new_name = random_string(random_int(5, 10));
+	new_name += ".exe";
+	if (!rename(exe.c_str(), new_name.c_str()))
 		return true;
-	else return false;
+	return false;
 }
 
-bool Utils::HideFile(std::string file)
+bool utils::hide_file(const std::string& file)
 {
-	int attr = GetFileAttributesA(file.c_str());
-	if ((attr & FILE_ATTRIBUTE_HIDDEN) == 0)
+	if (const int attr = GetFileAttributesA(file.c_str()); (attr & FILE_ATTRIBUTE_HIDDEN) == 0)
 	{
 		SetFileAttributesA(file.c_str(), attr | FILE_ATTRIBUTE_HIDDEN);
 		return true;
@@ -253,49 +249,57 @@ bool Utils::HideFile(std::string file)
 	return false;
 }
 
-bool Utils::RunAsUser(LPCWSTR lpApplicationName, LPWSTR lpCommandLine)
+bool utils::run_as_user(const LPCWSTR lp_application_name, const LPWSTR lp_command_line)
 {
-	typedef BOOL(WINAPI* tOpenProcessToken)(HANDLE ProcessHandle, DWORD DesiredAccess, PHANDLE TokenHandle);
-	static tOpenProcessToken OpenProcessToken = (tOpenProcessToken)GetProcAddress(LoadLibraryW(L"advapi32.dll"), "OpenProcessToken");
+	using t_open_process_token = BOOL(WINAPI*)(HANDLE process_handle, DWORD desired_access, PHANDLE token_handle);
+	static t_open_process_token open_process_token;
+	open_process_token = reinterpret_cast<t_open_process_token>(GetProcAddress(
+		LoadLibraryW(L"advapi32.dll"), "OpenProcessToken"));
 
-	HANDLE hProcessToken = 0;
-	if (!OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES, &hProcessToken))
+	HANDLE h_process_token = nullptr;
+	if (!open_process_token(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES, &h_process_token))
 	{
 		// fails if current process isn't elevated
-		CloseHandle(hProcessToken);
+		CloseHandle(h_process_token);
 		return false;
 	}
 
-	typedef BOOL(WINAPI* tLookupPrivilegeValueW)(LPCWSTR lpSystemName, LPCWSTR lpName, PLUID lpLuid);
-	static tLookupPrivilegeValueW LookupPrivilegeValueW = (tLookupPrivilegeValueW)GetProcAddress(LoadLibraryW(L"advapi32.dll"), "LookupPrivilegeValueW");
+	using t_lookup_privilege_value_w = BOOL(WINAPI*)(LPCWSTR lpSystemName, LPCWSTR lpName, PLUID lpLuid);
+	static t_lookup_privilege_value_w lookup_privilege_value_w;
+	lookup_privilege_value_w = reinterpret_cast<t_lookup_privilege_value_w>(GetProcAddress(
+		LoadLibraryW(L"advapi32.dll"), "LookupPrivilegeValueW"));
 
-	TOKEN_PRIVILEGES tkp = { 0 };
+	TOKEN_PRIVILEGES tkp = {0};
 	tkp.PrivilegeCount = 1;
-	if (!LookupPrivilegeValueW(NULL, SE_INCREASE_QUOTA_NAME, &tkp.Privileges[0].Luid))
+	if (!lookup_privilege_value_w(nullptr, SE_INCREASE_QUOTA_NAME, &tkp.Privileges[0].Luid))
 	{
-		CloseHandle(hProcessToken);
+		CloseHandle(h_process_token);
 		return false;
 	}
 
-	typedef BOOL(WINAPI* tAdjustTokenPrivileges)(HANDLE TokenHandle, BOOL DisableAllPrivileges,
-		PTOKEN_PRIVILEGES NewState, DWORD BufferLength, PTOKEN_PRIVILEGES PreviousState, PDWORD ReturnLength);
-	static tAdjustTokenPrivileges AdjustTokenPrivileges = (tAdjustTokenPrivileges)GetProcAddress(LoadLibraryW(L"advapi32.dll"), "AdjustTokenPrivileges");
+	using t_adjust_token_privileges = BOOL(WINAPI*)(HANDLE token_handle, BOOL disable_all_privileges,
+	                                                PTOKEN_PRIVILEGES new_state, DWORD buffer_length,
+	                                                PTOKEN_PRIVILEGES previous_state, PDWORD return_length);
+	static t_adjust_token_privileges adjust_token_privileges;
+	adjust_token_privileges = reinterpret_cast<t_adjust_token_privileges>(GetProcAddress(
+		LoadLibraryW(L"advapi32.dll"), "AdjustTokenPrivileges"));
 
-	DWORD returnLength = 0;
+	DWORD return_length = 0;
 	tkp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
-	if (!AdjustTokenPrivileges(hProcessToken, FALSE, &tkp, 0, NULL, &returnLength))
+	if (!adjust_token_privileges(h_process_token, FALSE, &tkp, 0, nullptr, &return_length))
 	{
-		CloseHandle(hProcessToken);
+		CloseHandle(h_process_token);
 		return false;
 	}
 
-	typedef HWND(WINAPI* tGetShellWindow)();
-	static tGetShellWindow GetShellWindow = (tGetShellWindow)GetProcAddress(LoadLibraryW(L"user32.dll"), "GetShellWindow");
+	using t_get_shell_window = HWND(WINAPI*)();
+	static t_get_shell_window get_shell_window;
+	get_shell_window = reinterpret_cast<t_get_shell_window>(GetProcAddress(LoadLibraryW(L"user32.dll"), "GetShellWindow"));
 
-	HWND hwnd = GetShellWindow();
+	const HWND hwnd = get_shell_window();
 	if (!hwnd)
 	{
-		CloseHandle(hProcessToken);
+		CloseHandle(h_process_token);
 		return false;
 	}
 
@@ -303,78 +307,86 @@ bool Utils::RunAsUser(LPCWSTR lpApplicationName, LPWSTR lpCommandLine)
 	GetWindowThreadProcessId(hwnd, &pid);
 	if (!pid)
 	{
-		CloseHandle(hProcessToken);
+		CloseHandle(h_process_token);
 		return false;
 	}
 
-	HANDLE hShellProcess = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, pid);
-	if (!hShellProcess)
+	const HANDLE h_shell_process = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, pid);
+	if (!h_shell_process)
 	{
-		CloseHandle(hProcessToken);
+		CloseHandle(h_process_token);
 		return false;
 	}
 
-	HANDLE hShellProcessToken = 0;
-	if (!OpenProcessToken(hShellProcess, TOKEN_DUPLICATE, &hShellProcessToken))
+	HANDLE h_shell_process_token = nullptr;
+	if (!open_process_token(h_shell_process, TOKEN_DUPLICATE, &h_shell_process_token))
 	{
-		CloseHandle(hProcessToken);
-		CloseHandle(hShellProcess);
-		CloseHandle(hShellProcessToken);
+		CloseHandle(h_process_token);
+		CloseHandle(h_shell_process);
+		CloseHandle(h_shell_process_token);
 		return false;
 	}
 
-	typedef BOOL(WINAPI* tDuplicateTokenEx)(HANDLE hExistingToken, DWORD dwDesiredAccess, LPSECURITY_ATTRIBUTES pTokenAttributes,
-		SECURITY_IMPERSONATION_LEVEL ImpersonationLevel, TOKEN_TYPE TokenType, PHANDLE phNewToken);
-	static tDuplicateTokenEx DuplicateTokenEx = (tDuplicateTokenEx)GetProcAddress(LoadLibraryW(L"advapi32.dll"), "DuplicateTokenEx");
+	using t_duplicate_token_ex = BOOL(WINAPI*)(HANDLE h_existing_token, DWORD dw_desired_access,
+	                                           LPSECURITY_ATTRIBUTES p_token_attributes,
+	                                           SECURITY_IMPERSONATION_LEVEL impersonation_level, TOKEN_TYPE token_type,
+	                                           PHANDLE ph_new_token);
+	static t_duplicate_token_ex duplicate_token_ex;
+	duplicate_token_ex = reinterpret_cast<t_duplicate_token_ex>(GetProcAddress(
+		LoadLibraryW(L"advapi32.dll"), "DuplicateTokenEx"));
 
-	HANDLE hPrimaryToken = 0;
-	if (!DuplicateTokenEx(hShellProcessToken, TOKEN_ALL_ACCESS, NULL, SecurityImpersonation, TokenPrimary, &hPrimaryToken))
+	HANDLE h_primary_token = nullptr;
+	if (!duplicate_token_ex(h_shell_process_token, TOKEN_ALL_ACCESS, nullptr, SecurityImpersonation, TokenPrimary,
+	                        &h_primary_token))
 	{
-		CloseHandle(hProcessToken);
-		CloseHandle(hShellProcess);
-		CloseHandle(hShellProcessToken);
-		CloseHandle(hPrimaryToken);
+		CloseHandle(h_process_token);
+		CloseHandle(h_shell_process);
+		CloseHandle(h_shell_process_token);
+		CloseHandle(h_primary_token);
 		return false;
 	}
 
-	typedef BOOL(WINAPI* tCreateProcessWithTokenW)(HANDLE hToken, DWORD dwLogonFlags, LPCWSTR lpApplicationName,
-		LPWSTR lpCommandLine, DWORD dwCreationFlags, LPVOID lpEnvironment, LPCWSTR lpCurrentDirectory,
-		LPSTARTUPINFOW lpStartupInfo, LPPROCESS_INFORMATION lpProcessInformation);
-	static tCreateProcessWithTokenW CreateProcessWithTokenW = (tCreateProcessWithTokenW)GetProcAddress(LoadLibraryW(L"advapi32.dll"), "CreateProcessWithTokenW");
+	using t_create_process_with_token_w = BOOL(WINAPI*)(HANDLE h_token, DWORD dw_logon_flags, LPCWSTR lp_application_name,
+	                                                    LPWSTR lp_command_line, DWORD dw_creation_flags, LPVOID lp_environment,
+	                                                    LPCWSTR lp_current_directory,
+	                                                    LPSTARTUPINFOW lp_startup_info,
+	                                                    LPPROCESS_INFORMATION lp_process_information);
+	static t_create_process_with_token_w create_process_with_token_w;
+	create_process_with_token_w = reinterpret_cast<t_create_process_with_token_w>(GetProcAddress(
+		LoadLibraryW(L"advapi32.dll"), "CreateProcessWithTokenW"));
 
-	PROCESS_INFORMATION pi = { 0 };
-	STARTUPINFOW si = { 0 };
+	PROCESS_INFORMATION pi = {nullptr};
+	STARTUPINFOW si = {0};
 	si.cb = sizeof(si);
 	si.wShowWindow = SW_SHOWNORMAL;
 	si.dwFlags = STARTF_USESHOWWINDOW;
-	if (!CreateProcessWithTokenW(hPrimaryToken, 0, lpApplicationName, lpCommandLine, 0/*DETACHED_PROCESS - error 87*/, NULL, NULL, &si, &pi))
+	if (!create_process_with_token_w(h_primary_token, 0, lp_application_name, lp_command_line, 0/*DETACHED_PROCESS - error 87*/,
+	                                 nullptr, nullptr, &si, &pi))
 	{
-		//printf("%d",GetLastError());
-		CloseHandle(hProcessToken);
-		CloseHandle(hShellProcess);
-		CloseHandle(hShellProcessToken);
-		CloseHandle(hPrimaryToken);
+		CloseHandle(h_process_token);
+		CloseHandle(h_shell_process);
+		CloseHandle(h_shell_process_token);
+		CloseHandle(h_primary_token);
 		CloseHandle(pi.hProcess);
 		return false;
 	}
 
-	CloseHandle(hProcessToken);
-	CloseHandle(hShellProcess);
-	CloseHandle(hShellProcessToken);
-	CloseHandle(hPrimaryToken);
+	CloseHandle(h_process_token);
+	CloseHandle(h_shell_process);
+	CloseHandle(h_shell_process_token);
+	CloseHandle(h_primary_token);
 	CloseHandle(pi.hProcess);
 	return true;
 }
 
-cpr::Header Utils::StringToHeader(const std::string& str)
+cpr::Header utils::string_to_header(const std::string& str)
 {
 	cpr::Header header;
-	for (const auto& line : Utils::StringSplit(str, "\r\n"))
+	for (const auto& line : string_split(str, "\r\n"))
 	{
-		auto index = line.find(': ', 0);
-		if (index != std::string::npos)
+		if (const auto index = line.find(': ', 0); index != std::string::npos)
 		{
-			header.insert({ line.substr(0, index - 1), line.substr(index + 1) });
+			header.insert({line.substr(0, index - 1), line.substr(index + 1)});
 		}
 	}
 	return header;

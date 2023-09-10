@@ -7,218 +7,259 @@
 
 #include "Includes.h"
 
-struct Settings
+struct settings
 {
-	Settings() {};
+	settings(): hwnd(nullptr)
+	{
+	}
+	;
 	HWND hwnd;
-	const std::string settingsFile = "config.JSON";
-	std::string currentDebugger; // debugger path
-	std::vector<std::string>ignoredVersions;
+	const std::string settings_file = "config.JSON";
+	std::string current_debugger; // debugger path
+	std::vector<std::string> ignored_versions;
 
-	bool autoRename = false;
-	std::string leaguePath = "C:/Riot Games/League of Legends/";
-	float fontScale = 1.f;
-	bool streamProof = false;
+	bool auto_rename = false;
+	std::string league_path = "C:/Riot Games/League of Legends/";
+	float font_scale = 1.f;
+	bool stream_proof = false;
 	bool debugger = false;
-	bool noAdmin = false;
+	bool no_admin = false;
 
 	struct
 	{
 		int width = 730;
 		int height = 530;
-	}Window;
+	} window;
 
 	struct
 	{
-		std::string playerName;
-	}infoTab;
+		std::string player_name;
+	} info_tab;
 
 	struct
 	{
 		std::string method;
-		std::string urlText;
-		std::string requestText;
+		std::string url_text;
+		std::string request_text;
 		std::string port;
 		std::string header;
-	}customTab;
+	} custom_tab;
 
 	struct
 	{
 		std::string destination;
 		std::string method;
 		std::string args;
-	}invokeTab;
+	} invoke_tab;
 
 	struct
 	{
 		std::string language = "en_US";
-		std::string leagueArgs = "--locale=en_US";
-	}loginTab;
+		std::string league_args = "--locale=en_US";
+	} login_tab;
 
 	struct
 	{
-		size_t indexFirstRole = 0;
-		size_t indexSecondRole = 0;
-		size_t indexMultiSearch = 0;
-		bool autoAcceptEnabled = false;
-		bool instalockEnabled = false;
-		bool autoBanEnabled = false;
-		int instalockId = 0;
-		int instalockDelay = 0;
-		std::string instantMessage;
-		int instantMessageDelay = 0;
-		int instantMessageTimes = 1;
-		int instantMessageDelayTimes = 0;
-		int autoBanId = 0;
-		int autoBanDelay = 0;
-		bool dodgeOnBan = false;
-		int backupId = 0;
-		bool instantMute = false;
-		bool sideNotification = false;
-	}gameTab;
+		size_t index_first_role = 0;
+		size_t index_second_role = 0;
+		size_t index_multi_search = 0;
+		bool auto_accept_enabled = false;
+		bool instalock_enabled = false;
+		bool auto_ban_enabled = false;
+		int instalock_id = 0;
+		int instalock_delay = 0;
+		std::string instant_message;
+		int instant_message_delay = 0;
+		int instant_message_times = 1;
+		int instant_message_delay_times = 0;
+		int auto_ban_id = 0;
+		int auto_ban_delay = 0;
+		bool dodge_on_ban = false;
+		int backup_id = 0;
+		bool instant_mute = false;
+		bool side_notification = false;
+	} game_tab;
 };
-extern Settings S;
 
-class Config
+extern settings s;
+
+class config
 {
 public:
-
-	static void Save()
+	static void save()
 	{
 		// if file doesn't exist, create new one with {} so it can be parsed
-		if (!std::filesystem::exists(S.settingsFile))
+		if (!std::filesystem::exists(s.settings_file))
 		{
-			std::ofstream file(S.settingsFile);
+			std::ofstream file(s.settings_file);
 			file << "{}";
 			file.close();
 		}
 
-		Json::CharReaderBuilder builder;
 		Json::Value root;
 		JSONCPP_STRING err;
 
-		std::ifstream iFile(S.settingsFile);
+		std::ifstream i_file(s.settings_file);
 
-		if (iFile.good())
+		if (i_file.good())
 		{
-			if (parseFromStream(builder, iFile, &root, &err))
+			if (Json::CharReaderBuilder builder; parseFromStream(builder, i_file, &root, &err))
 			{
-				root["autoRename"] = S.autoRename;
-				root["leaguePath"] = S.leaguePath;
-				root["debugger"] = S.debugger;
-				root["window"]["width"] = S.Window.width;
-				root["window"]["height"] = S.Window.height;
-				root["fontScale"] = S.fontScale;
-				root["loginTab"]["language"] = S.loginTab.language;
-				root["loginTab"]["leagueArgs"] = S.loginTab.leagueArgs;
-				root["streamProof"] = S.streamProof;
-				root["noAdmin"] = S.noAdmin;
+				root["autoRename"] = s.auto_rename;
+				root["leaguePath"] = s.league_path;
+				root["debugger"] = s.debugger;
+				root["window"]["width"] = s.window.width;
+				root["window"]["height"] = s.window.height;
+				root["fontScale"] = s.font_scale;
+				root["loginTab"]["language"] = s.login_tab.language;
+				root["loginTab"]["leagueArgs"] = s.login_tab.league_args;
+				root["streamProof"] = s.stream_proof;
+				root["noAdmin"] = s.no_admin;
 
-				root["infoTab"]["playerName"] = S.infoTab.playerName;
+				root["infoTab"]["playerName"] = s.info_tab.player_name;
 
-				root["customTab"]["method"] = S.customTab.method;
-				root["customTab"]["urlText"] = S.customTab.urlText;
-				root["customTab"]["requestText"] = S.customTab.requestText;
-				root["customTab"]["port"] = S.customTab.port;
-				root["customTab"]["header"] = S.customTab.header;
-				root["invokeTab"]["destination"] = S.invokeTab.destination;
-				root["invokeTab"]["method"] = S.invokeTab.method;
-				root["invokeTab"]["args"] = S.invokeTab.args;
+				root["customTab"]["method"] = s.custom_tab.method;
+				root["customTab"]["urlText"] = s.custom_tab.url_text;
+				root["customTab"]["requestText"] = s.custom_tab.request_text;
+				root["customTab"]["port"] = s.custom_tab.port;
+				root["customTab"]["header"] = s.custom_tab.header;
+				root["invokeTab"]["destination"] = s.invoke_tab.destination;
+				root["invokeTab"]["method"] = s.invoke_tab.method;
+				root["invokeTab"]["args"] = s.invoke_tab.args;
 
-				root["gameTab"]["indexFirstRole"] = S.gameTab.indexFirstRole;
-				root["gameTab"]["indexSecondRole"] = S.gameTab.indexSecondRole;
-				root["gameTab"]["indexMultiSearch"] = S.gameTab.indexMultiSearch;
-				root["gameTab"]["autoAcceptEnabled"] = S.gameTab.autoAcceptEnabled;
-				root["gameTab"]["instalockEnabled"] = S.gameTab.instalockEnabled;
-				root["gameTab"]["autoBanEnabled"] = S.gameTab.autoBanEnabled;
-				root["gameTab"]["instalockDelay"] = S.gameTab.instalockDelay;
-				root["gameTab"]["instalockId"] = S.gameTab.instalockId;
-				root["gameTab"]["instantMessage"] = S.gameTab.instantMessage;
-				root["gameTab"]["instantMessageDelay"] = S.gameTab.instantMessageDelay;
-				root["gameTab"]["instantMessageTimes"] = S.gameTab.instantMessageTimes;
-				root["gameTab"]["instantMessageDelayTimes"] = S.gameTab.instantMessageDelayTimes;
-				root["gameTab"]["autoBanId"] = S.gameTab.autoBanId;
-				root["gameTab"]["autoBanDelay"] = S.gameTab.autoBanDelay;
-				root["gameTab"]["dodgeOnBan"] = S.gameTab.dodgeOnBan;
-				root["gameTab"]["backupId"] = S.gameTab.backupId;
-				root["gameTab"]["instantMute"] = S.gameTab.instantMute;
-				root["gameTab"]["sideNotification"] = S.gameTab.sideNotification;
+				root["gameTab"]["indexFirstRole"] = s.game_tab.index_first_role;
+				root["gameTab"]["indexSecondRole"] = s.game_tab.index_second_role;
+				root["gameTab"]["indexMultiSearch"] = s.game_tab.index_multi_search;
+				root["gameTab"]["autoAcceptEnabled"] = s.game_tab.auto_accept_enabled;
+				root["gameTab"]["instalockEnabled"] = s.game_tab.instalock_enabled;
+				root["gameTab"]["autoBanEnabled"] = s.game_tab.auto_ban_enabled;
+				root["gameTab"]["instalockDelay"] = s.game_tab.instalock_delay;
+				root["gameTab"]["instalockId"] = s.game_tab.instalock_id;
+				root["gameTab"]["instantMessage"] = s.game_tab.instant_message;
+				root["gameTab"]["instantMessageDelay"] = s.game_tab.instant_message_delay;
+				root["gameTab"]["instantMessageTimes"] = s.game_tab.instant_message_times;
+				root["gameTab"]["instantMessageDelayTimes"] = s.game_tab.instant_message_delay_times;
+				root["gameTab"]["autoBanId"] = s.game_tab.auto_ban_id;
+				root["gameTab"]["autoBanDelay"] = s.game_tab.auto_ban_delay;
+				root["gameTab"]["dodgeOnBan"] = s.game_tab.dodge_on_ban;
+				root["gameTab"]["backupId"] = s.game_tab.backup_id;
+				root["gameTab"]["instantMute"] = s.game_tab.instant_mute;
+				root["gameTab"]["sideNotification"] = s.game_tab.side_notification;
 
 				{
 					root["ignoredVersions"] = Json::Value(Json::arrayValue);
-					for (const std::string& version : S.ignoredVersions)
+					for (const std::string& version : s.ignored_versions)
 						root["ignoredVersions"].append(version);
 				}
 
 				if (!root.toStyledString().empty())
 				{
-					std::ofstream oFile(S.settingsFile);
-					oFile << root.toStyledString() << std::endl;
-					oFile.close();
+					std::ofstream o_file(s.settings_file);
+					o_file << root.toStyledString() << std::endl;
+					o_file.close();
 				}
 			}
 		}
-		iFile.close();
+		i_file.close();
 	}
 
-	static void Load()
+	static void load()
 	{
-		std::fstream file(S.settingsFile, std::ios_base::in);
+		std::fstream file(s.settings_file, std::ios_base::in);
 		if (file.good())
 		{
 			Json::Value root;
-			Json::CharReaderBuilder builder;
 			JSONCPP_STRING err;
 
-			if (parseFromStream(builder, file, &root, &err))
+			if (Json::CharReaderBuilder builder; parseFromStream(builder, file, &root, &err))
 			{
-				if (auto t = root["autoRename"]; !t.empty()) S.autoRename = t.asBool();
-				if (auto t = root["leaguePath"]; !t.empty()) S.leaguePath = t.asString();
-				if (auto t = root["debugger"]; !t.empty()) S.debugger = t.asBool();
-				if (auto t = root["window"]["width"]; !t.empty()) S.Window.width = t.asInt();
-				if (auto t = root["window"]["height"]; !t.empty()) S.Window.height = t.asInt();
-				if (auto t = root["fontScale"]; !t.empty()) S.fontScale = t.asFloat();
-				if (auto t = root["loginTab"]["language"]; !t.empty()) S.loginTab.language = t.asString();
-				if (auto t = root["loginTab"]["leagueArgs"]; !t.empty()) S.loginTab.leagueArgs = t.asString();
-				if (auto t = root["streamProof"]; !t.empty()) S.streamProof = t.asBool();
-				if (auto t = root["noAdmin"]; !t.empty()) S.noAdmin = t.asBool();
+				if (auto t = root["autoRename"]; !t.empty())
+					s.auto_rename = t.asBool();
+				if (auto t = root["leaguePath"]; !t.empty())
+					s.league_path = t.asString();
+				if (auto t = root["debugger"]; !t.empty())
+					s.debugger = t.asBool();
+				if (auto t = root["window"]["width"]; !t.empty())
+					s.window.width = t.asInt();
+				if (auto t = root["window"]["height"]; !t.empty())
+					s.window.height = t.asInt();
+				if (auto t = root["fontScale"]; !t.empty())
+					s.font_scale = t.asFloat();
+				if (auto t = root["loginTab"]["language"]; !t.empty())
+					s.login_tab.language = t.asString();
+				if (auto t = root["loginTab"]["leagueArgs"]; !t.empty())
+					s.login_tab.league_args = t.asString();
+				if (auto t = root["streamProof"]; !t.empty())
+					s.stream_proof = t.asBool();
+				if (auto t = root["noAdmin"]; !t.empty())
+					s.no_admin = t.asBool();
 
-				if (auto t = root["infoTab"]["playerName"]; !t.empty()) S.infoTab.playerName = t.asString();
+				if (auto t = root["infoTab"]["playerName"]; !t.empty())
+					s.info_tab.player_name = t.asString();
 
-				if (auto t = root["customTab"]["method"]; !t.empty()) S.customTab.method = t.asString();
-				if (auto t = root["customTab"]["urlText"]; !t.empty()) S.customTab.urlText = t.asString();
-				if (auto t = root["customTab"]["requestText"]; !t.empty()) S.customTab.requestText = t.asString();
-				if (auto t = root["customTab"]["port"]; !t.empty()) S.customTab.port = t.asString();
-				if (auto t = root["customTab"]["header"]; !t.empty()) S.customTab.header = t.asString();
+				if (auto t = root["customTab"]["method"]; !t.empty())
+					s.custom_tab.method = t.asString();
+				if (auto t = root["customTab"]["urlText"]; !t.empty())
+					s.custom_tab.url_text = t.asString();
+				if (auto t = root["customTab"]["requestText"]; !t.empty())
+					s.custom_tab.request_text = t.asString();
+				if (auto t = root["customTab"]["port"]; !t.empty())
+					s.custom_tab.port = t.asString();
+				if (auto t = root["customTab"]["header"]; !t.empty())
+					s.custom_tab.header = t.asString();
 
-				if (auto t = root["invokeTab"]["destination"]; !t.empty()) S.invokeTab.destination = t.asString();
-				if (auto t = root["invokeTab"]["method"]; !t.empty()) S.invokeTab.method = t.asString();
-				if (auto t = root["invokeTab"]["args"]; !t.empty()) S.invokeTab.args = t.asString();
+				if (auto t = root["invokeTab"]["destination"]; !t.empty())
+					s.invoke_tab.destination = t.asString();
+				if (auto t = root["invokeTab"]["method"]; !t.empty())
+					s.invoke_tab.method = t.asString();
+				if (auto t = root["invokeTab"]["args"]; !t.empty())
+					s.invoke_tab.args = t.asString();
 
-				if (auto t = root["gameTab"]["indexFirstRole"]; !t.empty()) S.gameTab.indexFirstRole = t.asUInt();
-				if (auto t = root["gameTab"]["indexSecondRole"]; !t.empty()) S.gameTab.indexSecondRole = t.asUInt();
-				if (auto t = root["gameTab"]["indexMultiSearch"]; !t.empty()) S.gameTab.indexMultiSearch = t.asUInt();
-				if (auto t = root["gameTab"]["autoAcceptEnabled"]; !t.empty()) S.gameTab.autoAcceptEnabled = t.asBool();
-				if (auto t = root["gameTab"]["instalockEnabled"]; !t.empty()) S.gameTab.instalockEnabled = t.asBool();
-				if (auto t = root["gameTab"]["autoBanEnabled"]; !t.empty()) S.gameTab.autoBanEnabled = t.asBool();
-				if (auto t = root["gameTab"]["instalockDelay"]; !t.empty()) S.gameTab.instalockDelay = t.asInt();
-				if (auto t = root["gameTab"]["instalockId"]; !t.empty()) S.gameTab.instalockId = t.asInt();
-				if (auto t = root["gameTab"]["instantMessage"]; !t.empty()) S.gameTab.instantMessage = t.asString();
-				if (auto t = root["gameTab"]["instantMessageDelay"]; !t.empty()) S.gameTab.instantMessageDelay = t.asInt();
-				if (auto t = root["gameTab"]["instantMessageTimes"]; !t.empty()) S.gameTab.instantMessageTimes = t.asInt();
-				if (auto t = root["gameTab"]["instantMessageDelayTimes"]; !t.empty()) S.gameTab.instantMessageDelayTimes = t.asInt();
-				if (auto t = root["gameTab"]["autoBanId"]; !t.empty()) S.gameTab.autoBanId = t.asInt();
-				if (auto t = root["gameTab"]["autoBanDelay"]; !t.empty()) S.gameTab.autoBanDelay = t.asInt();
-				if (auto t = root["gameTab"]["dodgeOnBan"]; !t.empty()) S.gameTab.dodgeOnBan = t.asBool();
-				if (auto t = root["gameTab"]["backupId"]; !t.empty()) S.gameTab.backupId = t.asInt();
-				if (auto t = root["gameTab"]["instantMute"]; !t.empty()) S.gameTab.instantMute = t.asBool();
-				if (auto t = root["gameTab"]["sideNotification"]; !t.empty()) S.gameTab.sideNotification = t.asBool();
+				if (auto t = root["gameTab"]["indexFirstRole"]; !t.empty())
+					s.game_tab.index_first_role = t.asUInt();
+				if (auto t = root["gameTab"]["indexSecondRole"]; !t.empty())
+					s.game_tab.index_second_role = t.asUInt();
+				if (auto t = root["gameTab"]["indexMultiSearch"]; !t.empty())
+					s.game_tab.index_multi_search = t.asUInt();
+				if (auto t = root["gameTab"]["autoAcceptEnabled"]; !t.empty())
+					s.game_tab.auto_accept_enabled = t.asBool();
+				if (auto t = root["gameTab"]["instalockEnabled"]; !t.empty())
+					s.game_tab.instalock_enabled = t.asBool();
+				if (auto t = root["gameTab"]["autoBanEnabled"]; !t.empty())
+					s.game_tab.auto_ban_enabled = t.asBool();
+				if (auto t = root["gameTab"]["instalockDelay"]; !t.empty())
+					s.game_tab.instalock_delay = t.asInt();
+				if (auto t = root["gameTab"]["instalockId"]; !t.empty())
+					s.game_tab.instalock_id = t.asInt();
+				if (auto t = root["gameTab"]["instantMessage"]; !t.empty())
+					s.game_tab.instant_message = t.asString();
+				if (auto t = root["gameTab"]["instantMessageDelay"]; !t.empty())
+					s.game_tab.instant_message_delay = t.
+						asInt();
+				if (auto t = root["gameTab"]["instantMessageTimes"]; !t.empty())
+					s.game_tab.instant_message_times = t.
+						asInt();
+				if (auto t = root["gameTab"]["instantMessageDelayTimes"]; !t.empty())
+					s.game_tab.instant_message_delay_times
+						= t.asInt();
+				if (auto t = root["gameTab"]["autoBanId"]; !t.empty())
+					s.game_tab.auto_ban_id = t.asInt();
+				if (auto t = root["gameTab"]["autoBanDelay"]; !t.empty())
+					s.game_tab.auto_ban_delay = t.asInt();
+				if (auto t = root["gameTab"]["dodgeOnBan"]; !t.empty())
+					s.game_tab.dodge_on_ban = t.asBool();
+				if (auto t = root["gameTab"]["backupId"]; !t.empty())
+					s.game_tab.backup_id = t.asInt();
+				if (auto t = root["gameTab"]["instantMute"]; !t.empty())
+					s.game_tab.instant_mute = t.asBool();
+				if (auto t = root["gameTab"]["sideNotification"]; !t.empty())
+					s.game_tab.side_notification = t.asBool();
 
 				if (root["ignoredVersions"].isArray() && !root["ignoredVersions"].empty())
 				{
-					for (Json::Value::ArrayIndex i = 0; i < root["ignoredVersions"].size(); i++)
+					for (const auto& i : root["ignoredVersions"])
 					{
-						S.ignoredVersions.emplace_back(root["ignoredVersions"][i].asString());
+						s.ignored_versions.emplace_back(i.asString());
 					}
 				}
 			}

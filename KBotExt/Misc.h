@@ -11,42 +11,41 @@
 
 #ifdef _MSC_VER
 #include <Shlwapi.h>
-#define istrstr StrStrIA
+#define ISTRSTR StrStrIA
 #pragma comment(lib, "Shlwapi.lib")
 #else
-#define istrstr strcasestr
+#define ISTRSTR strcasestr
 #endif
 
-class Misc
+class misc
 {
 public:
+	static inline std::string program_version = "1.5.3";
+	static inline std::string latest_version = "";
 
-	static inline std::string programVersion = "1.5.3";
-	static inline std::string latestVersion = "";
-
-	static bool LaunchClient(const std::string args)
+	static bool launch_client(const std::string& args)
 	{
-		const std::string path = std::format("{}LeagueClient.exe", S.leaguePath).c_str();
-		if (S.noAdmin)
+		const std::string path = std::format("{}LeagueClient.exe", s.league_path).c_str();
+		if (s.no_admin)
 		{
-			if (Utils::RunAsUser(Utils::StringToWstring(path).c_str(), &(Utils::StringToWstring(args))[0]))
+			if (utils::run_as_user(utils::string_to_wstring(path).c_str(), utils::string_to_wstring(args).data()))
 				return true;
 		}
-		ShellExecuteA(NULL, "open", path.c_str(), args.c_str(), NULL, SW_SHOWNORMAL);
+		ShellExecuteA(nullptr, "open", path.c_str(), args.c_str(), nullptr, SW_SHOWNORMAL);
 		return false;
 	}
 
-	static void LaunchLegacyClient()
+	static void launch_legacy_client()
 	{
-		if (!std::filesystem::exists(std::format("{}LoL Companion", S.leaguePath)))
+		if (!std::filesystem::exists(std::format("{}LoL Companion", s.league_path)))
 		{
-			std::filesystem::create_directory(std::format("{}LoL Companion", S.leaguePath));
+			std::filesystem::create_directory(std::format("{}LoL Companion", s.league_path));
 		}
-		if (!std::filesystem::exists(std::format("{}LoL Companion/system.yaml", S.leaguePath)))
+		if (!std::filesystem::exists(std::format("{}LoL Companion/system.yaml", s.league_path)))
 		{
-			std::ifstream infile(std::format("{}system.yaml", S.leaguePath));
-			std::ofstream outfile(std::format("{}LoL Companion/system.yaml", S.leaguePath));
-			std::string content = "";
+			std::ifstream infile(std::format("{}system.yaml", s.league_path));
+			std::ofstream outfile(std::format("{}LoL Companion/system.yaml", s.league_path));
+			std::string content;
 
 			std::string temp;
 			while (std::getline(infile, temp))
@@ -60,65 +59,68 @@ public:
 			outfile.close();
 		}
 
-		if (::FindWindowA("RCLIENT", "League of Legends"))
+		if (FindWindowA("RCLIENT", "League of Legends"))
 		{
-			LCU::Request("POST", "https://127.0.0.1/process-control/v1/process/quit");
-
-			// wait for client to close (maybe theres a better method of doing that)
+			lcu::request("POST", "https://127.0.0.1/process-control/v1/process/quit");
 			std::this_thread::sleep_for(std::chrono::milliseconds(4500));
 		}
 
-		ShellExecuteA(NULL, "open", std::format("{}LeagueClient.exe", S.leaguePath).c_str(),
-			std::format("--system-yaml-override=\"{}LoL Companion/system.yaml\"", S.leaguePath).c_str(), NULL, SW_SHOWNORMAL);
+		ShellExecuteA(nullptr, "open", std::format("{}LeagueClient.exe", s.league_path).c_str(),
+		              std::format("--system-yaml-override=\"{}LoL Companion/system.yaml\"", s.league_path).c_str(),
+		              nullptr, SW_SHOWNORMAL);
 	}
 
-	static void CheckVersion()
+	static void check_version()
 	{
-		std::string getLatest = cpr::Get(cpr::Url{ "https://api.github.com/repos/KebsCS/KBotExt/releases/latest" }).text;
+		const std::string get_latest = Get(cpr::Url{"https://api.github.com/repos/KebsCS/KBotExt/releases/latest"}).text;
 
-		Json::CharReaderBuilder builder;
+		const Json::CharReaderBuilder builder;
 		const std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
 		JSONCPP_STRING err;
 		Json::Value root;
-		if (reader->parse(getLatest.c_str(), getLatest.c_str() + static_cast<int>(getLatest.length()), &root, &err))
+		if (reader->parse(get_latest.c_str(), get_latest.c_str() + static_cast<int>(get_latest.length()), &root, &err))
 		{
-			std::string latestTag = root["tag_name"].asString();
-			Misc::latestVersion = latestTag;
+			std::string latest_tag = root["tag_name"].asString();
+			latest_version = latest_tag;
 
-			std::vector<std::string>latestNameSplit = Utils::StringSplit(latestTag, ".");
-			std::vector<std::string>programVersionSplit = Utils::StringSplit(Misc::programVersion, ".");
+			const std::vector<std::string> latest_name_split = utils::string_split(latest_tag, ".");
+			const std::vector<std::string> program_version_split = utils::string_split(program_version, ".");
 
 			for (size_t i = 0; i < 2; i++)
 			{
-				if (latestNameSplit[i] != programVersionSplit[i])
+				if (latest_name_split[i] != program_version_split[i])
 				{
-					if (MessageBoxA(0, "Open download website?", "New major version available", MB_YESNO | MB_SETFOREGROUND) == IDYES)
+					if (MessageBoxA(nullptr, "Open download website?", "New major version available",
+					                MB_YESNO | MB_SETFOREGROUND) == IDYES)
 					{
-						ShellExecuteW(0, 0, L"https://github.com/KebsCS/KBotExt/releases/latest", 0, 0, SW_SHOW);
+						ShellExecuteW(nullptr, nullptr, L"https://github.com/KebsCS/KBotExt/releases/latest", nullptr,
+						              nullptr, SW_SHOW);
 					}
 				}
 			}
-			if (latestTag != Misc::programVersion
-				&& std::find(S.ignoredVersions.begin(), S.ignoredVersions.end(), latestTag) == S.ignoredVersions.end())
+			if (latest_tag != program_version
+				&& std::ranges::find(s.ignored_versions, latest_tag) == s.ignored_versions.end())
 			{
-				const auto status = MessageBoxA(0, "Open download website?\nCancel to ignore this version forever", "New minor update available", MB_YESNOCANCEL | MB_SETFOREGROUND);
-				if (status == IDYES)
+				if (const auto status = MessageBoxA(
+					nullptr, "Open download website?\nCancel to ignore this version forever",
+					"New minor update available", MB_YESNOCANCEL | MB_SETFOREGROUND); status == IDYES)
 				{
-					ShellExecuteW(0, 0, L"https://github.com/KebsCS/KBotExt/releases/latest", 0, 0, SW_SHOW);
+					ShellExecuteW(nullptr, nullptr, L"https://github.com/KebsCS/KBotExt/releases/latest", nullptr,
+					              nullptr, SW_SHOW);
 				}
 				else if (status == IDCANCEL)
 				{
-					S.ignoredVersions.emplace_back(latestTag);
-					Config::Save();
+					s.ignored_versions.emplace_back(latest_tag);
+					config::save();
 				}
 			}
 		}
 	}
 
-	static std::string GetCurrentPatch()
+	static std::string get_current_patch()
 	{
-		std::string result = cpr::Get(cpr::Url{ "http://ddragon.leagueoflegends.com/api/versions.json" }).text;
-		Json::CharReaderBuilder builder;
+		const std::string result = Get(cpr::Url{"http://ddragon.leagueoflegends.com/api/versions.json"}).text;
+		const Json::CharReaderBuilder builder;
 		const std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
 		JSONCPP_STRING err;
 		Json::Value root;
@@ -129,168 +131,164 @@ public:
 		return "0.0.0";
 	}
 
-	static void GetAllChampionSkins()
+	static void get_all_champion_skins()
 	{
-		std::string getSkins = cpr::Get(cpr::Url{ "https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/skins.json" }).text;
+		std::string get_skins = Get(cpr::Url{
+			"https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/skins.json"
+		}).text;
 		Json::CharReaderBuilder builder;
 		const std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
 		JSONCPP_STRING err;
 		Json::Value root;
-		if (!reader->parse(getSkins.c_str(), getSkins.c_str() + static_cast<int>(getSkins.length()), &root, &err))
+		if (!reader->parse(get_skins.c_str(), get_skins.c_str() + static_cast<int>(get_skins.length()), &root, &err))
 			return;
 
-		std::map<std::string, Champ>champs;
+		std::map<std::string, champ> champs;
 		for (const std::string& id : root.getMemberNames())
 		{
-			const Json::Value currentSkin = root[id];
+			const Json::Value current_skin = root[id];
 
-			std::string loadScreenPath = currentSkin["loadScreenPath"].asString();
-			size_t nameStart = loadScreenPath.find("ASSETS/Characters/") + strlen("ASSETS/Characters/");
-			std::string champName = loadScreenPath.substr(nameStart, loadScreenPath.find("/", nameStart) - nameStart);
+			std::string load_screen_path = current_skin["loadScreenPath"].asString();
+			size_t name_start = load_screen_path.find("ASSETS/Characters/") + strlen("ASSETS/Characters/");
+			std::string champ_name = load_screen_path.substr(name_start, load_screen_path.find("/", name_start) - name_start);
 
-			std::string name = currentSkin["name"].asString();
+			std::string name = current_skin["name"].asString();
 
 			std::pair<std::string, std::string> skin;
-			if (currentSkin["isBase"].asBool() == true)
+			if (current_skin["isBase"].asBool() == true)
 			{
-				champs[champName].name = champName;
+				champs[champ_name].name = champ_name;
 
-				std::string splashPath = currentSkin["splashPath"].asString();
-				size_t keyStart = splashPath.find("champion-splashes/") + strlen("champion-splashes/");
-				std::string champKey = splashPath.substr(keyStart, splashPath.find("/", keyStart) - keyStart);
+				std::string splash_path = current_skin["splashPath"].asString();
+				size_t key_start = splash_path.find("champion-splashes/") + strlen("champion-splashes/");
+				std::string champ_key = splash_path.substr(key_start, splash_path.find("/", key_start) - key_start);
 
-				champs[champName].key = std::stoi(champKey);
+				champs[champ_name].key = std::stoi(champ_key);
 				skin.first = id;
 				skin.second = "default";
-				champs[champName].skins.insert(champs[champName].skins.begin(), skin);
+				champs[champ_name].skins.insert(champs[champ_name].skins.begin(), skin);
 			}
 			else
 			{
-				if (currentSkin["questSkinInfo"]) // K/DA ALL OUT Seraphine
+				if (current_skin["questSkinInfo"])
 				{
-					const Json::Value skinTiers = currentSkin["questSkinInfo"]["tiers"];
-					for (Json::Value::ArrayIndex i = 0; i < skinTiers.size(); i++)
+					const Json::Value skin_tiers = current_skin["questSkinInfo"]["tiers"];
+					for (Json::Value::ArrayIndex i = 0; i < skin_tiers.size(); i++)
 					{
-						skin.first = skinTiers[i]["id"].asString();
-						skin.second = skinTiers[i]["name"].asString();
-						champs[champName].skins.emplace_back(skin);
+						skin.first = skin_tiers[i]["id"].asString();
+						skin.second = skin_tiers[i]["name"].asString();
+						champs[champ_name].skins.emplace_back(skin);
 					}
 				}
 				else
 				{
 					skin.first = id;
 					skin.second = name;
-					champs[champName].skins.emplace_back(skin);
+					champs[champ_name].skins.emplace_back(skin);
 				}
 			}
 		}
 
-		std::vector<Champ> temp;
-		for (const auto& c : champs)
+		std::vector<champ> temp;
+		for (const auto& champion_value : champs | std::views::values)
 		{
-			temp.emplace_back(c.second);
+			temp.emplace_back(champion_value);
 		}
-		champSkins = temp;
+		champ_skins = temp;
 	}
 
-	static void TaskKillLeague()
+	static void task_kill_league()
 	{
-		std::vector<std::wstring>leagueProcs = {
-			L"RiotClientCrashHandler.exe",
-			L"RiotClientServices.exe",
-			L"RiotClientUx.exe",
-			L"RiotClientUxRender.exe",
+		for (const std::vector<std::wstring> league_procs = {
+			     L"RiotClientCrashHandler.exe",
+			     L"RiotClientServices.exe",
+			     L"RiotClientUx.exe",
+			     L"RiotClientUxRender.exe",
 
-			L"LeagueCrashHandler.exe",
-			L"LeagueClient.exe",
-			L"LeagueClientUx.exe",
-			L"LeagueClientUxRender.exe"
-		};
-
-		for (const auto& proc : leagueProcs)
+			     L"LeagueCrashHandler.exe",
+			     L"LeagueClient.exe",
+			     L"LeagueClientUx.exe",
+			     L"LeagueClientUxRender.exe"
+		     }; const auto& proc : league_procs)
 		{
-			Misc::TerminateProcessByName(proc);
+			terminate_process_by_name(proc);
 		}
 	}
 
-	static std::string ChampIdToName(int id)
+	static std::string champ_id_to_name(const int id)
 	{
 		if (!id)
 		{
 			return "None";
 		}
-		else if (champSkins.empty())
+		if (champ_skins.empty())
 		{
-			return "No data";// "Champion data is still being fetched";
+			return "No data"; // "Champion data is still being fetched";
 		}
 		{
-			for (const auto& c : champSkins)
+			for (const auto& [key, name, skins] : champ_skins)
 			{
-				if (c.key == id)
-					return c.name;
+				if (key == id)
+					return name;
 			}
 		}
 		return "";
 	}
 
-	// Terminate all league related processes,
-	// remove read only and hidden property from files
-	// and delete them
-	static std::string ClearLogs()
+	static std::string clear_logs()
 	{
-		std::string result = "";
+		std::string result;
 
-		TaskKillLeague();
+		task_kill_league();
 
 		std::this_thread::sleep_for(std::chrono::seconds(2));
 
-		std::error_code errorCode;
+		std::error_code error_code;
 
-		auto leaguePath = std::filesystem::path(S.leaguePath);
+		const auto league_path = std::filesystem::path(s.league_path);
 
-		auto riotClientPath = std::filesystem::path(
-			S.leaguePath.substr(0, S.leaguePath.find_last_of("/\\", S.leaguePath.size() - 2))) / "Riot Client";
+		const auto riot_client_path = std::filesystem::path(
+			s.league_path.substr(0, s.league_path.find_last_of("/\\", s.league_path.size() - 2))) / "Riot Client";
 
-		char* pLocal;
-		size_t localLen;
-		_dupenv_s(&pLocal, &localLen, "LOCALAPPDATA");
-		auto localAppData = std::filesystem::path(pLocal);
+		char* p_local;
+		size_t local_len;
+		_dupenv_s(&p_local, &local_len, "LOCALAPPDATA");
+		const auto local_app_data = std::filesystem::path(p_local);
 
-		std::vector<std::filesystem::path> leagueFiles = {
-			leaguePath / "Logs",
-			leaguePath / "Config",
-			leaguePath / "debug.log",
-			riotClientPath / "UX" / "natives_blob.bin",
-			riotClientPath / "UX" / "snapshot_blob.bin",
-			riotClientPath / "UX" / "v8_context_snapshot.bin",
-			riotClientPath / "UX" / "icudtl.dat",
-			localAppData / "Riot Games"
-		};
-
-		for (const auto& file : leagueFiles)
+		for (const std::vector league_files = {
+			     league_path / "Logs",
+			     league_path / "Config",
+			     league_path / "debug.log",
+			     riot_client_path / "UX" / "natives_blob.bin",
+			     riot_client_path / "UX" / "snapshot_blob.bin",
+			     riot_client_path / "UX" / "v8_context_snapshot.bin",
+			     riot_client_path / "UX" / "icudtl.dat",
+			     local_app_data / "Riot Games"
+		     }; const auto& file : league_files)
 		{
-			if (std::filesystem::exists(file))
+			if (exists(file))
 			{
-				SetFileAttributesA(file.string().c_str(), GetFileAttributesA(file.string().c_str()) & ~FILE_ATTRIBUTE_READONLY & ~FILE_ATTRIBUTE_HIDDEN);
-				std::filesystem::remove_all(file, errorCode);
-				result += file.string() + " - " + errorCode.message() + "\n";
+				SetFileAttributesA(file.string().c_str(),
+				                   GetFileAttributesA(file.string().c_str()) & ~FILE_ATTRIBUTE_READONLY & ~
+				                   FILE_ATTRIBUTE_HIDDEN);
+				remove_all(file, error_code);
+				result += file.string() + " - " + error_code.message() + "\n";
 			}
 		}
 
 		int counter = 0;
 		for (const auto& file : std::filesystem::directory_iterator(std::filesystem::temp_directory_path()))
 		{
-			std::filesystem::remove_all(file, errorCode);
+			remove_all(file, error_code);
 			counter++;
 		}
 		result += "Deleted " + std::to_string(counter) + " files in temp directory\n";
 		return result;
 	}
 
-	// returns true on success
-	static bool TerminateProcessByName(std::wstring processName)
+	static bool terminate_process_by_name(const std::wstring& processName)
 	{
-		HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, NULL);
+		const HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, NULL);
 		bool result = false;
 		if (snapshot != INVALID_HANDLE_VALUE)
 		{
@@ -302,12 +300,13 @@ public:
 				{
 					if (std::wstring(entry.szExeFile) == processName)
 					{
-						HANDLE process = OpenProcess(PROCESS_TERMINATE, false, entry.th32ProcessID);
-						bool terminate = TerminateProcess(process, 0);
+						const HANDLE process = OpenProcess(PROCESS_TERMINATE, false, entry.th32ProcessID);
+						const bool terminate = TerminateProcess(process, 0);
 						CloseHandle(process);
 						result = terminate;
 					}
-				} while (Process32NextW(snapshot, &entry));
+				}
+				while (Process32NextW(snapshot, &entry));
 			}
 		}
 		CloseHandle(snapshot);
@@ -315,29 +314,31 @@ public:
 	}
 };
 
-int FuzzySearch(const char* needle, void* data) {
-	auto& items = *(std::vector<std::string> *)data;
-	for (int i = 0; i < (int)items.size(); i++) {
-		auto haystack = items[i].c_str();
+inline int fuzzy_search(const char* needle, void* data)
+{
+	const auto& items = *static_cast<std::vector<std::string>*>(data);
+	for (int i = 0; i < static_cast<int>(items.size()); i++)
+	{
+		const auto haystack = items[i].c_str();
 		// empty
-		if (!needle[0]) {
+		if (!needle[0])
+		{
 			if (!haystack[0])
 				return i;
 			continue;
 		}
-		// exact match
 		if (strstr(haystack, needle))
 			return i;
-		// fuzzy match
-		if (istrstr(haystack, needle))
+		if (ISTRSTR(haystack, needle))
 			return i;
 	}
 	return -1;
 }
 
-static bool itemsGetter(void* data, int n, const char** out_str) {
-	auto& items = *(std::vector<std::string> *)data;
-	if (n >= 0 && n < (int)items.size()) {
+static bool items_getter(void* data, const int n, const char** out_str)
+{
+	if (const auto& items = *static_cast<std::vector<std::string>*>(data); n >= 0 && n < static_cast<int>(items.size()))
+	{
 		*out_str = items[n].c_str();
 		return true;
 	}
@@ -346,85 +347,87 @@ static bool itemsGetter(void* data, int n, const char** out_str) {
 
 namespace ImGui
 {
-	// Helper to display a little (?) mark which shows a tooltip when hovered.
-	// In your own code you may want to display an actual icon if you are using a merged icon fonts (see docs/FONTS.md)
-	static void HelpMarker(const char* desc)
+	static void help_marker(const char* desc)
 	{
-		ImGui::TextDisabled("(?)");
-		if (ImGui::IsItemHovered())
+		TextDisabled("(?)");
+		if (IsItemHovered())
 		{
-			ImGui::BeginTooltip();
-			ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
-			ImGui::TextUnformatted(desc);
-			ImGui::PopTextWrapPos();
-			ImGui::EndTooltip();
+			BeginTooltip();
+			PushTextWrapPos(GetFontSize() * 35.0f);
+			TextUnformatted(desc);
+			PopTextWrapPos();
+			EndTooltip();
 		}
 	}
 
 #pragma warning( push )
 #pragma warning( disable : 4505 ) //  warning C4505: 'ImGui::ArrowButtonDisabled': unreferenced function with internal linkage has been removed
-	static void ArrowButtonDisabled(const char* id, ImGuiDir dir)
+
+	static void arrow_button_disabled(const char* id, const ImGuiDir dir)
 	{
-		ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
-		ImGui::ArrowButton(id, dir);
-		ImGui::PopStyleVar();
+		PushStyleVar(ImGuiStyleVar_Alpha, GetStyle().Alpha * 0.5f);
+		ArrowButton(id, dir);
+		PopStyleVar();
 	}
 #pragma warning( pop )
 
-	static void AddUnderLine(ImColor col)
+	static void add_under_line(const ImColor col)
 	{
-		ImVec2 min = ImGui::GetItemRectMin();
-		ImVec2 max = ImGui::GetItemRectMax();
+		ImVec2 min = GetItemRectMin();
+		const ImVec2 max = GetItemRectMax();
 		min.y = max.y;
-		ImGui::GetWindowDrawList()->AddLine(min, max, col, 1.0f);
+		GetWindowDrawList()->AddLine(min, max, col, 1.0f);
 	}
 
-	static void TextURL(const char* name, const char* url, uint8_t sameLineBefore = 1, uint8_t sameLineAfter = 1)
+	static void text_url(const char* name, const char* url, const uint8_t same_line_before = 1, const uint8_t same_line_after = 1)
 	{
-		if (1 == sameLineBefore) { ImGui::SameLine(0.0f, ImGui::GetStyle().ItemInnerSpacing.x); }
-		ImGui::PushStyleColor(ImGuiCol_Text, ImGui::GetStyle().Colors[ImGuiCol_ButtonHovered]);
-		ImGui::Text(name);
-		ImGui::PopStyleColor();
-		if (ImGui::IsItemHovered())
+		if (1 == same_line_before) { SameLine(0.0f, GetStyle().ItemInnerSpacing.x); }
+		PushStyleColor(ImGuiCol_Text, GetStyle().Colors[ImGuiCol_ButtonHovered]);
+		Text(name);
+		PopStyleColor();
+		if (IsItemHovered())
 		{
-			if (ImGui::IsMouseClicked(0))
+			if (IsMouseClicked(0))
 			{
-				ShellExecuteA(NULL, "open", url, NULL, NULL, SW_SHOWNORMAL);
+				ShellExecuteA(nullptr, "open", url, nullptr, nullptr, SW_SHOWNORMAL);
 			}
-			AddUnderLine(ImGui::GetStyle().Colors[ImGuiCol_ButtonHovered]);
-			ImGui::SetTooltip("  Open in browser\n%s", url);
+			add_under_line(GetStyle().Colors[ImGuiCol_ButtonHovered]);
+			SetTooltip("  Open in browser\n%s", url);
 		}
 		else
 		{
-			AddUnderLine(ImGui::GetStyle().Colors[ImGuiCol_Button]);
+			add_under_line(GetStyle().Colors[ImGuiCol_Button]);
 		}
-		if (1 == sameLineAfter) { ImGui::SameLine(0.0f, ImGui::GetStyle().ItemInnerSpacing.x); }
+		if (1 == same_line_after) { SameLine(0.0f, GetStyle().ItemInnerSpacing.x); }
 	}
 
 #pragma warning( push )
 #pragma warning( disable : 4996 )
-	struct ComboAutoSelectData {
+	struct combo_auto_select_data
+	{
 		std::vector<std::string> items;
 		int index = -1;
 		char input[128] = {};
 
-		ComboAutoSelectData() {};
+		combo_auto_select_data()
+		= default;
 
-		ComboAutoSelectData(std::vector<std::string> hints, int selected_index = -1)
+		explicit combo_auto_select_data(const std::vector<std::string>& hints, const int selected_index = -1)
 			: items(hints)
 		{
-			if (selected_index > -1 && selected_index < (int)items.size()) {
+			if (selected_index > -1 && selected_index < static_cast<int>(items.size()))
+			{
 				strncpy(input, items[selected_index].c_str(), sizeof(input) - 1);
 				index = selected_index;
 			}
 		}
 	};
 
-	bool ComboAutoSelectComplex(const char* label, char* input, int inputlen, int* current_item,
-		std::vector<std::string> data, int items_count, ImGuiComboFlags flags)
+	inline bool combo_auto_select_complex(const char* label, char* input, const int input_len, int* current_item,
+	                                      std::vector<std::string> data, const int items_count, const ImGuiComboFlags flags)
 	{
 		// Always consume the SetNextWindowSizeConstraint() call in our early return paths
-		ImGuiContext& g = *GImGui;
+		const ImGuiContext& g = *GImGui;
 
 		ImGuiWindow* window = GetCurrentWindow();
 		if (window->SkipItems)
@@ -432,95 +435,126 @@ namespace ImGui
 
 		// Call the getter to obtain the preview string which is a parameter to BeginCombo()
 
-		const ImGuiID popupId = window->GetID(label);
-		bool popupIsAlreadyOpened = IsPopupOpen(popupId, 0); //ImGuiPopupFlags_AnyPopupLevel);
-		const char* sActiveidxValue1 = NULL;
-		itemsGetter((void*)&data, *current_item, &sActiveidxValue1);
-		bool popupNeedsToBeOpened = (input[0] != 0) && (sActiveidxValue1 && strcmp(input, sActiveidxValue1));
-		bool popupJustOpened = false;
+		const ImGuiID popup_id = window->GetID(label);
+		bool popup_is_already_opened = IsPopupOpen(popup_id, 0); //ImGuiPopupFlags_AnyPopupLevel);
+		const char* s_activeidx_value1 = nullptr;
+		items_getter(&data, *current_item, &s_activeidx_value1);
+		const bool popup_needs_to_be_opened = (input[0] != 0) && (s_activeidx_value1 && strcmp(input, s_activeidx_value1));
+		bool popup_just_opened = false;
 
-		IM_ASSERT((flags & (ImGuiComboFlags_NoArrowButton | ImGuiComboFlags_NoPreview)) != (ImGuiComboFlags_NoArrowButton | ImGuiComboFlags_NoPreview)); // Can't use both flags together
+		IM_ASSERT(
+			(flags & (ImGuiComboFlags_NoArrowButton | ImGuiComboFlags_NoPreview)) != (ImGuiComboFlags_NoArrowButton |
+				ImGuiComboFlags_NoPreview)); // Can't use both flags together
 
 		const ImGuiStyle& style = g.Style;
 
 		const float arrow_size = (flags & ImGuiComboFlags_NoArrowButton) ? 0.0f : GetFrameHeight();
-		const ImVec2 label_size = CalcTextSize(label, NULL, true);
+		const ImVec2 label_size = CalcTextSize(label, nullptr, true);
 		const float expected_w = CalcItemWidth();
 		const float w = (flags & ImGuiComboFlags_NoPreview) ? arrow_size : expected_w;
-		const ImRect frame_bb(window->DC.CursorPos, ImVec2(window->DC.CursorPos.x + w, window->DC.CursorPos.y + label_size.y + style.FramePadding.y * 2.0f));
-		const ImRect total_bb(frame_bb.Min, ImVec2((label_size.x > 0.0f ? style.ItemInnerSpacing.x + label_size.x : 0.0f) + frame_bb.Max.x, frame_bb.Max.y));
+		const ImRect frame_bb(window->DC.CursorPos,
+		                      ImVec2(window->DC.CursorPos.x + w,
+		                             window->DC.CursorPos.y + label_size.y + style.FramePadding.y * 2.0f));
+		const ImRect total_bb(frame_bb.Min,
+		                      ImVec2(
+			                      (label_size.x > 0.0f ? style.ItemInnerSpacing.x + label_size.x : 0.0f) + frame_bb.Max.
+			                      x, frame_bb.Max.y));
 		const float value_x2 = ImMax(frame_bb.Min.x, frame_bb.Max.x - arrow_size);
 		ItemSize(total_bb, style.FramePadding.y);
-		if (!ItemAdd(total_bb, popupId, &frame_bb))
+		if (!ItemAdd(total_bb, popup_id, &frame_bb))
 			return false;
 
 		bool hovered, held;
-		bool pressed = ButtonBehavior(frame_bb, popupId, &hovered, &held);
+		const bool pressed = ButtonBehavior(frame_bb, popup_id, &hovered, &held);
 
-		if (!popupIsAlreadyOpened) {
+		if (!popup_is_already_opened)
+		{
 			const ImU32 frame_col = GetColorU32(hovered ? ImGuiCol_FrameBgHovered : ImGuiCol_FrameBg);
-			RenderNavHighlight(frame_bb, popupId);
+			RenderNavHighlight(frame_bb, popup_id);
 			if (!(flags & ImGuiComboFlags_NoPreview))
-				window->DrawList->AddRectFilled(frame_bb.Min, ImVec2(value_x2, frame_bb.Max.y), frame_col, style.FrameRounding, (flags & ImGuiComboFlags_NoArrowButton) ? ImDrawFlags_RoundCornersAll : ImDrawFlags_RoundCornersLeft);
+				window->DrawList->AddRectFilled(frame_bb.Min, ImVec2(value_x2, frame_bb.Max.y), frame_col,
+				                                style.FrameRounding,
+				                                (flags & ImGuiComboFlags_NoArrowButton)
+					                                ? ImDrawFlags_RoundCornersAll
+					                                : ImDrawFlags_RoundCornersLeft);
 		}
-		if (!(flags & ImGuiComboFlags_NoArrowButton)) {
-			ImU32 bg_col = GetColorU32((popupIsAlreadyOpened || hovered) ? ImGuiCol_ButtonHovered : ImGuiCol_Button);
-			ImU32 text_col = GetColorU32(ImGuiCol_Text);
-			window->DrawList->AddRectFilled(ImVec2(value_x2, frame_bb.Min.y), frame_bb.Max, bg_col, style.FrameRounding, (w <= arrow_size) ? ImDrawFlags_RoundCornersAll : ImDrawFlags_RoundCornersRight);
+		if (!(flags & ImGuiComboFlags_NoArrowButton))
+		{
+			const ImU32 bg_col = GetColorU32((popup_is_already_opened || hovered) ? ImGuiCol_ButtonHovered : ImGuiCol_Button);
+			const ImU32 text_col = GetColorU32(ImGuiCol_Text);
+			window->DrawList->AddRectFilled(ImVec2(value_x2, frame_bb.Min.y), frame_bb.Max, bg_col, style.FrameRounding,
+			                                (w <= arrow_size)
+				                                ? ImDrawFlags_RoundCornersAll
+				                                : ImDrawFlags_RoundCornersRight);
 			if (value_x2 + arrow_size - style.FramePadding.x <= frame_bb.Max.x)
-				RenderArrow(window->DrawList, ImVec2(value_x2 + style.FramePadding.y, frame_bb.Min.y + style.FramePadding.y), text_col, ImGuiDir_Down, 1.0f);
+				RenderArrow(window->DrawList,
+				            ImVec2(value_x2 + style.FramePadding.y, frame_bb.Min.y + style.FramePadding.y), text_col,
+				            ImGuiDir_Down, 1.0f);
 		}
 
-		if (!popupIsAlreadyOpened) {
+		if (!popup_is_already_opened)
+		{
 			RenderFrameBorder(frame_bb.Min, frame_bb.Max, style.FrameRounding);
-			if (input != NULL && !(flags & ImGuiComboFlags_NoPreview)) {
+			if (input != nullptr && !(flags & ImGuiComboFlags_NoPreview))
+			{
 				RenderTextClipped(
 					ImVec2(frame_bb.Min.x + style.FramePadding.x, frame_bb.Min.y + style.FramePadding.y),
 					ImVec2(value_x2, frame_bb.Max.y),
 					input,
-					NULL,
-					NULL,
+					nullptr,
+					nullptr,
 					ImVec2(0.0f, 0.0f)
 				);
 			}
 
-			if ((pressed || g.NavActivateId == popupId || popupNeedsToBeOpened) && !popupIsAlreadyOpened) {
+			if ((pressed || g.NavActivateId == popup_id || popup_needs_to_be_opened) && !popup_is_already_opened)
+			{
 				if (window->DC.NavLayerCurrent == 0)
-					window->NavLastIds[0] = popupId;
-				OpenPopupEx(popupId);
-				popupIsAlreadyOpened = true;
-				popupJustOpened = true;
+					window->NavLastIds[0] = popup_id;
+				OpenPopupEx(popup_id);
+				popup_is_already_opened = true;
+				popup_just_opened = true;
 			}
 		}
 
-		if (label_size.x > 0) {
+		if (label_size.x > 0)
+		{
 			RenderText(ImVec2(frame_bb.Max.x + style.ItemInnerSpacing.x, frame_bb.Min.y + style.FramePadding.y), label);
 		}
 
-		if (!popupIsAlreadyOpened) {
+		if (!popup_is_already_opened)
+		{
 			return false;
 		}
 
-		const float totalWMinusArrow = w - arrow_size;
-		struct ImGuiSizeCallbackWrapper {
-			static void sizeCallback(ImGuiSizeCallbackData* data) {
-				float* totalWMinusArrow = (float*)(data->UserData);
-				data->DesiredSize = ImVec2(*totalWMinusArrow, 200.f);
+		const float total_w_minus_arrow = w - arrow_size;
+		struct im_gui_size_callback_wrapper
+		{
+			static void size_callback(ImGuiSizeCallbackData* data)
+			{
+				const auto total_w_minus_arrow = static_cast<float*>(data->UserData);
+				data->DesiredSize = ImVec2(*total_w_minus_arrow, 200.f);
 			}
 		};
-		SetNextWindowSizeConstraints(ImVec2(0, 0), ImVec2(totalWMinusArrow, 150.f), ImGuiSizeCallbackWrapper::sizeCallback, (void*)&totalWMinusArrow);
+		SetNextWindowSizeConstraints(ImVec2(0, 0), ImVec2(total_w_minus_arrow, 150.f),
+		                             im_gui_size_callback_wrapper::size_callback, (void*)&total_w_minus_arrow);
 
 		char name[16];
-		ImFormatString(name, IM_ARRAYSIZE(name), "##Combo_%02d", g.BeginPopupStack.Size); // Recycle windows based on depth
+		ImFormatString(name, IM_ARRAYSIZE(name), "##Combo_%02d", g.BeginPopupStack.Size);
+		// Recycle windows based on depth
 
 		// Peek into expected window size so we can position it
-		if (ImGuiWindow* popup_window = FindWindowByName(name)) {
-			if (popup_window->WasActive) {
-				ImVec2 size_expected = CalcWindowNextAutoFitSize(popup_window);
+		if (ImGuiWindow* popup_window = FindWindowByName(name))
+		{
+			if (popup_window->WasActive)
+			{
+				const ImVec2 size_expected = CalcWindowNextAutoFitSize(popup_window);
 				if (flags & ImGuiComboFlags_PopupAlignLeft)
 					popup_window->AutoPosLastDirection = ImGuiDir_Left;
-				ImRect r_outer = GetPopupAllowedExtentRect(popup_window);
-				ImVec2 pos = FindBestWindowPosForPopupEx(frame_bb.GetBL(), size_expected, &popup_window->AutoPosLastDirection, r_outer, frame_bb, ImGuiPopupPositionPolicy_ComboBox);
+				const ImRect r_outer = GetPopupAllowedExtentRect(popup_window);
+				ImVec2 pos = FindBestWindowPosForPopupEx(frame_bb.GetBL(), size_expected,
+				                                         &popup_window->AutoPosLastDirection, r_outer, frame_bb,
+				                                         ImGuiPopupPositionPolicy_ComboBox);
 
 				pos.y -= label_size.y + style.FramePadding.y * 2.0f;
 
@@ -529,73 +563,85 @@ namespace ImGui
 		}
 
 		// Horizontally align ourselves with the framed text
-		ImGuiWindowFlags window_flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_Popup | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoSavedSettings;
+		constexpr ImGuiWindowFlags window_flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_Popup |
+			ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoSavedSettings;
 		//    PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(style.FramePadding.x, style.WindowPadding.y));
-		bool ret = Begin(name, NULL, window_flags);
+		const bool ret = Begin(name, nullptr, window_flags);
 
 		PushItemWidth(GetWindowWidth());
 		SetCursorPos(ImVec2(0.f, window->DC.CurrLineTextBaseOffset));
-		if (popupJustOpened) {
+		if (popup_just_opened)
+		{
 			SetKeyboardFocusHere(0);
 		}
 
-		bool done = InputTextEx("##inputText", NULL, input, inputlen, ImVec2(0, 0), ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue, NULL, NULL);
+		const bool done = InputTextEx("##inputText", nullptr, input, input_len, ImVec2(0, 0),
+		                              ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue, nullptr,
+		                              nullptr);
 		PopItemWidth();
 
-		if (!ret) {
+		if (!ret)
+		{
 			EndChild();
 			PopItemWidth();
 			EndPopup();
-			IM_ASSERT(0);   // This should never happen as we tested for IsPopupOpen() above
+			IM_ASSERT(0); // This should never happen as we tested for IsPopupOpen() above
 			return false;
 		}
 
-		ImGuiWindowFlags window_flags2 = ImGuiWindowFlags_NoNavInputs | ImGuiWindowFlags_NoNavFocus; //0; //ImGuiWindowFlags_HorizontalScrollbar
+		constexpr ImGuiWindowFlags window_flags2 = ImGuiWindowFlags_NoNavInputs | ImGuiWindowFlags_NoNavFocus;
+		//0; //ImGuiWindowFlags_HorizontalScrollbar
 		BeginChild("ChildL", ImVec2(GetContentRegionAvail().x, GetContentRegionAvail().y), false, window_flags2);
 
-		bool selectionChanged = false;
-		if (input[0] != '\0') {
-			int new_idx = FuzzySearch(input, (void*)&data);
-			int idx = new_idx >= 0 ? new_idx : *current_item;
-			selectionChanged = *current_item != idx;
+		bool selection_changed = false;
+		if (input[0] != '\0')
+		{
+			const int new_idx = fuzzy_search(input, &data);
+			const int idx = new_idx >= 0 ? new_idx : *current_item;
+			selection_changed = *current_item != idx;
 			*current_item = idx;
 		}
 
-		bool arrowScroll = false;
+		bool arrow_scroll = false;
 		//int arrowScrollIdx = *current_item;
 
-		if (IsKeyPressed(GetKeyIndex(ImGuiKey_UpArrow))) {
+		if (IsKeyPressed(GetKeyIndex(ImGuiKey_UpArrow)))
+		{
 			if (*current_item > 0)
 			{
 				*current_item -= 1;
-				arrowScroll = true;
+				arrow_scroll = true;
 				SetWindowFocus();
 			}
 		}
-		if (IsKeyPressed(GetKeyIndex(ImGuiKey_DownArrow))) {
+		if (IsKeyPressed(GetKeyIndex(ImGuiKey_DownArrow)))
+		{
 			if (*current_item >= -1 && *current_item < items_count - 1)
 			{
 				*current_item += 1;
-				arrowScroll = true;
+				arrow_scroll = true;
 				SetWindowFocus();
 			}
 		}
 
 		// select the first match
-		if (IsKeyPressed(GetKeyIndex(ImGuiKey_Enter))) {
-			arrowScroll = true;
-			*current_item = FuzzySearch(input, (void*)&data);
+		if (IsKeyPressed(GetKeyIndex(ImGuiKey_Enter)))
+		{
+			arrow_scroll = true;
+			*current_item = fuzzy_search(input, &data);
 			if (*current_item < 0)
 				*input = 0;
 			CloseCurrentPopup();
 		}
 
-		if (IsKeyPressed(GetKeyIndex(ImGuiKey_Backspace))) {
-			*current_item = FuzzySearch(input, (void*)&data);
-			selectionChanged = true;
+		if (IsKeyPressed(GetKeyIndex(ImGuiKey_Backspace)))
+		{
+			*current_item = fuzzy_search(input, &data);
+			selection_changed = true;
 		}
 
-		if (done && !arrowScroll) {
+		if (done && !arrow_scroll)
+		{
 			CloseCurrentPopup();
 		}
 
@@ -603,59 +649,64 @@ namespace ImGui
 
 		for (int n = 0; n < items_count; n++)
 		{
-			bool is_selected = n == *current_item;
-			if (is_selected && (IsWindowAppearing() || selectionChanged)) {
+			const bool is_selected = n == *current_item;
+			if (is_selected && (IsWindowAppearing() || selection_changed))
+			{
 				SetScrollHereY();
 			}
 
-			if (is_selected && arrowScroll) {
+			if (is_selected && arrow_scroll)
+			{
 				SetScrollHereY();
 			}
 
-			const char* select_value = NULL;
-			itemsGetter((void*)&data, n, &select_value);
+			const char* select_value = nullptr;
+			items_getter(&data, n, &select_value);
 
 			// allow empty item
 			char item_id[128];
 			ImFormatString(item_id, sizeof(item_id), "%s##item_%02d", select_value, n);
-			if (Selectable(item_id, is_selected)) {
-				selectionChanged = *current_item != n;
+			if (Selectable(item_id, is_selected))
+			{
+				selection_changed = *current_item != n;
 				*current_item = n;
-				strncpy(input, select_value, inputlen);
+				strncpy(input, select_value, input_len);
 				CloseCurrentPopup();
 				done2 = true;
 			}
 		}
 
-		if (arrowScroll && *current_item > -1) {
-			const char* sActiveidxValue2 = NULL;
-			itemsGetter((void*)&data, *current_item, &sActiveidxValue2);
-			strncpy(input, sActiveidxValue2, inputlen);
+		if (arrow_scroll && *current_item > -1)
+		{
+			const char* s_activeidx_value2 = nullptr;
+			items_getter(&data, *current_item, &s_activeidx_value2);
+			strncpy(input, s_activeidx_value2, input_len);
 			ImGuiWindow* wnd = FindWindowByName(name);
 			const ImGuiID id = wnd->GetID("##inputText");
 			ImGuiInputTextState* state = GetInputTextState(id);
 
-			const char* buf_end = NULL;
-			state->CurLenW = ImTextStrFromUtf8(state->TextW.Data, state->TextW.Size, input, NULL, &buf_end);
-			state->CurLenA = (int)(buf_end - input);
+			const char* buf_end = nullptr;
+			state->CurLenW = ImTextStrFromUtf8(state->TextW.Data, state->TextW.Size, input, nullptr, &buf_end);
+			state->CurLenA = buf_end - input;
 			state->CursorClamp();
 		}
 
 		EndChild();
 		EndPopup();
 
-		const char* sActiveidxValue3 = NULL;
-		itemsGetter((void*)&data, *current_item, &sActiveidxValue3);
-		bool ret1 = (selectionChanged && (sActiveidxValue3 && !strcmp(sActiveidxValue3, input)));
+		const char* s_activeidx_value3 = nullptr;
+		items_getter(&data, *current_item, &s_activeidx_value3);
+		const bool ret1 = (selection_changed && (s_activeidx_value3 && !strcmp(s_activeidx_value3, input)));
 
-		bool widgetRet = done || done2 || ret1;
+		const bool widget_ret = done || done2 || ret1;
 
-		return widgetRet;
+		return widget_ret;
 	}
 #pragma warning( pop )
 
-	static bool ComboAutoSelect(const char* label, ImGui::ComboAutoSelectData& data, ImGuiComboFlags flags = 0)
+	static bool combo_auto_select(const char* label, combo_auto_select_data& data, const ImGuiComboFlags flags = 0)
 	{
-		return ComboAutoSelectComplex(label, data.input, sizeof(data.input) - 1, &data.index, data.items, (int)data.items.size(), flags);
+		return combo_auto_select_complex(label, data.input, sizeof(data.input) - 1, &data.index, data.items,
+		                                 data.items.size(), flags);
 	}
 }

@@ -3,101 +3,99 @@
 #include <vector>
 #include <string>
 
-//#define RandomInt(min, max) (rand() % (max - min + 1) + min)
-
-struct ChampMinimal
+struct champ_minimal
 {
 	bool active;
 	std::string alias;
-	std::string banVoPath;
-	std::string baseLoadScreenPath;
-	bool botEnabled;
-	std::string chooseVoPath;
+	std::string ban_vo_path;
+	std::string base_load_screen_path;
+	bool bot_enabled;
+	std::string choose_vo_path;
 	//disabledQueues
-	bool freeToPlay;
+	bool free_to_play;
 	int id;
 	std::string name;
 
 	//ownership
-	bool freeToPlayReward;
+	bool free_to_play_reward;
 	int owned;
 
 	std::string purchased;
-	bool rankedPlayEnabled;
-	std::pair<std::string, std::string>roles;
-	std::string squarePortraitPath;
-	std::string stingerSfxPath;
+	bool ranked_play_enabled;
+	std::pair<std::string, std::string> roles;
+	std::string square_portrait_path;
+	std::string stinger_sfx_path;
 	std::string title;
 };
 
-struct ChampMastery
+struct champ_mastery
 {
-	int championId;
-	int championLevel;
-	int championPoints = 0;
-	int championPointsSinceLastLevel;
-	int championPointsUntilNextLevel;
-	bool chestGranted;
-	std::string formattedChampionPoints;
-	std::string formattedMasteryGoal;
-	std::string highestGrade;
-	std::string lastPlayTime;
-	std::string playerId;
-	int tokensEarned;
+	int champion_id;
+	int champion_level;
+	int champion_points = 0;
+	int champion_points_since_last_level;
+	int champion_points_until_next_level;
+	bool chest_granted;
+	std::string formatted_champion_points;
+	std::string formatted_mastery_goal;
+	std::string highest_grade;
+	std::string last_play_time;
+	std::string player_id;
+	int tokens_earned;
 };
 
-struct ChampAll
+struct champ_all
 {
-	ChampMinimal min;
-	ChampMastery mas;
+	champ_minimal min;
+	champ_mastery mas;
 };
 
-inline std::vector<ChampMinimal>champsMinimal;
-inline std::vector<ChampMastery>champsMastery;
-inline std::vector<ChampAll>champsAll;
+inline std::vector<champ_minimal> champs_minimal;
+inline std::vector<champ_mastery> champs_mastery;
+inline std::vector<champ_all> champs_all;
 
-struct Skin
+struct skin
 {
 	std::string name;
-	std::string inventoryType;
-	int itemId;
-	std::string ownershipType;
-	bool isVintage;
-	tm purchaseDate;
-	int qunatity;
+	std::string inventory_type;
+	int item_id;
+	std::string ownership_type;
+	bool is_vintage;
+	tm purchase_date;
+	int quantity;
 	std::string uuid;
 };
 
-inline std::vector<Skin>ownedSkins;
+inline std::vector<skin> owned_skins;
 
-enum QueueID : const int
+enum queue_id
 {
-	DraftPick = 400,
-	SoloDuo = 420,
-	BlindPick = 430,
-	Flex = 440,
-	ARAM = 450,
-	Clash = 700,
-	IntroBots = 830,
-	BeginnerBots = 840,
-	IntermediateBots = 850,
-	ARURF = 900,
-	TFTNormal = 1090,
-	TFTRanked = 1100,
-	TFTTutorial = 1110,
-	TFTHyperRoll = 1130,
-	TFTDoubleUp = 1160,
-	NexusBlitz = 1300,
-	Tutorial1 = 2000,
-	Tutorial2 = 2010,
-	Tutorial3 = 2020,
+	draft_pick = 400,
+	solo_duo = 420,
+	blind_pick = 430,
+	flex = 440,
+	aram = 450,
+	clash = 700,
+	intro_bots = 830,
+	beginner_bots = 840,
+	intermediate_bots = 850,
+	arurf = 900,
+	tft_normal = 1090,
+	tft_ranked = 1100,
+	tft_tutorial = 1110,
+	tft_hyper_roll = 1130,
+	tft_double_up = 1160,
+	nexus_blitz = 1300,
+	tutorial1 = 2000,
+	tutorial2 = 2010,
+	tutorial3 = 2020,
 };
 
-struct Champ
+struct champ
 {
 	int key;
 	std::string name;
-	std::vector < std::pair<std::string, std::string>>skins;
+	std::vector<std::pair<std::string, std::string>> skins;
 };
 
-inline std::vector<Champ>champSkins;
+inline std::vector<champ> champ_skins;

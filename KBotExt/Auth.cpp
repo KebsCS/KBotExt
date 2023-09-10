@@ -9,51 +9,50 @@
 #include "Auth.h"
 #include "Utils.h"
 
-ClientInfo Auth::GetClientInfo(const DWORD& pid, bool riotClient)
+client_info auth::get_client_info(const DWORD& pid, const bool riot_client)
 {
 	if (!pid)
 		return {};
 
-	std::string cmdLine = Utils::WstringToString(GetProcessCommandLine(pid));
-	if (cmdLine.empty())
+	const std::string cmd_line = utils::wstring_to_string(get_process_command_line(pid));
+	if (cmd_line.empty())
 		return {};
 
-	ClientInfo info;
-	info.port = GetPort(cmdLine, riotClient);
-	info.token = GetToken(cmdLine, riotClient);
-	info.path = GetProcessPath(pid);
-	info.version = GetFileVersion(info.path);
+	client_info info;
+	info.port = get_port(cmd_line, riot_client);
+	info.token = get_token(cmd_line, riot_client);
+	info.path = get_process_path(pid);
+	info.version = get_file_version(info.path);
 
 	return info;
 }
 
-int Auth::GetPort(const std::string& cmdLine, bool riotClient)
+int auth::get_port(const std::string& cmd_line, const bool riot_client)
 {
-	std::regex regexStr;
-	regexStr = riotClient ? ("--riotclient-app-port=(\\d*)") : ("--app-port=(\\d*)");
-	std::smatch m;
-	if (std::regex_search(cmdLine, m, regexStr))
+	std::regex regex_str;
+	regex_str = riot_client ? ("--riotclient-app-port=(\\d*)") : ("--app-port=(\\d*)");
+	if (std::smatch m; std::regex_search(cmd_line, m, regex_str))
 		return std::stoi(m[1].str());
 
 	return 0;
 }
 
-std::string Auth::GetToken(const std::string& cmdLine, bool riotClient)
+std::string auth::get_token(const std::string& cmd_line, bool riot_client)
 {
-	std::regex regexStr;
-	regexStr = riotClient ? ("--riotclient-auth-token=([\\w-]*)") : ("--remoting-auth-token=([\\w-]*)");
+	std::regex regex_str;
+	regex_str = riot_client ? ("--riotclient-auth-token=([\\w-]*)") : ("--remoting-auth-token=([\\w-]*)");
 	std::smatch m;
-	if (std::regex_search(cmdLine, m, regexStr))
+	if (std::regex_search(cmd_line, m, regex_str))
 	{
 		std::string token = "riot:" + m[1].str();
-		char* tokenArray = &token[0];
-		return base64.Encode(reinterpret_cast<unsigned char*>(tokenArray), static_cast<unsigned>(token.size())).c_str();
+		char* token_array = token.data();
+		return base64_.encode(reinterpret_cast<unsigned char*>(token_array), token.size()).c_str();
 	}
 
 	return "";
 }
 
-std::string Auth::MakeLeagueHeader(const ClientInfo& info)
+std::string auth::make_league_header(const client_info& info)
 {
 	return "Host: 127.0.0.1:" + std::to_string(info.port) + "\r\n" +
 		"Connection: keep-alive" + "\r\n" +
@@ -61,7 +60,8 @@ std::string Auth::MakeLeagueHeader(const ClientInfo& info)
 		"Accept: application/json" + "\r\n" +
 		"Content-Type: application/json" + "\r\n" +
 		"Origin: https://127.0.0.1:" + std::to_string(info.port) + "\r\n" +
-		"User-Agent: Mozilla/5.0 (Windows NT 6.2; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) LeagueOfLegendsClient/" + info.version + " (CEF 91) Safari/537.36" + "\r\n" +
+		"User-Agent: Mozilla/5.0 (Windows NT 6.2; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) LeagueOfLegendsClient/"
+		+ info.version + " (CEF 91) Safari/537.36" + "\r\n" +
 		"X-Riot-Source: rcp-fe-lol-social" + "\r\n" +
 		"sec-ch-ua: \"Chromium\";v=\"91\"" + "\r\n" +
 		"sec-ch-ua-mobile: ?0" + "\r\n" +
@@ -73,7 +73,7 @@ std::string Auth::MakeLeagueHeader(const ClientInfo& info)
 		"Accept-Language: en-US,en;q=0.9\r\n\r\n";
 }
 
-std::string Auth::MakeRiotHeader(const ClientInfo& info)
+std::string auth::make_riot_header(const client_info& info)
 {
 	return "Host: 127.0.0.1:" + std::to_string(info.port) + "\r\n" +
 		"Connection: keep-alive" + "\r\n" +
@@ -87,16 +87,17 @@ std::string Auth::MakeRiotHeader(const ClientInfo& info)
 		"Sec-Fetch-Mode: cors" + "\r\n" +
 		"Sec-Fetch-Site: same-origin" + "\r\n" +
 		"Sec-Fetch-User: ?F" + "\r\n" +
-		"User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) RiotClient/" + info.version + " (CEF 74) Safari/537.36" + "\r\n" +
+		"User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) RiotClient/" + info.
+		version + " (CEF 74) Safari/537.36" + "\r\n" +
 		"sec-ch-ua: Chromium" + "\r\n" +
 		"Referer: https://127.0.0.1:" + std::to_string(info.port) + "/index.html" + "\r\n" +
 		"Accept-Encoding: gzip, deflate, br" + "\r\n" +
 		"Accept-Language: en-US,en;q=0.9\r\n\r\n";
 }
 
-DWORD Auth::GetProcessId(const std::wstring& processName)
+DWORD auth::get_process_id(const std::wstring& process_name)
 {
-	HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, NULL);
+	const HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, NULL);
 	if (snapshot != INVALID_HANDLE_VALUE)
 	{
 		PROCESSENTRY32W entry;
@@ -105,22 +106,23 @@ DWORD Auth::GetProcessId(const std::wstring& processName)
 		{
 			do
 			{
-				if (std::wstring(entry.szExeFile) == processName)
+				if (std::wstring(entry.szExeFile) == process_name)
 				{
 					CloseHandle(snapshot);
 					return entry.th32ProcessID;
 				}
-			} while (Process32NextW(snapshot, &entry));
+			}
+			while (Process32NextW(snapshot, &entry));
 		}
 	}
 	CloseHandle(snapshot);
 	return 0;
 }
 
-std::vector<DWORD> Auth::GetAllProcessIds(const std::wstring& processName)
+std::vector<DWORD> auth::get_all_process_ids(const std::wstring& process_name)
 {
-	std::vector<DWORD>pids;
-	HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, NULL);
+	std::vector<DWORD> process_ids;
+	const HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, NULL);
 	if (snapshot != INVALID_HANDLE_VALUE)
 	{
 		PROCESSENTRY32W entry;
@@ -129,30 +131,31 @@ std::vector<DWORD> Auth::GetAllProcessIds(const std::wstring& processName)
 		{
 			do
 			{
-				if (std::wstring(entry.szExeFile) == processName)
+				if (std::wstring(entry.szExeFile) == process_name)
 				{
-					pids.emplace_back(entry.th32ProcessID);
+					process_ids.emplace_back(entry.th32ProcessID);
 				}
-			} while (Process32NextW(snapshot, &entry));
+			}
+			while (Process32NextW(snapshot, &entry));
 		}
 	}
 	CloseHandle(snapshot);
-	return pids;
+	return process_ids;
 }
 
-std::wstring Auth::GetProcessCommandLine(const DWORD& processId)
+std::wstring auth::get_process_command_line(const DWORD& process_id)
 {
-	typedef NTSTATUS(__stdcall* tNtQueryInformationProcess)
-		(
-			HANDLE ProcessHandle,
-			ULONG ProcessInformationClass,
-			PVOID ProcessInformation,
-			ULONG ProcessInformationLength,
-			PULONG ReturnLength
-			);
+	using t_nt_query_information_process = NTSTATUS(__stdcall*)
+	(
+		HANDLE process_handle,
+		ULONG process_information_class,
+		PVOID process_information,
+		ULONG process_information_length,
+		PULONG return_length
+	);
 
 	std::wstring result;
-	HANDLE processHandle = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, 0, processId);
+	const HANDLE process_handle = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, 0, process_id);
 
 	SYSTEM_INFO si;
 	GetNativeSystemInfo(&si);
@@ -160,178 +163,181 @@ std::wstring Auth::GetProcessCommandLine(const DWORD& processId)
 	BOOL wow;
 	IsWow64Process(GetCurrentProcess(), &wow);
 
-	DWORD ProcessParametersOffset = si.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_AMD64 ? 0x20 : 0x10;
-	DWORD CommandLineOffset = si.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_AMD64 ? 0x70 : 0x40;
+	const DWORD process_parameters_offset = si.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_AMD64 ? 0x20 : 0x10;
+	const DWORD command_line_offset = si.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_AMD64 ? 0x70 : 0x40;
 
-	DWORD pebSize = ProcessParametersOffset + 8; // size until ProcessParameters
-	PBYTE peb = (PBYTE)malloc(pebSize);
-	ZeroMemory(peb, pebSize);
+	const DWORD peb_size = process_parameters_offset + 8; // size until ProcessParameters
+	const auto peb = static_cast<PBYTE>(malloc(peb_size));
+	ZeroMemory(peb, peb_size);
 
-	DWORD processParametersSize = CommandLineOffset + 16;
-	PBYTE processParameters = (PBYTE)malloc(processParametersSize);
-	ZeroMemory(processParameters, processParametersSize);
+	const DWORD process_parameters_size = command_line_offset + 16;
+	const auto process_parameters = static_cast<PBYTE>(malloc(process_parameters_size));
+	ZeroMemory(process_parameters, process_parameters_size);
 
 	if (wow)
 	{
-		typedef struct _PROCESS_BASIC_INFORMATION_WOW64 {
-			PVOID Reserved1[2];
-			PVOID64 PebBaseAddress;
-			PVOID Reserved2[4];
-			ULONG_PTR UniqueProcessId[2];
-			PVOID Reserved3[2];
-		} PROCESS_BASIC_INFORMATION_WOW64;
+		using process_basic_information_wow64 = struct process_basic_information_wow64
+		{
+			PVOID reserved1[2];
+			PVOID64 peb_base_address;
+			PVOID reserved2[4];
+			ULONG_PTR unique_process_id[2];
+			PVOID reserved3[2];
+		};
 
-		typedef struct _UNICODE_STRING_WOW64 {
-			USHORT Length;
-			USHORT MaximumLength;
-			PVOID64 Buffer;
-		} UNICODE_STRING_WOW64;
+		using unicode_string_wow64 = struct unicode_string_wow64
+		{
+			USHORT length;
+			USHORT maximum_length;
+			PVOID64 buffer;
+		};
 
-		typedef NTSTATUS(NTAPI* tNtWow64ReadVirtualMemory64)(
-			IN HANDLE ProcessHandle,
-			IN PVOID64 BaseAddress,
-			OUT PVOID Buffer,
-			IN ULONG64 Size,
-			OUT PULONG64 NumberOfBytesRead);
+		using t_nt_wow64_read_virtual_memory64 = NTSTATUS(NTAPI*)(
+			IN HANDLE handle,
+			IN PVOID64 base_address,
+			OUT PVOID buffer,
+			IN ULONG64 size,
+			OUT PULONG64 number_of_bytes_read);
 
-		PROCESS_BASIC_INFORMATION_WOW64 pbi;
+		process_basic_information_wow64 pbi;
 		ZeroMemory(&pbi, sizeof(pbi));
 
-		tNtQueryInformationProcess NtQueryInformationProcess =
-			(tNtQueryInformationProcess)GetProcAddress(GetModuleHandleA("ntdll.dll"), "NtWow64QueryInformationProcess64");
-		if (NtQueryInformationProcess(processHandle, 0, &pbi, sizeof(pbi), 0) != 0)
+		if (const auto nt_query_information_process =
+			reinterpret_cast<t_nt_query_information_process>(GetProcAddress(GetModuleHandleA("ntdll.dll"),
+			                                                                "NtWow64QueryInformationProcess64")); nt_query_information_process(
+			process_handle, 0, &pbi, sizeof(pbi), nullptr) != 0)
 		{
-			MessageBoxA(0, "NtQueryInformationProcess failed", 0, 0);
-			CloseHandle(processHandle);
+			MessageBoxA(nullptr, "NtQueryInformationProcess failed", nullptr, 0);
+			CloseHandle(process_handle);
 			return {};
 		}
 
-		tNtWow64ReadVirtualMemory64 NtWow64ReadVirtualMemory64 =
-			(tNtWow64ReadVirtualMemory64)GetProcAddress(GetModuleHandleA("ntdll.dll"), "NtWow64ReadVirtualMemory64");
+		const auto nt_wow64_read_virtual_memory64 =
+			reinterpret_cast<t_nt_wow64_read_virtual_memory64>(GetProcAddress(GetModuleHandleA("ntdll.dll"), "NtWow64ReadVirtualMemory64"));
 
-		if (NtWow64ReadVirtualMemory64(processHandle, pbi.PebBaseAddress, peb, pebSize, NULL) != 0)
+		if (nt_wow64_read_virtual_memory64(process_handle, pbi.peb_base_address, peb, peb_size, nullptr) != 0)
 		{
-			MessageBoxA(0, "PEB NtWow64ReadVirtualMemory64 failed", 0, 0);
-			CloseHandle(processHandle);
+			MessageBoxA(nullptr, "PEB NtWow64ReadVirtualMemory64 failed", nullptr, 0);
+			CloseHandle(process_handle);
 			return {};
 		}
 
-		PVOID64 parameters = (PVOID64) * ((PVOID64*)(peb + ProcessParametersOffset));
-		if (NtWow64ReadVirtualMemory64(processHandle, parameters, processParameters, processParametersSize, NULL) != 0)
+		if (const auto parameters = *reinterpret_cast<PVOID64*>(peb + process_parameters_offset); nt_wow64_read_virtual_memory64(
+				process_handle, parameters, process_parameters, process_parameters_size, nullptr) !=
+			0)
 		{
-			MessageBoxA(0, "processParameters NtWow64ReadVirtualMemory64 failed", 0, 0);
-			CloseHandle(processHandle);
+			MessageBoxA(nullptr, "processParameters NtWow64ReadVirtualMemory64 failed", nullptr, 0);
+			CloseHandle(process_handle);
 			return {};
 		}
 
-		UNICODE_STRING_WOW64* pCommandLine = (UNICODE_STRING_WOW64*)(processParameters + CommandLineOffset);
-		PWSTR commandLineCopy = (PWSTR)malloc(pCommandLine->MaximumLength);
-		if (NtWow64ReadVirtualMemory64(processHandle, pCommandLine->Buffer, commandLineCopy, pCommandLine->MaximumLength, NULL) != 0)
+		const auto p_command_line = reinterpret_cast<unicode_string_wow64*>(process_parameters + command_line_offset);
+		const auto command_line_copy = static_cast<PWSTR>(malloc(p_command_line->maximum_length));
+		if (nt_wow64_read_virtual_memory64(process_handle, p_command_line->buffer, command_line_copy,
+		                                   p_command_line->maximum_length, nullptr) != 0)
 		{
-			MessageBoxA(0, "pCommandLine NtWow64ReadVirtualMemory64 failed", 0, 0);
-			CloseHandle(processHandle);
+			MessageBoxA(nullptr, "pCommandLine NtWow64ReadVirtualMemory64 failed", nullptr, 0);
+			CloseHandle(process_handle);
 			return {};
 		}
 
-		result = std::wstring(commandLineCopy);
-		CloseHandle(processHandle);
+		result = std::wstring(command_line_copy);
+		CloseHandle(process_handle);
 	}
 	else
 	{
-		typedef struct _PROCESS_BASIC_INFORMATION {
-			LONG ExitStatus;
-			PVOID PebBaseAddress;
-			ULONG_PTR AffinityMask;
-			LONG BasePriority;
-			HANDLE UniqueProcessId;
-			HANDLE InheritedFromUniqueProcessId;
-		} PROCESS_BASIC_INFORMATION;
-
-		typedef struct _UNICODE_STRING
+		using process_basic_information = struct PROCESS_BASIC_INFORMATION
 		{
-			USHORT Length;
-			USHORT MaximumLength;
-			PWSTR Buffer;
-		} UNICODE_STRING, * PUNICODE_STRING;
-		typedef const UNICODE_STRING* PCUNICODE_STRING;
+			LONG exit_status;
+			PVOID peb_base_address;
+			ULONG_PTR affinity_mask;
+			LONG base_priority;
+			HANDLE unique_process_id;
+			HANDLE inherited_from_unique_process_id;
+		};
 
-		PROCESS_BASIC_INFORMATION pbi;
+		using unicode_string = struct unicode_string
+		{
+			USHORT length;
+			USHORT maximum_length;
+			PWSTR buffer;
+		};
+
+		process_basic_information pbi;
 		ZeroMemory(&pbi, sizeof(pbi));
 
-		tNtQueryInformationProcess NtQueryInformationProcess =
-			(tNtQueryInformationProcess)GetProcAddress(GetModuleHandleA("ntdll.dll"), "NtQueryInformationProcess");
-		if (NtQueryInformationProcess(processHandle, 0, &pbi, sizeof(pbi), 0) != 0)
+		if (const auto nt_query_information_process =
+				reinterpret_cast<t_nt_query_information_process>(GetProcAddress(GetModuleHandleA("ntdll.dll"), "NtQueryInformationProcess"));
+			nt_query_information_process(process_handle, 0, &pbi, sizeof(pbi), nullptr) != 0)
 		{
-			MessageBoxA(0, "NtQueryInformationProcess failed", 0, 0);
-			CloseHandle(processHandle);
+			MessageBoxA(nullptr, "NtQueryInformationProcess failed", nullptr, 0);
+			CloseHandle(process_handle);
 			return {};
 		}
 
-		if (!ReadProcessMemory(processHandle, pbi.PebBaseAddress, peb, pebSize, NULL))
+		if (!ReadProcessMemory(process_handle, pbi.peb_base_address, peb, peb_size, nullptr))
 		{
-			MessageBoxA(0, "PEB ReadProcessMemory failed", 0, 0);
-			CloseHandle(processHandle);
+			MessageBoxA(nullptr, "PEB ReadProcessMemory failed", nullptr, 0);
+			CloseHandle(process_handle);
 			return {};
 		}
 
-		PBYTE* parameters = (PBYTE*)*(LPVOID*)(peb + ProcessParametersOffset);
-		if (!ReadProcessMemory(processHandle, parameters, processParameters, processParametersSize, NULL))
+		if (const auto parameters = static_cast<PBYTE*>(*reinterpret_cast<LPVOID*>(peb + process_parameters_offset)); !ReadProcessMemory(
+			process_handle, parameters, process_parameters, process_parameters_size, nullptr))
 		{
-			MessageBoxA(0, "processParameters ReadProcessMemory failed", 0, 0);
-			CloseHandle(processHandle);
+			MessageBoxA(nullptr, "processParameters ReadProcessMemory failed", nullptr, 0);
+			CloseHandle(process_handle);
 			return {};
 		}
 
-		UNICODE_STRING* pCommandLine = (UNICODE_STRING*)(processParameters + CommandLineOffset);
-		PWSTR commandLineCopy = (PWSTR)malloc(pCommandLine->MaximumLength);
-		if (!ReadProcessMemory(processHandle, pCommandLine->Buffer, commandLineCopy, pCommandLine->MaximumLength, NULL))
+		const auto p_command_line = reinterpret_cast<unicode_string*>(process_parameters + command_line_offset);
+		const auto command_line_copy = static_cast<PWSTR>(malloc(p_command_line->maximum_length));
+		if (!ReadProcessMemory(process_handle, p_command_line->buffer, command_line_copy, p_command_line->maximum_length,
+		                       nullptr))
 		{
-			MessageBoxA(0, "pCommandLine ReadProcessMemory failed", 0, 0);
-			CloseHandle(processHandle);
+			MessageBoxA(nullptr, "pCommandLine ReadProcessMemory failed", nullptr, 0);
+			CloseHandle(process_handle);
 			return {};
 		}
 
-		result = std::wstring(commandLineCopy);
-		CloseHandle(processHandle);
+		result = std::wstring(command_line_copy);
+		CloseHandle(process_handle);
 	}
 
 	return result;
 }
 
-std::wstring Auth::GetProcessPath(const DWORD& processId)
+std::wstring auth::get_process_path(const DWORD& process_id)
 {
-	HANDLE processHandle = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, 0, processId);
-	if (processHandle)
+	if (const HANDLE process_handle = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, 0, process_id))
 	{
-		WCHAR result[MAX_PATH];
-		if (GetModuleFileNameExW(processHandle, NULL, result, MAX_PATH))
+		if (WCHAR result[MAX_PATH]; GetModuleFileNameExW(process_handle, nullptr, result, MAX_PATH))
 		{
-			CloseHandle(processHandle);
-			return std::wstring(result);
+			CloseHandle(process_handle);
+			return std::basic_string(result);
 		}
-		CloseHandle(processHandle);
+		CloseHandle(process_handle);
 	}
 	return L"";
 }
 
-std::string Auth::GetFileVersion(const std::wstring& file)
+std::string auth::get_file_version(const std::wstring& file)
 {
-	DWORD versionSize = GetFileVersionInfoSizeW(file.c_str(), 0);
-	if (versionSize)
+	if (const DWORD version_size = GetFileVersionInfoSizeW(file.c_str(), nullptr))
 	{
-		std::vector<unsigned char> versionInfo(versionSize);
+		std::vector<unsigned char> version_info(version_size);
 
-		if (GetFileVersionInfoW(file.c_str(), 0, versionSize, &versionInfo[0]))
+		if (GetFileVersionInfoW(file.c_str(), 0, version_size, &version_info[0]))
 		{
-			VS_FIXEDFILEINFO* lpFfi;
+			VS_FIXEDFILEINFO* lp_ffi;
 			UINT size = sizeof(VS_FIXEDFILEINFO);
-			if (VerQueryValueW(&versionInfo[0], L"\\", (LPVOID*)&lpFfi, &size))
+			if (VerQueryValueW(&version_info[0], L"\\", reinterpret_cast<LPVOID*>(&lp_ffi), &size))
 			{
-				DWORD dwFileVersionMS = lpFfi->dwFileVersionMS;
-				DWORD dwFileVersionLS = lpFfi->dwFileVersionLS;
+				const DWORD dw_file_version_ms = lp_ffi->dwFileVersionMS;
+				const DWORD dw_file_version_ls = lp_ffi->dwFileVersionLS;
 				std::string result = std::format("{}.{}.{}.{}",
-					HIWORD(dwFileVersionMS), LOWORD(dwFileVersionMS),
-					HIWORD(dwFileVersionLS), LOWORD(dwFileVersionLS));
+				                                 HIWORD(dw_file_version_ms), LOWORD(dw_file_version_ms),
+				                                 HIWORD(dw_file_version_ls), LOWORD(dw_file_version_ls));
 				return result;
 			}
 		}

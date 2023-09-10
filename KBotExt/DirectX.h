@@ -12,46 +12,44 @@
 #pragma comment(lib, "dcomp.lib")
 #pragma comment(lib, "d3d11.lib")
 
-// Data
-inline ID3D11Device* g_pd3dDevice = NULL;
-inline ID3D11DeviceContext* g_pd3dDeviceContext = NULL;
-inline ID3D11RenderTargetView* g_pd3dRenderTargetView = NULL;
-inline IDXGISwapChain* g_pSwapChain = NULL;
+inline ID3D11Device* g_pd3d_device = nullptr;
+inline ID3D11DeviceContext* g_pd3d_device_context = nullptr;
+inline ID3D11RenderTargetView* g_pd3d_render_target_view = nullptr;
+inline IDXGISwapChain* g_p_swap_chain = nullptr;
 
-class Direct3D11Render
+class direct_3d11_render
 {
-private:
+	std::string game_patch_;
 
-	std::string gamePatch;
 public:
-	bool closedClient = false;
+	bool closed_client = false;
 
-	Direct3D11Render() = default;
+	direct_3d11_render() = default;
 
-	~Direct3D11Render() = default;
+	~direct_3d11_render() = default;
 
-	void StartFrame();
+	static void start_frame();
 
-	void EndFrame();
+	static void end_frame();
 
 	// initializes directx, fonts, imgui and objects
-	bool DirectXInit(HWND hWnd);
+	bool direct_x_init(HWND h_wnd);
 
-	bool CreateRenderTarget();
+	static bool create_render_target();
 
-	void CleanupRenderTarget();
+	static void cleanup_render_target();
 
 	// main rendering loop
-	int Render();
+	int render() const;
 
 	//releases directx and clears imgui
-	void Shutdown();
+	static void shutdown();
 
 	//initializes imgui
-	void Renderimgui(HWND hWnd);
+	void render_imgui(HWND h_wnd);
 
-	void InitializeFonts();
+	static void initialize_fonts();
 
 	//initializes imgui styles
-	void MenuInit();
+	static void menu_init();
 };

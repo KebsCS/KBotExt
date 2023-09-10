@@ -9,55 +9,53 @@
 
 #pragma warning(disable : 4996)
 
-class LoginTab
+class login_tab
 {
-private:
-
-	static void LoginOnClientOpen(std::string username, std::string password)
+	static void login_on_client_open(const std::string& username, const std::string& password)
 	{
 		while (true)
 		{
-			if (::FindWindowA("RCLIENT", "Riot Client") && LCU::riot.port != 0)
+			if (FindWindowA("RCLIENT", "Riot Client") && lcu::riot.port != 0)
 			{
 				// waits to be sure that client is fully loaded
 				std::this_thread::sleep_for(std::chrono::milliseconds(2000));
-				Login(username, password);
+				login(username, password);
 				break;
 			}
 			std::this_thread::sleep_for(std::chrono::milliseconds(10));
 		}
 	}
 
-	static std::string Login(std::string username, std::string password)
+	static std::string login(std::string username, std::string password)
 	{
 		// If riot client not open
-		if (LCU::riot.port == 0)
+		if (lcu::riot.port == 0)
 		{
-			if (std::filesystem::exists(S.leaguePath))
+			if (std::filesystem::exists(s.league_path))
 			{
-				Misc::LaunchClient("");
-				std::thread t(LoginOnClientOpen, username, password);
+				misc::launch_client("");
+				std::thread t(login_on_client_open, username, password);
 				t.detach();
 				return "Launching client...";
 			}
-			else
-				return "Invalid client path, change it in Settings tab";
+			return "Invalid client path, change it in Settings tab";
 		}
 
 		cpr::Session session;
 		session.SetVerifySsl(false);
-		session.SetHeader(Utils::StringToHeader(LCU::riot.header));
-		session.SetUrl(std::format("https://127.0.0.1:{}/rso-auth/v2/authorizations", LCU::riot.port));
+		session.SetHeader(utils::string_to_header(lcu::riot.header));
+		session.SetUrl(std::format("https://127.0.0.1:{}/rso-auth/v2/authorizations", lcu::riot.port));
 		session.SetBody(R"({"clientId":"riot-client","trustLevels":["always_trusted"]})");
 		session.Post();
 		// refresh session
 
-		std::string loginBody = R"({"username":")" + username + R"(","password":")" + password + R"(","persistLogin":false})";
-		session.SetUrl(std::format("https://127.0.0.1:{}/rso-auth/v1/session/credentials", LCU::riot.port));
-		session.SetBody(loginBody);
+		std::string login_body = R"({"username":")" + username + R"(","password":")" + password +
+			R"(","persistLogin":false})";
+		session.SetUrl(std::format("https://127.0.0.1:{}/rso-auth/v1/session/credentials", lcu::riot.port));
+		session.SetBody(login_body);
 		std::string result = session.Put().text;
 
-		Json::CharReaderBuilder builder;
+		const Json::CharReaderBuilder builder;
 		const std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
 		JSONCPP_STRING err;
 		Json::Value root;
@@ -65,76 +63,80 @@ private:
 		{
 			if (!root["type"].empty())
 				return root["type"].asString();
-			else if (!root["message"].empty())
+			if (!root["message"].empty())
 				return root["message"].asString();
 		}
 		return result;
 	}
 
 public:
-	static void Render()
+	static void render()
 	{
 		if (ImGui::BeginTabItem("Login"))
 		{
 			static std::string result;
 			static bool once = true;
-			static char leagueArgs[1024 * 16];
-			static std::string sArgs;
+			static char league_args[1024 * 16];
+			static std::string s_args;
 
 			if (once)
 			{
 				once = false;
-				std::copy(S.loginTab.leagueArgs.begin(), S.loginTab.leagueArgs.end(), leagueArgs);
+				std::ranges::copy(s.login_tab.league_args, league_args);
 			}
 
-			ImGui::Columns(2, 0, false);
+			ImGui::Columns(2, nullptr, false);
 
-			static std::vector<std::pair<std::string, std::string>>langs = {
-				{"English (US)", "en_US"},{"Japanese","ja_JP"},{"Korean","ko_KR"},{"Chinese (China)","zh_CN"},
-				{"German","de_DE"},{"Spanish (Spain)","es_ES"},{"Polish","pl_PL"},{"Russian","ru_RU"},
-				{"French","fr_FR"},{"Turkish","tr_TR"},{"Portuguese","pt_BR"},{"Czech","cs_CZ"},{"Greek","el_GR"},
-				{"Romanian","ro_RO"},{"Hungarian","hu_HU"},{"English (UK)","en_GB"},{"Italian","it_IT"},
-				{"Spanish (Mexico)","es_MX"},{"Spanish (Argentina)","es_AR"},{"English (Australia)","en_AU"},
-				{"Malay","ms_MY"},{"English (Philippines)","en_PH"},{"English (Singapore)","en_SG"},{"Thai","th_TH"},
-				{"Vietnamese","vi_VN"},{"Indonesian","id_ID"},{"Tagalog","tl_PH"},{"Chinese (Malaysia)","zh_MY"},{"Chinese (Taiwan)","zh_TW"}
+			static std::vector<std::pair<std::string, std::string>> langs = {
+				{"English (US)", "en_US"}, {"Japanese", "ja_JP"}, {"Korean", "ko_KR"}, {"Chinese (China)", "zh_CN"},
+				{"German", "de_DE"}, {"Spanish (Spain)", "es_ES"}, {"Polish", "pl_PL"}, {"Russian", "ru_RU"},
+				{"French", "fr_FR"}, {"Turkish", "tr_TR"}, {"Portuguese", "pt_BR"}, {"Czech", "cs_CZ"},
+				{"Greek", "el_GR"},
+				{"Romanian", "ro_RO"}, {"Hungarian", "hu_HU"}, {"English (UK)", "en_GB"}, {"Italian", "it_IT"},
+				{"Spanish (Mexico)", "es_MX"}, {"Spanish (Argentina)", "es_AR"}, {"English (Australia)", "en_AU"},
+				{"Malay", "ms_MY"}, {"English (Philippines)", "en_PH"}, {"English (Singapore)", "en_SG"},
+				{"Thai", "th_TH"},
+				{"Vietnamese", "vi_VN"}, {"Indonesian", "id_ID"}, {"Tagalog", "tl_PH"}, {"Chinese (Malaysia)", "zh_MY"},
+				{"Chinese (Taiwan)", "zh_TW"}
 			};
-			// find saved lang from cfg file
-			auto findLang = std::find_if(langs.begin(), langs.end(), [](std::pair<std::string, std::string>k) { return k.second == S.loginTab.language; });
 
-			static std::pair<std::string, std::string>selectedLang = { findLang[0].first,findLang[0].second };
+			auto find_lang = std::ranges::find_if(langs, [](const std::pair<std::string, std::string>& k) {
+				return k.second == s.login_tab.language;
+			});
+
+			static std::pair selected_lang = {find_lang[0].first, find_lang[0].second};
 
 			if (ImGui::Button("Launch client"))
 			{
-				if (!std::filesystem::exists(S.leaguePath))
+				if (!std::filesystem::exists(s.league_path))
 				{
 					result = "Invalid path, change it in Settings tab";
 				}
 				else
 				{
-					Misc::LaunchClient(sArgs);
-					result = S.leaguePath + "LeagueClient.exe " + sArgs;
+					misc::launch_client(s_args);
+					result = s.league_path + "LeagueClient.exe " + s_args;
 				}
 			}
 			ImGui::SameLine();
 
-			if (ImGui::BeginCombo("##language", selectedLang.first.c_str()))
+			if (ImGui::BeginCombo("##language", selected_lang.first.c_str()))
 			{
-				for (const auto& lang : langs)
+				for (const auto& [fst, snd] : langs)
 				{
-					if (ImGui::Selectable(lang.first.c_str(), lang.first == selectedLang.first))
+					if (ImGui::Selectable(fst.c_str(), fst == selected_lang.first))
 					{
-						selectedLang = { lang.first,lang.second };
-						S.loginTab.language = lang.second;
-						Config::Save();
+						selected_lang = {fst, snd};
+						s.login_tab.language = snd;
+						config::save();
 
-						std::string localeArg = std::format("--locale={} ", selectedLang.second);
-						size_t localePos = sArgs.find("--locale=");
-						if (localePos != std::string::npos)
+						std::string locale_arg = std::format("--locale={} ", selected_lang.second);
+						if (size_t locale_pos = s_args.find("--locale="); locale_pos != std::string::npos)
 						{
-							sArgs.replace(localePos, localeArg.size(), localeArg);
+							s_args.replace(locale_pos, locale_arg.size(), locale_arg);
 						}
 						else
-							sArgs += localeArg;
+							s_args += locale_arg;
 					}
 				}
 				ImGui::EndCombo();
@@ -144,24 +146,24 @@ public:
 
 			if (ImGui::Button("Launch legacy client"))
 			{
-				if (!std::filesystem::exists(S.leaguePath))
+				if (!std::filesystem::exists(s.league_path))
 				{
 					result = "Invalid path, change it in Settings tab";
 				}
 				else
 				{
-					Misc::LaunchLegacyClient();
+					misc::launch_legacy_client();
 				}
 			}
 			ImGui::Columns(1);
 
-			std::copy(sArgs.begin(), sArgs.end(), leagueArgs);
+			std::ranges::copy(s_args, league_args);
 			ImGui::Text(" Args: ");
 			ImGui::SameLine();
-			ImGui::InputText("##inputLeagueArgs", leagueArgs, IM_ARRAYSIZE(leagueArgs));
+			ImGui::InputText("##inputLeagueArgs", league_args, IM_ARRAYSIZE(league_args));
 
-			sArgs = leagueArgs;
-			S.loginTab.leagueArgs = sArgs;
+			s_args = league_args;
+			s.login_tab.league_args = s_args;
 
 			ImGui::Separator();
 
@@ -176,67 +178,66 @@ public:
 			if (ImGui::Button("Login") || ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Enter), false))
 			{
 				if (!std::string(username).empty() && !std::string(password).empty())
-					result = Login(username, password);
+					result = login(username, password);
 			}
 
 			ImGui::SameLine();
 			if (ImGui::Button("Save") && !std::string(username).empty() && !std::string(password).empty())
 			{
-				// if file doesn't exist, create new one with {} so it can be parsed
-				if (!std::filesystem::exists(S.settingsFile))
+				if (!std::filesystem::exists(s.settings_file))
 				{
-					std::ofstream file(S.settingsFile);
+					std::ofstream file(s.settings_file);
 					file << "{}";
 					file.close();
 				}
 
-				Json::Reader reader;
-				Json::Value root;
+				std::ifstream i_file(s.settings_file);
 
-				std::ifstream iFile(S.settingsFile);
-
-				if (iFile.good())
+				if (i_file.good())
 				{
-					if (reader.parse(iFile, root, false))
+					Json::Value root;
+					if (Json::Reader reader; reader.parse(i_file, root, false))
 					{
 						if (!root["accounts"].isArray())
 							root["accounts"] = Json::Value(Json::arrayValue);
-						Json::Value accArray = root["accounts"];
+						Json::Value acc_array = root["accounts"];
 
-						accArray.append(std::format("{0}:{1}", username, password));
-						root["accounts"] = accArray;
+						acc_array.append(std::format("{0}:{1}", username, password));
+						root["accounts"] = acc_array;
 
-						std::ofstream oFile(S.settingsFile);
-						oFile << root.toStyledString() << std::endl;
-						oFile.close();
+						std::ofstream o_file(s.settings_file);
+						o_file << root.toStyledString() << std::endl;
+						o_file.close();
 					}
 				}
-				iFile.close();
+				i_file.close();
 			}
 
 			ImGui::SameLine();
-			ImGui::HelpMarker("This part is only, if you want to save your login and pass to config file and login with 1 click. You don't have to do that, you can just log in the usual way in client and launch the tool anytime you want");
+			ImGui::help_marker(
+				"This part is only, if you want to save your login and pass to config file and login with 1 click. You don't have to do that, you can just log in the usual way in client and launch the tool anytime you want");
 
 			ImGui::SameLine();
-			ImGui::Columns(2, 0, false);
+			ImGui::Columns(2, nullptr, false);
 			ImGui::NextColumn();
 
-			static std::string banCheck = "";
+			static std::string ban_check = "";
 
 			if (ImGui::Button("Check ban reason"))
 			{
-				Json::Value authData;
-				authData["acr_values"] = "";
-				authData["claims"] = "";
-				authData["client_id"] = "riot-client";
-				authData["nonce"] = Utils::RandomString(22);
-				authData["code_challenge"] = "";
-				authData["code_challenge_method"] = "";
-				authData["redirect_uri"] = "http://localhost/redirect";
-				authData["response_type"] = "token id_token";
-				authData["scope"] = "openid offline_access lol ban profile email phone birthdate summoner link lol_region";
+				Json::Value auth_data;
+				auth_data["acr_values"] = "";
+				auth_data["claims"] = "";
+				auth_data["client_id"] = "riot-client";
+				auth_data["nonce"] = utils::random_string(22);
+				auth_data["code_challenge"] = "";
+				auth_data["code_challenge_method"] = "";
+				auth_data["redirect_uri"] = "http://localhost/redirect";
+				auth_data["response_type"] = "token id_token";
+				auth_data["scope"] =
+					"openid offline_access lol ban profile email phone birthdate summoner link lol_region";
 
-				cpr::Header authHeader = {
+				cpr::Header auth_header = {
 					{"Content-Type", "application/json"},
 					{"Accept-Encoding", "deflate"},
 					{"User-Agent", "RiotClient/69.0.3.228.1352 rso-auth (Windows;10;;Home, x64)"},
@@ -246,54 +247,56 @@ public:
 				};
 
 				cpr::Session session;
-				session.SetHeader(authHeader);
+				session.SetHeader(auth_header);
 
-				std::string valoApi = cpr::Get(cpr::Url{ "https://valorant-api.com/v1/version" }).text;
+				std::string valo_api = Get(cpr::Url{"https://valorant-api.com/v1/version"}).text;
 
-				std::regex regexStr("\"riotClientBuild\":\"(.*?)\"");
-				std::smatch m;
-				if (std::regex_search(valoApi, m, regexStr))
+				std::regex regex_str("\"riotClientBuild\":\"(.*?)\"");
+				if (std::smatch m; std::regex_search(valo_api, m, regex_str))
 				{
-					session.UpdateHeader(cpr::Header{ { "User-Agent", "RiotClient/" + m[1].str() + " rso-auth (Windows;10;;Home, x64)"}});
+					session.UpdateHeader(cpr::Header{
+						{"User-Agent", "RiotClient/" + m[1].str() + " rso-auth (Windows;10;;Home, x64)"}
+					});
 				}
 
-				session.SetBody(authData.toStyledString());
+				session.SetBody(auth_data.toStyledString());
 				session.SetUrl("https://auth.riotgames.com/api/v1/authorization");
 				session.Post();
 
-				Json::Value authData2;
-				authData2["language"] = "en_GB";
-				authData2["password"] = password;
-				authData2["region"] = Json::nullValue;
-				authData2["remember"] = false;
-				authData2["type"] = "auth";
-				authData2["username"] = username;
+				Json::Value auth_data2;
+				auth_data2["language"] = "en_GB";
+				auth_data2["password"] = password;
+				auth_data2["region"] = Json::nullValue;
+				auth_data2["remember"] = false;
+				auth_data2["type"] = "auth";
+				auth_data2["username"] = username;
 
-				session.SetBody(authData2.toStyledString());
+				session.SetBody(auth_data2.toStyledString());
 				session.SetUrl("https://auth.riotgames.com/api/v1/authorization");
 				std::string r = session.Put().text;
 
 				Json::CharReaderBuilder builder;
 				const std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
 				JSONCPP_STRING err;
-				Json::Value rootAuth;
-				banCheck = r;
-				if (r.find("\"error\"") == std::string::npos && reader->parse(r.c_str(), r.c_str() + static_cast<int>(r.length()), &rootAuth, &err))
+				Json::Value root_auth;
+				ban_check = r;
+				if (r.find("\"error\"") == std::string::npos && reader->parse(
+					r.c_str(), r.c_str() + static_cast<int>(r.length()), &root_auth, &err))
 				{
-					std::string uri = rootAuth["response"]["parameters"]["uri"].asString();
-					size_t startIndex = uri.find("#access_token=") + strlen("#access_token=");
-					size_t endIndex = uri.find("&scope");
-					std::string bearer = uri.substr(startIndex, endIndex - startIndex);
-					session.UpdateHeader(cpr::Header{ { "Authorization", "Bearer " + bearer} });
+					std::string uri = root_auth["response"]["parameters"]["uri"].asString();
+					size_t start_index = uri.find("#access_token=") + strlen("#access_token=");
+					size_t end_index = uri.find("&scope");
+					std::string bearer = uri.substr(start_index, end_index - start_index);
+					session.UpdateHeader(cpr::Header{{"Authorization", "Bearer " + bearer}});
 
 					session.SetUrl("https://auth.riotgames.com/userinfo");
 					r = session.Get().text;
-					Json::Value rootInfo;
+					Json::Value root_info;
 
-					if (reader->parse(r.c_str(), r.c_str() + static_cast<int>(r.length()), &rootInfo, &err))
+					if (reader->parse(r.c_str(), r.c_str() + static_cast<int>(r.length()), &root_info, &err))
 					{
-						banCheck = rootInfo.toStyledString();
-						std::cout << rootInfo.toStyledString();
+						ban_check = root_info.toStyledString();
+						std::cout << root_info.toStyledString();
 					}
 				}
 			}
@@ -303,55 +306,62 @@ public:
 			if (ImGui::Button("Get email"))
 			{
 				cpr::Session session;
-				cpr::Header authHeader = {
+				cpr::Header auth_header = {
 					{"Content-Type", "application/json"},
 					{"Accept-Encoding", "deflate"},
 					{"Upgrade-Insecure-Requests", "1"},
 					{"sec-ch-ua", R"("Not/A)Brand";v="99", "Google Chrome";v="115", "Chromium";v="115")"},
 					{"sec-ch-ua-platform", "\"Windows\""},
 					{"sec-ch-ua-mobile", "?0"},
-					{"User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36"},
+					{
+						"User-Agent",
+						"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36"
+					},
 					{"Sec-Fetch-Site", "cross-site"},
 					{"Sec-Fetch-Mode", "navigate"},
 					{"Sec-Fetch-Dest", "document"},
 					{"Accept-Language", "en-US,en;q=0.9"},
-					{"Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7"},
+					{
+						"Accept",
+						"text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7"
+					},
 					{"Referer", "https://riotgames.zendesk.com/"},
 				};
-				session.SetHeader(authHeader);
+				session.SetHeader(auth_header);
 
-				session.SetUrl("https://auth.riotgames.com/authorize?redirect_uri=https://login.playersupport.riotgames.com/login_callback&client_id=player-support-zendesk&ui_locales=en-us%20en-us&response_type=code&scope=openid%20email");
+				session.SetUrl(
+					"https://auth.riotgames.com/authorize?redirect_uri=https://login.playersupport.riotgames.com/login_callback&client_id=player-support-zendesk&ui_locales=en-us%20en-us&response_type=code&scope=openid%20email");
 				session.Get();
 
-				Json::Value authData2;
-				authData2["language"] = "en_GB";
-				authData2["password"] = password;
-				authData2["region"] = Json::nullValue;
-				authData2["remember"] = false;
-				authData2["type"] = "auth";
-				authData2["username"] = username;
+				Json::Value auth_data2;
+				auth_data2["language"] = "en_GB";
+				auth_data2["password"] = password;
+				auth_data2["region"] = Json::nullValue;
+				auth_data2["remember"] = false;
+				auth_data2["type"] = "auth";
+				auth_data2["username"] = username;
 
-				session.SetBody(authData2.toStyledString());
+				session.SetBody(auth_data2.toStyledString());
 				session.SetUrl("https://auth.riotgames.com/api/v1/authorization");
 				std::string r = session.Put().text;
 
 				Json::CharReaderBuilder builder;
 				const std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
 				JSONCPP_STRING err;
-				Json::Value rootAuth;
-				banCheck = r;
-				if (r.find("\"error\"") == std::string::npos && reader->parse(r.c_str(), r.c_str() + static_cast<int>(r.length()), &rootAuth, &err))
+				Json::Value root_auth;
+				ban_check = r;
+				if (r.find("\"error\"") == std::string::npos && reader->parse(
+					r.c_str(), r.c_str() + static_cast<int>(r.length()), &root_auth, &err))
 				{
-					session.SetUrl(rootAuth["response"]["parameters"]["uri"].asString());
+					session.SetUrl(root_auth["response"]["parameters"]["uri"].asString());
 					session.Get().text;
 
 					session.SetUrl("https://support-leagueoflegends.riotgames.com/hc/en-us/requests");
 					std::string support = session.Get().text;
-					std::regex regexStr("\"email\":(.*?),");
-					std::smatch m;
-					if (std::regex_search(support, m, regexStr))
+					std::regex regex_str("\"email\":(.*?),");
+					if (std::smatch m; std::regex_search(support, m, regex_str))
 					{
-						banCheck = m.str();
+						ban_check = m.str();
 					}
 				}
 			}
@@ -360,49 +370,46 @@ public:
 
 			ImGui::Separator();
 
-			ImGui::Columns(2, 0, false);
+			ImGui::Columns(2, nullptr, false);
 
-			Json::Reader reader;
-			Json::Value root;
+			std::ifstream i_file(s.settings_file);
 
-			std::ifstream iFile(S.settingsFile);
-
-			if (iFile.good())
+			if (i_file.good())
 			{
-				if (reader.parse(iFile, root, false))
+				Json::Value root;
+				if (Json::Reader reader; reader.parse(i_file, root, false))
 				{
-					auto accArray = root["accounts"];
-					if (accArray.isArray())
+					if (auto acc_array = root["accounts"]; acc_array.isArray())
 					{
-						for (Json::Value::ArrayIndex i = 0; i < accArray.size(); ++i)
+						for (Json::Value::ArrayIndex i = 0; i < acc_array.size(); ++i)
 						{
-							std::string acc = accArray[i].asString();
-							std::string accUsername = acc.substr(0, acc.find(":"));
-							std::string accPassword = acc.substr(acc.find(":") + 1);
-							if (ImGui::Button(accUsername.c_str()))
+							std::string acc = acc_array[i].asString();
+							std::string acc_username = acc.substr(0, acc.find(":"));
+							std::string acc_password = acc.substr(acc.find(":") + 1);
+							if (ImGui::Button(acc_username.c_str()))
 							{
-								result = Login(accUsername, accPassword);
+								result = login(acc_username, acc_password);
 							}
 
 							ImGui::SameLine();
-							std::string deleteButton = "Delete##" + acc;
-							if (ImGui::Button(deleteButton.c_str()))
+							std::string delete_button = "Delete##" + acc;
+							if (ImGui::Button(delete_button.c_str()))
 							{
-								std::ofstream oFile(S.settingsFile);
-								accArray.removeIndex(i, 0);
-								root["accounts"] = accArray;
-								oFile << root.toStyledString() << std::endl;
-								oFile.close();
+								std::ofstream o_file(s.settings_file);
+								acc_array.removeIndex(i, nullptr);
+								root["accounts"] = acc_array;
+								o_file << root.toStyledString() << std::endl;
+								o_file.close();
 							}
 						}
 					}
 				}
 			}
-			iFile.close();
+			i_file.close();
 
 			ImGui::NextColumn();
 
-			ImGui::TextWrapped(banCheck.c_str());
+			ImGui::TextWrapped(ban_check.c_str());
 
 			ImGui::Columns(1);
 

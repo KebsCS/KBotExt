@@ -10,7 +10,7 @@
 #include "ChampsTab.h"
 #include "SettingsTab.h"
 
-bool Direct3D11Render::DirectXInit(HWND hWnd)
+bool direct_3d11_render::direct_x_init(const HWND h_wnd)
 {
 	// Setup swap chain
 	DXGI_SWAP_CHAIN_DESC sd;
@@ -23,38 +23,41 @@ bool Direct3D11Render::DirectXInit(HWND hWnd)
 	sd.BufferDesc.RefreshRate.Denominator = 1;
 	sd.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
 	sd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-	sd.OutputWindow = hWnd;
+	sd.OutputWindow = h_wnd;
 	sd.SampleDesc.Count = 1;
 	sd.SampleDesc.Quality = 0;
 	sd.Windowed = TRUE;
 	sd.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
 
-	UINT createDeviceFlags = 0;
 	//createDeviceFlags |= D3D11_CREATE_DEVICE_DEBUG;
-	D3D_FEATURE_LEVEL featureLevel;
-	const D3D_FEATURE_LEVEL featureLevelArray[2] = { D3D_FEATURE_LEVEL_11_0, D3D_FEATURE_LEVEL_10_0, };
-	if (D3D11CreateDeviceAndSwapChain(NULL, D3D_DRIVER_TYPE_HARDWARE, NULL, createDeviceFlags, featureLevelArray, 2, D3D11_SDK_VERSION, &sd, &g_pSwapChain, &g_pd3dDevice, &featureLevel, &g_pd3dDeviceContext) != S_OK)
+	D3D_FEATURE_LEVEL feature_level;
+	constexpr D3D_FEATURE_LEVEL feature_level_array[2] = {D3D_FEATURE_LEVEL_11_0, D3D_FEATURE_LEVEL_10_0,};
+	if (constexpr UINT create_device_flags = 0; D3D11CreateDeviceAndSwapChain(nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr, create_device_flags,
+	                                                                          feature_level_array,
+	                                                                          2, D3D11_SDK_VERSION, &sd, &g_p_swap_chain, &g_pd3d_device,
+	                                                                          &feature_level,
+	                                                                          &g_pd3d_device_context) != S_OK)
 		return false;
 
-	if (!CreateRenderTarget())
+	if (!create_render_target())
 		return false;
 
-	Renderimgui(hWnd);
+	render_imgui(h_wnd);
 
-	Misc::CheckVersion();
+	misc::check_version();
 
-	gamePatch = Misc::GetCurrentPatch();
+	game_patch_ = misc::get_current_patch();
 
-	std::thread t{ Misc::GetAllChampionSkins };
+	std::thread t{misc::get_all_champion_skins};
 	t.detach();
 
-	std::thread AutoAcceptThread(&GameTab::AutoAccept);
-	AutoAcceptThread.detach();
+	std::thread auto_accept_thread(&game_tab::auto_accept);
+	auto_accept_thread.detach();
 
 	return true;
 }
 
-void Direct3D11Render::StartFrame()
+void direct_3d11_render::start_frame()
 {
 	// Start the Dear ImGui frame
 	ImGui_ImplDX11_NewFrame();
@@ -62,73 +65,74 @@ void Direct3D11Render::StartFrame()
 	ImGui::NewFrame();
 }
 
-void Direct3D11Render::EndFrame()
+void direct_3d11_render::end_frame()
 {
 	// Rendering
-	ImVec4 clear_color = ImVec4(0, 0, 0, 255.f);
+	auto clear_color = ImVec4(0, 0, 0, 255.f);
 	ImGui::EndFrame();
 	ImGui::Render();
-	g_pd3dDeviceContext->OMSetRenderTargets(1, &g_pd3dRenderTargetView, NULL);
-	g_pd3dDeviceContext->ClearRenderTargetView(g_pd3dRenderTargetView, (float*)&clear_color);
+	g_pd3d_device_context->OMSetRenderTargets(1, &g_pd3d_render_target_view, nullptr);
+	g_pd3d_device_context->ClearRenderTargetView(g_pd3d_render_target_view, (float*)&clear_color);
 	ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
 
-	g_pSwapChain->Present(1, 0); // Present with vsync
+	g_p_swap_chain->Present(1, 0); // Present with vsync
 	//g_pSwapChain->Present(0, 0); // Present without vsync
 }
 
-int Direct3D11Render::Render()
+int direct_3d11_render::render() const
 {
 	static char buf[255];
-	static std::string connectedTo = "";
-	static std::string currentInfo = "";
-	if (gamePatch == "0.0.0")
+	static std::string connected_to;
+	static std::string current_info;
+	if (game_patch_ == "0.0.0")
 	{
-		currentInfo = "Failed to connect, most likely blocked by antivirus or firewall";
+		current_info = "Failed to connect, most likely blocked by antivirus or firewall";
 	}
 	else
 	{
-		if (LCU::IsProcessGood())
-			connectedTo = "| Connected to: " + LCU::leagueProcesses[LCU::indexLeagueProcesses].second;
+		if (lcu::is_process_good())
+			connected_to = "| Connected to: " + lcu::league_processes[lcu::index_league_processes].second;
 
-		if (champSkins.empty())
-			currentInfo = "Fetching skin data...";
+		if (champ_skins.empty())
+			current_info = "Fetching skin data...";
 		else
-			currentInfo = "";
+			current_info = "";
 	}
 
-	sprintf_s(buf, ("KBotExt by kebs - %s %s \t %s ###AnimatedTitle"), gamePatch.c_str(), connectedTo.c_str(), currentInfo.c_str());
+	sprintf_s(buf, "KBotExt by kebs - %s %s \t %s ###AnimatedTitle", game_patch_.c_str(), connected_to.c_str(),
+	          current_info.c_str());
 
 	ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiCond_FirstUseEver);
 	ImGui::SetNextWindowSize(ImVec2(685, 462), ImGuiCond_FirstUseEver);
-	ImGui::SetNextWindowSize(ImVec2(static_cast<float>(S.Window.width - 15), static_cast<float>(S.Window.height - 38)));
-	ImGuiWindowFlags flags = /*ImGuiWindowFlags_NoTitleBar |*/ ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoSavedSettings;
-	ImGui::Begin(buf, (bool*)0, flags);// , ImGuiWindowFlags_AlwaysAutoResize);
-	ImGuiTabBarFlags tab_bar_flags = 0;// ImGuiTabBarFlags_Reorderable;
-	if (ImGui::BeginTabBar("TabBar", tab_bar_flags))
+	ImGui::SetNextWindowSize(ImVec2(static_cast<float>(s.window.width - 15), static_cast<float>(s.window.height - 38)));
+	constexpr ImGuiWindowFlags flags = /*ImGuiWindowFlags_NoTitleBar |*/ ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove |
+		ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoSavedSettings;
+	ImGui::Begin(buf, nullptr, flags); // , ImGuiWindowFlags_AlwaysAutoResize);
+	if (constexpr ImGuiTabBarFlags tab_bar_flags = 0; ImGui::BeginTabBar("TabBar", tab_bar_flags))
 	{
-		if (!closedClient)
+		if (!closed_client)
 		{
-			GameTab::Render();
+			game_tab::render();
 
-			ProfileTab::Render();
+			profile_tab::render();
 
-			InfoTab::Render();
+			info_tab::render();
 
-			ChampsTab::Render();
+			champs_tab::render();
 
-			SkinsTab::Render();
+			skins_tab::render();
 
-			MiscTab::Render();
+			misc_tab::render();
 
-			CustomTab::Render();
+			custom_tab::render();
 
-			SettingsTab::Render();
+			settings_tab::render();
 		}
 		else
 		{
-			LoginTab::Render();
+			login_tab::render();
 
-			SettingsTab::Render();
+			settings_tab::render();
 		}
 		ImGui::EndTabBar();
 	}
@@ -138,49 +142,66 @@ int Direct3D11Render::Render()
 	return 1;
 }
 
-void Direct3D11Render::Shutdown()
+void direct_3d11_render::shutdown()
 {
-	CleanupRenderTarget();
-	if (g_pSwapChain) { g_pSwapChain->Release(); g_pSwapChain = NULL; }
-	if (g_pd3dDeviceContext) { g_pd3dDeviceContext->Release(); g_pd3dDeviceContext = NULL; }
-	if (g_pd3dDevice) { g_pd3dDevice->Release(); g_pd3dDevice = NULL; }
+	cleanup_render_target();
+	if (g_p_swap_chain)
+	{
+		g_p_swap_chain->Release();
+		g_p_swap_chain = nullptr;
+	}
+	if (g_pd3d_device_context)
+	{
+		g_pd3d_device_context->Release();
+		g_pd3d_device_context = nullptr;
+	}
+	if (g_pd3d_device)
+	{
+		g_pd3d_device->Release();
+		g_pd3d_device = nullptr;
+	}
 }
 
-bool Direct3D11Render::CreateRenderTarget()
+bool direct_3d11_render::create_render_target()
 {
-	ID3D11Texture2D* pBackBuffer;
-	if (S_OK != g_pSwapChain->GetBuffer(0, IID_PPV_ARGS(&pBackBuffer)))
+	ID3D11Texture2D* p_back_buffer;
+	if (S_OK != g_p_swap_chain->GetBuffer(0, IID_PPV_ARGS(&p_back_buffer)))
 		return false;
-	if (S_OK != g_pd3dDevice->CreateRenderTargetView(pBackBuffer, NULL, &g_pd3dRenderTargetView))
+	if (S_OK != g_pd3d_device->CreateRenderTargetView(p_back_buffer, nullptr, &g_pd3d_render_target_view))
 		return false;
-	pBackBuffer->Release();
+	p_back_buffer->Release();
 	return true;
 }
 
-void Direct3D11Render::CleanupRenderTarget()
+void direct_3d11_render::cleanup_render_target()
 {
-	if (g_pd3dRenderTargetView) { g_pd3dRenderTargetView->Release(); g_pd3dRenderTargetView = NULL; }
+	if (g_pd3d_render_target_view)
+	{
+		g_pd3d_render_target_view->Release();
+		g_pd3d_render_target_view = nullptr;
+	}
 }
 
-void Direct3D11Render::Renderimgui(HWND hWnd)
+void direct_3d11_render::render_imgui(const HWND h_wnd)
 {
 	// Setup Dear ImGui context
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
 
 	// Setup Dear ImGui style
-	MenuInit();
+	menu_init();
 
 	// Setup Platform/Renderer backends
-	ImGui_ImplWin32_Init(hWnd);
-	ImGui_ImplDX11_Init(g_pd3dDevice, g_pd3dDeviceContext);
+	ImGui_ImplWin32_Init(h_wnd);
+	ImGui_ImplDX11_Init(g_pd3d_device, g_pd3d_device_context);
 }
 
-void Direct3D11Render::InitializeFonts()
+void direct_3d11_render::initialize_fonts()
 {
-	ImGuiIO& io = ImGui::GetIO(); (void)io;
+	const ImGuiIO& io = ImGui::GetIO();
+	(void)io;
 
-	static const ImWchar ranges[] = { 0x1, 0x1FFFF, 0 };
+	static constexpr ImWchar ranges[] = {0x1, 0x1FFFF, 0};
 	static ImFontConfig cfg;
 	cfg.OversampleH = cfg.OversampleV = 1;
 
@@ -189,31 +210,27 @@ void Direct3D11Render::InitializeFonts()
 	cfg.FontBuilderFlags |= ImGuiFreeTypeBuilderFlags_LoadColor;
 	cfg.MergeMode = true;
 
-	typedef HRESULT(WINAPI* tSHGetFolderPathW)(HWND hwnd, int csidl, HANDLE hToken, DWORD dwFlags, LPWSTR pszPath);
-	tSHGetFolderPathW SHGetFolderPathW = (tSHGetFolderPathW)GetProcAddress(LoadLibraryW(L"shell32.dll"), "SHGetFolderPathW");
+	using t_sh_get_folder_path_w = HRESULT(WINAPI*)(HWND hwnd, int csidl, HANDLE h_token, DWORD dw_flags, LPWSTR psz_path);
+	const auto sh_get_folder_path_w = reinterpret_cast<t_sh_get_folder_path_w>(GetProcAddress(LoadLibraryW(L"shell32.dll"), "SHGetFolderPathW"));
 
-	TCHAR szPath[MAX_PATH];
-	if (SUCCEEDED(SHGetFolderPathW(NULL, 0x0024/*CSIDL_WINDOWS*/, NULL, 0, szPath)))
+	if (TCHAR sz_path[MAX_PATH]; SUCCEEDED(sh_get_folder_path_w(NULL, 0x0024/*CSIDL_WINDOWS*/, NULL, 0, sz_path)))
 	{
-		std::filesystem::path fontsPath(szPath);
-		fontsPath = fontsPath / "Fonts";
+		std::filesystem::path fonts_path(sz_path);
+		fonts_path = fonts_path / "Fonts";
 
-		if (std::filesystem::is_directory(fontsPath))
+		if (is_directory(fonts_path))
 		{
-			const std::vector<std::string> fonts = {
-				"seguiemj.ttf", // emojis
-				"segoeuib.ttf", // cyrillic
-				"malgunbd.ttf", // korean
-				"YuGothB.ttc", // japanese
-				"simsun.ttc", // simplified chinese
-				"msjh.ttc", // traditional chinese
-				"seguisym.ttf", // symbols
-			};
-
-			for (const auto& f : fonts)
+			for (const std::vector<std::string> fonts = {
+				     "seguiemj.ttf", // emojis
+				     "segoeuib.ttf", // cyrillic
+				     "malgunbd.ttf", // korean
+				     "YuGothB.ttc", // japanese
+				     "simsun.ttc", // simplified chinese
+				     "msjh.ttc", // traditional chinese
+				     "seguisym.ttf", // symbols
+			     }; const auto& f : fonts)
 			{
-				const std::filesystem::path path = fontsPath / f;
-				if (std::filesystem::exists(path))
+				if (const std::filesystem::path path = fonts_path / f; exists(path))
 				{
 					io.Fonts->AddFontFromFileTTF(path.string().c_str(), 13.0f, &cfg, ranges);
 				}
@@ -222,14 +239,15 @@ void Direct3D11Render::InitializeFonts()
 	}
 }
 
-void Direct3D11Render::MenuInit()
+void direct_3d11_render::menu_init()
 {
-	ImGuiIO& io = ImGui::GetIO(); (void)io;
+	ImGuiIO& io = ImGui::GetIO();
+	(void)io;
 	io.IniFilename = nullptr;
 	io.LogFilename = nullptr;
-	io.FontGlobalScale = S.fontScale;
+	io.FontGlobalScale = s.font_scale;
 
-	InitializeFonts();
+	initialize_fonts();
 
 	ImGuiStyle& style = ImGui::GetStyle();
 

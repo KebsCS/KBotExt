@@ -1,118 +1,123 @@
 #pragma once
 
-#include "Definitions.h"
 #include "Includes.h"
 #include "LCU.h"
 
-class CustomTab
+class custom_tab
 {
 public:
-	static void Custom()
+	static void custom()
 	{
 		static bool once = true;
 
 		static char method[50];
-		static char urlText[1024 * 16];
-		static char requestText[1024 * 32];
+		static char url_text[1024 * 16];
+		static char request_text[1024 * 32];
 
-		static char inputPort[64] = "";
-		static char inputHeader[1024 * 16];
+		static char input_port[64] = "";
+		static char input_header[1024 * 16];
 
-		static std::string customHeader = LCU::league.header;
-		static int customPort = LCU::league.port;
+		static std::string custom_header = lcu::league.header;
+		static int custom_port = lcu::league.port;
 
-		static bool isCustomOpen = false;
+		static bool is_custom_open = false;
 
-		static std::string ledgeUrl;
-		static std::string storeUrl;
-		static std::string localhostUrl = "https://127.0.0.1";
+		static std::string ledge_url;
+		static std::string store_url;
+		static std::string localhost_url = "https://127.0.0.1";
 
 		if (once)
 		{
 			once = false;
-			std::copy(S.customTab.method.begin(), S.customTab.method.end(), method);
-			std::copy(S.customTab.urlText.begin(), S.customTab.urlText.end(), urlText);
-			std::copy(S.customTab.requestText.begin(), S.customTab.requestText.end(), requestText);
-			std::copy(S.customTab.port.begin(), S.customTab.port.end(), inputPort);
-			std::copy(S.customTab.header.begin(), S.customTab.header.end(), inputHeader);
+			std::ranges::copy(s.custom_tab.method, method);
+			std::ranges::copy(s.custom_tab.url_text, url_text);
+			std::ranges::copy(s.custom_tab.request_text, request_text);
+			std::ranges::copy(s.custom_tab.port, input_port);
+			std::ranges::copy(s.custom_tab.header, input_header);
 		}
 
-		if (onOpen)
+		if (on_open_)
 		{
-			customHeader = LCU::league.header;
-			customPort = LCU::league.port;
+			custom_header = lcu::league.header;
+			custom_port = lcu::league.port;
 
-			ledgeUrl = GetLedgeUrl();
-			storeUrl = LCU::Request("GET", "/lol-store/v1/getStoreUrl");
-			storeUrl.erase(std::remove(storeUrl.begin(), storeUrl.end(), '"'), storeUrl.end());
+			ledge_url = get_ledge_url();
+			store_url = lcu::request("GET", "/lol-store/v1/getStoreUrl");
+			std::erase(store_url, '"');
 		}
 
 		ImGui::Text("Method:");
-		const ImVec2 label_size = ImGui::CalcTextSize("W", NULL, true);
-		ImGui::InputTextEx("##inputMethod", NULL, method, IM_ARRAYSIZE(method), ImVec2(S.Window.width - 130.f, label_size.y + ImGui::GetStyle().FramePadding.y * 2.0f), 0, NULL, NULL);
+		const ImVec2 label_size = ImGui::CalcTextSize("W", nullptr, true);
+		ImGui::InputTextEx("##inputMethod", nullptr, method, IM_ARRAYSIZE(method),
+		                   ImVec2(s.window.width - 130.f, label_size.y + ImGui::GetStyle().FramePadding.y * 2.0f), 0,
+		                   nullptr, nullptr);
 
 		ImGui::Text("URL:");
-		ImGui::InputTextMultiline("##inputUrl", urlText, IM_ARRAYSIZE(urlText), ImVec2(S.Window.width - 130.f, label_size.y + ImGui::GetStyle().FramePadding.y * 2.0f));
+		ImGui::InputTextMultiline("##inputUrl", url_text, IM_ARRAYSIZE(url_text),
+		                          ImVec2(s.window.width - 130.f,
+		                                 label_size.y + ImGui::GetStyle().FramePadding.y * 2.0f));
 
 		ImGui::Text("Body:");
-		ImGui::InputTextMultiline("##inputBody", (requestText), IM_ARRAYSIZE(requestText), ImVec2(S.Window.width - 130.f,
-			(label_size.y + ImGui::GetStyle().FramePadding.y) * 6.f), ImGuiInputTextFlags_AllowTabInput);
+		ImGui::InputTextMultiline("##inputBody", (request_text), IM_ARRAYSIZE(request_text), ImVec2(
+			                          s.window.width - 130.f,
+			                          (label_size.y + ImGui::GetStyle().FramePadding.y) * 6.f),
+		                          ImGuiInputTextFlags_AllowTabInput);
 
-		S.customTab.method = method;
-		S.customTab.urlText = urlText;
-		S.customTab.requestText = requestText;
+		s.custom_tab.method = method;
+		s.custom_tab.url_text = url_text;
+		s.custom_tab.request_text = request_text;
 
 		if (ImGui::CollapsingHeader("Custom Port/Header"))
 		{
-			isCustomOpen = true;
+			is_custom_open = true;
 			ImGui::Text("Port:");
-			ImGui::InputText("##inputPort", inputPort, 64, ImGuiInputTextFlags_CharsDecimal);
+			ImGui::InputText("##inputPort", input_port, 64, ImGuiInputTextFlags_CharsDecimal);
 
 			ImGui::SameLine();
 
 			if (ImGui::Button("LCU"))
 			{
-				if (strlen(urlText) == 0 || strcmp(urlText, localhostUrl.c_str()) == 0
-					|| strcmp(urlText, storeUrl.c_str()) == 0 || strcmp(urlText, ledgeUrl.c_str()) == 0)
+				if (strlen(url_text) == 0 || strcmp(url_text, localhost_url.c_str()) == 0
+					|| strcmp(url_text, store_url.c_str()) == 0 || strcmp(url_text, ledge_url.c_str()) == 0)
 				{
-					std::strcpy(urlText, localhostUrl.c_str());
+					std::strcpy(url_text, localhost_url.c_str());
 				}
-				std::strcpy(inputPort, std::to_string(LCU::league.port).c_str());
-				std::strcpy(inputHeader, LCU::league.header.c_str());
+				std::strcpy(input_port, std::to_string(lcu::league.port).c_str());
+				std::strcpy(input_header, lcu::league.header.c_str());
 			}
 			ImGui::SameLine();
 
 			if (ImGui::Button("Riot"))
 			{
-				LCU::SetCurrentClientRiotInfo();
-				if (strlen(urlText) == 0 || strcmp(urlText, localhostUrl.c_str()) == 0
-					|| strcmp(urlText, storeUrl.c_str()) == 0 || strcmp(urlText, ledgeUrl.c_str()) == 0)
+				lcu::set_current_client_riot_info();
+				if (strlen(url_text) == 0 || strcmp(url_text, localhost_url.c_str()) == 0
+					|| strcmp(url_text, store_url.c_str()) == 0 || strcmp(url_text, ledge_url.c_str()) == 0)
 				{
-					std::strcpy(urlText, localhostUrl.c_str());
+					std::strcpy(url_text, localhost_url.c_str());
 				}
-				std::strcpy(inputPort, std::to_string(LCU::riot.port).c_str());
-				std::strcpy(inputHeader, LCU::riot.header.c_str());
+				std::strcpy(input_port, std::to_string(lcu::riot.port).c_str());
+				std::strcpy(input_header, lcu::riot.header.c_str());
 			}
 			ImGui::SameLine();
 
 			if (ImGui::Button("Store"))
 			{
-				std::string storeHeader = LCU::GetStoreHeader();
-				if (storeHeader != "")
+				std::string store_header = lcu::get_store_header();
+				if (!store_header.empty())
 				{
 					if (strlen(method) != 0)
 					{
-						std::strcpy(method, Utils::ToUpper(std::string(method)).c_str());
+						std::strcpy(method, utils::to_upper(std::string(method)).c_str());
 					}
-					if (strlen(urlText) == 0 || strcmp(urlText, localhostUrl.c_str()) == 0
-						|| strcmp(urlText, storeUrl.c_str()) == 0 || strcmp(urlText, ledgeUrl.c_str()) == 0)
+					if (strlen(url_text) == 0 || strcmp(url_text, localhost_url.c_str()) == 0
+						|| strcmp(url_text, store_url.c_str()) == 0 || strcmp(url_text, ledge_url.c_str()) == 0)
 					{
-						storeUrl = LCU::Request("GET", "/lol-store/v1/getStoreUrl");
-						storeUrl.erase(std::remove(storeUrl.begin(), storeUrl.end(), '"'), storeUrl.end());
-						std::strcpy(urlText, storeUrl.c_str());
+						store_url = lcu::request("GET", "/lol-store/v1/getStoreUrl");
+						std::erase(store_url, '"');
+						std::strcpy(url_text, store_url.c_str());
 					}
-					std::strcpy(inputPort, "443");
-					std::strcpy(inputHeader, storeHeader.c_str());
+					std::strcpy(input_port, "443");
+					std::strcpy(input_header, store_header.c_str());
 				}
 			}
 
@@ -120,131 +125,131 @@ public:
 
 			if (ImGui::Button("Ledge"))
 			{
-				std::string ledgeHeader = "";
+				std::string ledge_header;
 
-				ledgeUrl = GetLedgeUrl();
-				if (ledgeUrl != "")
+				ledge_url = get_ledge_url();
+				if (!ledge_url.empty())
 				{
-					std::string ledgeHost = "";
-					auto n = ledgeUrl.find("https://");
-					if (n != std::string::npos)
+					std::string ledge_host;
+					if (auto n = ledge_url.find("https://"); n != std::string::npos)
 					{
-						ledgeHost = ledgeUrl.substr(n + strlen("https://"));
+						ledge_host = ledge_url.substr(n + strlen("https://"));
 					}
-					ledgeHeader += "Host: " + ledgeHost + "\r\n";
+					ledge_header += "Host: " + ledge_host + "\r\n";
 
-					if (strlen(urlText) == 0 || strcmp(urlText, localhostUrl.c_str()) == 0
-						|| strcmp(urlText, storeUrl.c_str()) == 0 || strcmp(urlText, ledgeUrl.c_str()) == 0)
+					if (strlen(url_text) == 0 || strcmp(url_text, localhost_url.c_str()) == 0
+						|| strcmp(url_text, store_url.c_str()) == 0 || strcmp(url_text, ledge_url.c_str()) == 0)
 					{
-						std::strcpy(urlText, ledgeUrl.c_str());
+						std::strcpy(url_text, ledge_url.c_str());
 					}
 				}
 
-				std::string sessionToken = LCU::Request("GET", "/lol-league-session/v1/league-session-token");
-				sessionToken.erase(std::remove(sessionToken.begin(), sessionToken.end(), '\"'), sessionToken.end());
+				std::string session_token = lcu::request("GET", "/lol-league-session/v1/league-session-token");
+				std::erase(session_token, '\"');
 
-				ledgeHeader += "Accept-Encoding: deflate, "/*gzip, */"zstd\r\n";
-				ledgeHeader += "user-agent: LeagueOfLegendsClient/" + LCU::league.version + "\r\n";
-				ledgeHeader += "Authorization: Bearer " + sessionToken + "\r\n";
-				ledgeHeader += "Content-type: application/json\r\n";
-				ledgeHeader += "Accept: application/json\r\n";
+				ledge_header += "Accept-Encoding: deflate, "/*gzip, */"zstd\r\n";
+				ledge_header += "user-agent: LeagueOfLegendsClient/" + lcu::league.version + "\r\n";
+				ledge_header += "Authorization: Bearer " + session_token + "\r\n";
+				ledge_header += "Content-type: application/json\r\n";
+				ledge_header += "Accept: application/json\r\n";
 
 				if (strlen(method) != 0)
 				{
-					std::strcpy(method, Utils::ToUpper(std::string(method)).c_str());
+					std::strcpy(method, utils::to_upper(std::string(method)).c_str());
 				}
 
-				std::strcpy(inputPort, "443");
-				std::strcpy(inputHeader, ledgeHeader.c_str());
+				std::strcpy(input_port, "443");
+				std::strcpy(input_header, ledge_header.c_str());
 			}
 
 			ImGui::Text("Header:");
-			ImGui::InputTextMultiline("##inputHeader", (inputHeader), IM_ARRAYSIZE(inputHeader), ImVec2(S.Window.width - 130.f,
-				(label_size.y + ImGui::GetStyle().FramePadding.y) * 6.f), ImGuiInputTextFlags_AllowTabInput);
+			ImGui::InputTextMultiline("##inputHeader", (input_header), IM_ARRAYSIZE(input_header), ImVec2(
+				                          s.window.width - 130.f,
+				                          (label_size.y + ImGui::GetStyle().FramePadding.y) * 6.f),
+			                          ImGuiInputTextFlags_AllowTabInput);
 
-			S.customTab.port = inputPort;
-			S.customTab.header = inputHeader;
+			s.custom_tab.port = input_port;
+			s.custom_tab.header = input_header;
 
-			if (!S.customTab.port.empty())
-				customPort = std::stoi(S.customTab.port);
+			if (!s.custom_tab.port.empty())
+				custom_port = std::stoi(s.custom_tab.port);
 			else
-				customPort = 443;
+				custom_port = 443;
 
-			customHeader = S.customTab.header;
+			custom_header = s.custom_tab.header;
 		}
 		else
 		{
-			isCustomOpen = false;
-			customHeader = LCU::league.header;
-			customPort = LCU::league.port;
+			is_custom_open = false;
+			custom_header = lcu::league.header;
+			custom_port = lcu::league.port;
 		}
 
-		ImGui::Columns(2, 0, false);
+		ImGui::Columns(2, nullptr, false);
 
 		static std::string result;
 		if (ImGui::Button("Send custom request##customTab"))
 		{
-			std::string sURL = std::string(urlText);
+			auto s_url = std::string(url_text);
 
-			if (sURL.find("https://127.0.0.1") == std::string::npos && !isCustomOpen)
+			if (s_url.find("https://127.0.0.1") == std::string::npos && !is_custom_open)
 			{
-				if (sURL.find("https://") == std::string::npos && sURL.find("http://") == std::string::npos)
+				if (s_url.find("https://") == std::string::npos && s_url.find("http://") == std::string::npos)
 				{
-					while (sURL[0] == ' ' || sURL[0] == '\n')
-						sURL.erase(sURL.begin());
-					if (sURL[0] != '/')
-						sURL.insert(0, "/");
-					sURL.insert(0, "https://127.0.0.1:" + std::to_string(LCU::league.port));
+					while (s_url[0] == ' ' || s_url[0] == '\n')
+						s_url.erase(s_url.begin());
+					if (s_url[0] != '/')
+						s_url.insert(0, "/");
+					s_url.insert(0, "https://127.0.0.1:" + std::to_string(lcu::league.port));
 				}
 			}
-			else if (sURL.find("https://127.0.0.1:") == std::string::npos && !isCustomOpen)
+			else if (s_url.find("https://127.0.0.1:") == std::string::npos && !is_custom_open)
 			{
-				sURL.insert(strlen("https://127.0.0.1"), ":" + std::to_string(LCU::league.port));
+				s_url.insert(strlen("https://127.0.0.1"), ":" + std::to_string(lcu::league.port));
 			}
-			else if (sURL.find("https://") != std::string::npos || sURL.find("https://") != std::string::npos)
+			else if (s_url.find("https://") != std::string::npos || s_url.find("https://") != std::string::npos)
 			{
-				if (customPort != 443 && customPort != 80)
+				if (custom_port != 443 && custom_port != 80)
 				{
-					sURL.insert(sURL.find("/", strlen("https://")), ":" + std::to_string(customPort));
+					s_url.insert(s_url.find('/', strlen("https://")), ":" + std::to_string(custom_port));
 				}
 			}
 
-			cpr::Session customSession;
-			customSession.SetVerifySsl(false);
-			customSession.SetHeader(Utils::StringToHeader(customHeader));
-			customSession.SetBody(requestText);
-			customSession.SetUrl(sURL);
+			cpr::Session custom_session;
+			custom_session.SetVerifySsl(false);
+			custom_session.SetHeader(utils::string_to_header(custom_header));
+			custom_session.SetBody(request_text);
+			custom_session.SetUrl(s_url);
 
 			cpr::Response r;
 
-			const std::string upperMethod = Utils::ToUpper(method);
-			if (upperMethod == "GET")
+			if (const std::string upper_method = utils::to_upper(method); upper_method == "GET")
 			{
-				r = customSession.Get();
+				r = custom_session.Get();
 			}
-			else if (upperMethod == "POST")
+			else if (upper_method == "POST")
 			{
-				r = customSession.Post();
+				r = custom_session.Post();
 			}
-			else if (upperMethod == "OPTIONS")
+			else if (upper_method == "OPTIONS")
 			{
-				r = customSession.Options();
+				r = custom_session.Options();
 			}
-			else if (upperMethod == "DELETE")
+			else if (upper_method == "DELETE")
 			{
-				r = customSession.Delete();
+				r = custom_session.Delete();
 			}
-			else if (upperMethod == "PUT")
+			else if (upper_method == "PUT")
 			{
-				r = customSession.Put();
+				r = custom_session.Put();
 			}
-			else if (upperMethod == "HEAD")
+			else if (upper_method == "HEAD")
 			{
-				r = customSession.Head();
+				r = custom_session.Head();
 			}
-			else if (upperMethod == "PATCH")
+			else if (upper_method == "PATCH")
 			{
-				r = customSession.Patch();
+				r = custom_session.Patch();
 			}
 
 			result = r.text;
@@ -252,21 +257,22 @@ public:
 
 		ImGui::SameLine();
 
-		static Json::StreamWriterBuilder wBuilder;
-		static std::string sResultJson;
-		static char* cResultJson;
+		static Json::StreamWriterBuilder w_builder;
+		static std::string s_result_json;
+		static char* c_result_json;
 
 		if (ImGui::Button("Format JSON##customTab"))
 		{
-			if (!sResultJson.empty())
+			if (!s_result_json.empty())
 			{
 				Json::CharReaderBuilder builder;
 				const std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
 				JSONCPP_STRING err;
 				Json::Value root;
-				if (reader->parse(sResultJson.c_str(), sResultJson.c_str() + static_cast<int>(sResultJson.length()), &root, &err))
+				if (reader->parse(s_result_json.c_str(), s_result_json.c_str() + static_cast<int>(s_result_json.length()),
+				                  &root, &err))
 				{
-					sResultJson = Json::writeString(wBuilder, root);
+					s_result_json = writeString(w_builder, root);
 				}
 			}
 		}
@@ -274,10 +280,10 @@ public:
 		ImGui::NextColumn();
 
 		ImGui::Text("Endpoints list:");
-		ImGui::TextURL("LCU", "https://lcu.kebs.dev", 1, 0);
+		ImGui::text_url("LCU", "https://lcu.kebs.dev", 1, 0);
 		ImGui::SameLine();
 		ImGui::Text(" | ");
-		ImGui::TextURL("Riot Client", "https://riotclient.kebs.dev", 1, 0);
+		ImGui::text_url("Riot Client", "https://riotclient.kebs.dev", 1, 0);
 
 		ImGui::Columns(1);
 
@@ -287,24 +293,26 @@ public:
 			const std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
 			JSONCPP_STRING err;
 			Json::Value root;
-			if (!reader->parse(result.c_str(), result.c_str() + static_cast<int>(result.length()), &root, &err) || isCustomOpen)
-				sResultJson = result;
+			if (!reader->parse(result.c_str(), result.c_str() + static_cast<int>(result.length()), &root, &err) ||
+				is_custom_open)
+				s_result_json = result;
 			else
 			{
-				sResultJson = Json::writeString(wBuilder, root);
+				s_result_json = writeString(w_builder, root);
 			}
 			result = "";
 		}
 
-		if (!sResultJson.empty())
+		if (!s_result_json.empty())
 		{
-			cResultJson = &sResultJson[0];
-			ImGui::InputTextMultiline("##customResult", cResultJson, sResultJson.size() + 1, ImVec2(S.Window.width - 130.f,
-				(label_size.y + ImGui::GetStyle().FramePadding.y) * 19.f));
+			c_result_json = s_result_json.data();
+			ImGui::InputTextMultiline("##customResult", c_result_json, s_result_json.size() + 1, ImVec2(
+				                          s.window.width - 130.f,
+				                          (label_size.y + ImGui::GetStyle().FramePadding.y) * 19.f));
 		}
 	}
 
-	static void Invoke()
+	static void invoke()
 	{
 		static bool once = true;
 
@@ -315,9 +323,9 @@ public:
 		if (once)
 		{
 			once = false;
-			std::copy(S.invokeTab.destination.begin(), S.invokeTab.destination.end(), destination);
-			std::copy(S.invokeTab.method.begin(), S.invokeTab.method.end(), method);
-			std::copy(S.invokeTab.args.begin(), S.invokeTab.args.end(), args);
+			std::ranges::copy(s.invoke_tab.destination, destination);
+			std::ranges::copy(s.invoke_tab.method, method);
+			std::ranges::copy(s.invoke_tab.args, args);
 		}
 
 		ImGui::Text("Destination:");
@@ -329,16 +337,17 @@ public:
 		ImGui::Text("Args:");
 		ImGui::InputTextMultiline("##inputArgs", args, IM_ARRAYSIZE(args), ImVec2(600, 50));
 
-		S.invokeTab.destination = destination;
-		S.invokeTab.method = method;
-		S.invokeTab.args = args;
+		s.invoke_tab.destination = destination;
+		s.invoke_tab.method = method;
+		s.invoke_tab.args = args;
 
 		static std::string result;
 		if (ImGui::Button("Submit##submitInvoke"))
 		{
-			std::string req = std::format("https://127.0.0.1/lol-login/v1/session/invoke?destination={0}&method={1}&args=[{2}]",
+			const std::string req = std::format(
+				"https://127.0.0.1/lol-login/v1/session/invoke?destination={0}&method={1}&args=[{2}]",
 				destination, method, args);
-			result = LCU::Request("POST", req, "");
+			result = lcu::request("POST", req, "");
 		}
 
 		ImGui::Text("Result:");
@@ -346,41 +355,40 @@ public:
 
 		if (ImGui::Button("Copy to clipboard##invokeTab"))
 		{
-			Utils::CopyToClipboard(result);
+			utils::copy_to_clipboard(result);
 		}
 
-		static Json::StreamWriterBuilder wBuilder;
-		static std::string sResultJson;
-		static char* cResultJson;
+		static Json::StreamWriterBuilder w_builder;
+		static std::string s_result_json;
+		static char* c_result_json;
 
 		if (!result.empty())
 		{
-			Json::CharReaderBuilder builder;
+			const Json::CharReaderBuilder builder;
 			const std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
 			JSONCPP_STRING err;
 			Json::Value root;
 			if (!reader->parse(result.c_str(), result.c_str() + static_cast<int>(result.length()), &root, &err))
-				sResultJson = result;
+				s_result_json = result;
 			else
 			{
-				sResultJson = Json::writeString(wBuilder, root);
+				s_result_json = writeString(w_builder, root);
 			}
 			result = "";
 		}
 
-		if (!sResultJson.empty())
+		if (!s_result_json.empty())
 		{
-			cResultJson = &sResultJson[0];
-			ImGui::InputTextMultiline("##gameResult", cResultJson, sResultJson.size() + 1, ImVec2(600, 232));
+			c_result_json = s_result_json.data();
+			ImGui::InputTextMultiline("##gameResult", c_result_json, s_result_json.size() + 1, ImVec2(600, 232));
 		}
 	}
 
 private:
-	static inline bool onOpen = true;
+	static inline bool on_open_ = true;
 
 public:
-
-	static void Render()
+	static void render()
 	{
 		if (ImGui::BeginTabItem("Custom"))
 		{
@@ -388,46 +396,46 @@ public:
 			{
 				if (ImGui::BeginTabItem("HTTP/HTTPS"))
 				{
-					Custom();
+					custom();
 					ImGui::EndTabItem();
 				}
 				if (ImGui::BeginTabItem("LCDS"))
 				{
-					Invoke();
+					invoke();
 					ImGui::EndTabItem();
 				}
 				ImGui::EndTabBar();
 			}
 
-			if (onOpen)
-				onOpen = false;
+			if (on_open_)
+				on_open_ = false;
 
 			ImGui::EndTabItem();
 		}
 		else
 		{
-			onOpen = true;
+			on_open_ = true;
 		}
 	}
 
 private:
-
-	static std::string GetLedgeUrl()
+	static std::string get_ledge_url()
 	{
 		Json::CharReaderBuilder builder;
 		const std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
 		JSONCPP_STRING err;
-		Json::Value rootRegion;
-		std::string region = "";
-		std::string getRegion = LCU::Request("GET", "/riotclient/get_region_locale");
-		if (reader->parse(getRegion.c_str(), getRegion.c_str() + static_cast<int>(getRegion.length()), &rootRegion, &err))
+		Json::Value root_region;
+		std::string region;
+		std::string get_region = lcu::request("GET", "/riotclient/get_region_locale");
+		if (reader->parse(get_region.c_str(), get_region.c_str() + static_cast<int>(get_region.length()), &root_region,
+		                  &err))
 		{
-			region = rootRegion["webRegion"].asString();
+			region = root_region["webRegion"].asString();
 		}
 
-		if (region != "")
+		if (!region.empty())
 		{
-			std::ifstream systemYaml(S.leaguePath + "system.yaml");
+			std::ifstream systemYaml(s.league_path + "system.yaml");
 			std::string line;
 			while (std::getline(systemYaml, line))
 			{
@@ -435,7 +443,8 @@ private:
 					&& line.find(region) != std::string::npos)
 				{
 					std::string league_edge_url = line;
-					league_edge_url = league_edge_url.substr(league_edge_url.find("league_edge_url: ") + strlen("league_edge_url: "));
+					league_edge_url = league_edge_url.substr(
+						league_edge_url.find("league_edge_url: ") + strlen("league_edge_url: "));
 					systemYaml.close();
 					return league_edge_url;
 				}

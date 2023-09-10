@@ -4,49 +4,54 @@
 #include "Includes.h"
 #include "LCU.h"
 
-class ProfileTab
+class profile_tab
 {
 public:
-	static void Render()
+	static void render()
 	{
 		if (ImGui::BeginTabItem("Profile"))
 		{
-			static char statusText[1024 * 16];
+			static char status_text[1024 * 16];
 			ImGui::Text("Status:");
-			const ImVec2 label_size = ImGui::CalcTextSize("W", NULL, true);
+			const ImVec2 label_size = ImGui::CalcTextSize("W", nullptr, true);
 
-			ImGui::InputTextMultiline("##inputStatus", (statusText), IM_ARRAYSIZE(statusText), ImVec2(S.Window.width - 230.f,
-				(label_size.y + ImGui::GetStyle().FramePadding.y) * 6.f), ImGuiInputTextFlags_AllowTabInput);
+			ImGui::InputTextMultiline("##inputStatus", (status_text), IM_ARRAYSIZE(status_text), ImVec2(
+				                          s.window.width - 230.f,
+				                          (label_size.y + ImGui::GetStyle().FramePadding.y) * 6.f),
+			                          ImGuiInputTextFlags_AllowTabInput);
 			if (ImGui::Button("Submit status"))
 			{
-				std::string body = "{\"statusMessage\":\"" + std::string(statusText) + "\"}";
+				std::string body = R"({"statusMessage":")" + std::string(status_text) + "\"}";
 
-				size_t nPos = 0;
-				while (nPos != std::string::npos)
+				size_t n_pos = 0;
+				while (n_pos != std::string::npos)
 				{
-					nPos = body.find("\n", nPos);
-					if (nPos != std::string::npos)
+					n_pos = body.find('\n', n_pos);
+					if (n_pos != std::string::npos)
 					{
-						body.erase(body.begin() + nPos);
-						body.insert(nPos, "\\n");
+						body.erase(body.begin() + n_pos);
+						body.insert(n_pos, "\\n");
 					}
 				}
-				std::string result = LCU::Request("PUT", "https://127.0.0.1/lol-chat/v1/me", body);
+				std::string result = lcu::request("PUT", "https://127.0.0.1/lol-chat/v1/me", body);
 				if (result.find("errorCode") != std::string::npos)
-					MessageBoxA(0, result.c_str(), 0, 0);
+					MessageBoxA(nullptr, result.c_str(), nullptr, 0);
 			}
 
 			ImGui::SameLine();
 			static int availability = 0;
-			static int lastAvailability = 0;
-			ImGui::RadioButton("Online", &availability, 0); ImGui::SameLine();
-			ImGui::RadioButton("Mobile", &availability, 1); ImGui::SameLine();
-			ImGui::RadioButton("Away", &availability, 2); ImGui::SameLine();
+			static int last_availability = 0;
+			ImGui::RadioButton("Online", &availability, 0);
+			ImGui::SameLine();
+			ImGui::RadioButton("Mobile", &availability, 1);
+			ImGui::SameLine();
+			ImGui::RadioButton("Away", &availability, 2);
+			ImGui::SameLine();
 			ImGui::RadioButton("Offline", &availability, 3);
 
-			if (availability != lastAvailability)
+			if (availability != last_availability)
 			{
-				lastAvailability = availability;
+				last_availability = availability;
 				std::string body = R"({"availability":")";
 				switch (availability)
 				{
@@ -62,42 +67,61 @@ public:
 				case 3:
 					body += "offline";
 					break;
+				default: ;
 				}
 				body += "\"}";
-				LCU::Request("PUT", "https://127.0.0.1/lol-chat/v1/me", body);
+				lcu::request("PUT", "https://127.0.0.1/lol-chat/v1/me", body);
 			}
 
 			ImGui::Separator();
 
 			ImGui::Text("Rank:");
 			static int rank = 0;
-			ImGui::RadioButton("Iron", &rank, 0); ImGui::SameLine();
-			ImGui::RadioButton("Bronze", &rank, 1); ImGui::SameLine();
-			ImGui::RadioButton("Silver", &rank, 2); ImGui::SameLine();
-			ImGui::RadioButton("Gold", &rank, 3); ImGui::SameLine();
-			ImGui::RadioButton("Platinum", &rank, 4); ImGui::SameLine();
-			ImGui::RadioButton("Diamond", &rank, 5); ImGui::SameLine();
-			ImGui::RadioButton("Master", &rank, 6); ImGui::SameLine();
-			ImGui::RadioButton("GrandMaster", &rank, 7); ImGui::SameLine();
+			ImGui::RadioButton("Iron", &rank, 0);
+			ImGui::SameLine();
+			ImGui::RadioButton("Bronze", &rank, 1);
+			ImGui::SameLine();
+			ImGui::RadioButton("Silver", &rank, 2);
+			ImGui::SameLine();
+			ImGui::RadioButton("Gold", &rank, 3);
+			ImGui::SameLine();
+			ImGui::RadioButton("Platinum", &rank, 4);
+			ImGui::SameLine();
+			ImGui::RadioButton("Diamond", &rank, 5);
+			ImGui::SameLine();
+			ImGui::RadioButton("Master", &rank, 6);
+			ImGui::SameLine();
+			ImGui::RadioButton("GrandMaster", &rank, 7);
+			ImGui::SameLine();
 			ImGui::RadioButton("Challenger", &rank, 8);
 
 			static int tier = 0;
-			ImGui::RadioButton("I", &tier, 0); ImGui::SameLine();
-			ImGui::RadioButton("II", &tier, 1); ImGui::SameLine();
-			ImGui::RadioButton("III", &tier, 2); ImGui::SameLine();
-			ImGui::RadioButton("IV", &tier, 3); ImGui::SameLine();
+			ImGui::RadioButton("I", &tier, 0);
+			ImGui::SameLine();
+			ImGui::RadioButton("II", &tier, 1);
+			ImGui::SameLine();
+			ImGui::RadioButton("III", &tier, 2);
+			ImGui::SameLine();
+			ImGui::RadioButton("IV", &tier, 3);
+			ImGui::SameLine();
 			ImGui::RadioButton("None", &tier, 4);
 
 			static int queue = 0;
-			ImGui::RadioButton("Solo/Duo", &queue, 0); ImGui::SameLine();
-			ImGui::RadioButton("Flex 5v5", &queue, 1); ImGui::SameLine();
-			ImGui::RadioButton("Flex 3v3", &queue, 2); ImGui::SameLine();
-			ImGui::RadioButton("TFT", &queue, 3); ImGui::SameLine();
-			ImGui::RadioButton("Hyper Roll", &queue, 4); ImGui::SameLine();
-			ImGui::RadioButton("Double Up", &queue, 5); ImGui::SameLine();
+			ImGui::RadioButton("Solo/Duo", &queue, 0);
+			ImGui::SameLine();
+			ImGui::RadioButton("Flex 5v5", &queue, 1);
+			ImGui::SameLine();
+			ImGui::RadioButton("Flex 3v3", &queue, 2);
+			ImGui::SameLine();
+			ImGui::RadioButton("TFT", &queue, 3);
+			ImGui::SameLine();
+			ImGui::RadioButton("Hyper Roll", &queue, 4);
+			ImGui::SameLine();
+			ImGui::RadioButton("Double Up", &queue, 5);
+			ImGui::SameLine();
 			ImGui::RadioButton("()", &queue, 6);
 
-			ImGui::Columns(2, 0, false);
+			ImGui::Columns(2, nullptr, false);
 
 			if (ImGui::Button("Submit##submitRank"))
 			{
@@ -125,6 +149,7 @@ public:
 				case 6:
 					body += "";
 					break;
+				default: ;
 				}
 
 				body += R"(","rankedLeagueTier":")";
@@ -158,6 +183,7 @@ public:
 				case 8:
 					body += "CHALLENGER";
 					break;
+				default: ;
 				}
 
 				body += R"(","rankedLeagueDivision":")";
@@ -179,58 +205,60 @@ public:
 				case 4:
 					body += "";
 					break;
+				default: ;
 				}
 
 				body += R"("}})";
 
-				LCU::Request("PUT", "https://127.0.0.1/lol-chat/v1/me", body);
+				lcu::request("PUT", "https://127.0.0.1/lol-chat/v1/me", body);
 			}
 
 			ImGui::SameLine();
 			if (ImGui::Button("Empty##emptyRank"))
 			{
-				LCU::Request("PUT", "https://127.0.0.1/lol-chat/v1/me", R"({"lol":{"rankedLeagueQueue":"","rankedLeagueTier":"","rankedLeagueDivision":""}})");
+				lcu::request("PUT", "https://127.0.0.1/lol-chat/v1/me",
+				             R"({"lol":{"rankedLeagueQueue":"","rankedLeagueTier":"","rankedLeagueDivision":""}})");
 			}
 			ImGui::SameLine();
-			ImGui::HelpMarker("Only in the friend's list, not on profile");
+			ImGui::help_marker("Only in the friend's list, not on profile");
 
 			ImGui::NextColumn();
 
 			if (ImGui::Button("Invisible banner"))
 			{
-				std::string playerP = GetPlayerPreferences();
+				std::string player_p = get_player_preferences();
 				Json::CharReaderBuilder builder;
 				const std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
 				JSONCPP_STRING err;
 				Json::Value root;
-				if (reader->parse(playerP.c_str(), playerP.c_str() + static_cast<int>(playerP.length()), &root, &err))
+				if (reader->parse(player_p.c_str(), player_p.c_str() + static_cast<int>(player_p.length()), &root, &err))
 				{
 					root["bannerAccent"] = "2";
-					LCU::Request("POST", "/lol-challenges/v1/update-player-preferences/", root.toStyledString());
+					lcu::request("POST", "/lol-challenges/v1/update-player-preferences/", root.toStyledString());
 				}
 			}
 
 			ImGui::SameLine();
-			ImGui::HelpMarker("Works if last season's rank is unranked");
+			ImGui::help_marker("Works if last season's rank is unranked");
 
 			ImGui::Columns(1);
 
 			ImGui::Separator();
 
-			static int sendChangeBadges = -99;
+			static int send_change_badges = -99;
 			ImGui::Text("Challenge badges:");
 			ImGui::SameLine();
 
 			if (ImGui::Button("Empty"))
 			{
-				sendChangeBadges = -1;
+				send_change_badges = -1;
 			}
 
 			ImGui::SameLine();
 
 			if (ImGui::Button("Copy 1st to all 3"))
 			{
-				sendChangeBadges = -2;
+				send_change_badges = -2;
 			}
 
 			ImGui::SameLine();
@@ -239,65 +267,65 @@ public:
 
 			if (ImGui::Button("0##glitchedBadges"))
 			{
-				sendChangeBadges = 0;
+				send_change_badges = 0;
 			}
 			ImGui::SameLine();
 			if (ImGui::Button("1##glitchedBadges"))
 			{
-				sendChangeBadges = 1;
+				send_change_badges = 1;
 			}
 			ImGui::SameLine();
 			if (ImGui::Button("2##glitchedBadges"))
 			{
-				sendChangeBadges = 2;
+				send_change_badges = 2;
 			}
 			ImGui::SameLine();
 			if (ImGui::Button("3##glitchedBadges"))
 			{
-				sendChangeBadges = 3;
+				send_change_badges = 3;
 			}
 			ImGui::SameLine();
 			if (ImGui::Button("4##glitchedBadges"))
 			{
-				sendChangeBadges = 4;
+				send_change_badges = 4;
 			}
 			ImGui::SameLine();
 			if (ImGui::Button("5##glitchedBadges"))
 			{
-				sendChangeBadges = 5;
+				send_change_badges = 5;
 			}
 
-			if (sendChangeBadges != -99)
+			if (send_change_badges != -99)
 			{
-				std::string playerP = GetPlayerPreferences();
+				std::string player_p = get_player_preferences();
 				Json::CharReaderBuilder builder;
 				const std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
 				JSONCPP_STRING err;
 				Json::Value root;
-				if (reader->parse(playerP.c_str(), playerP.c_str() + static_cast<int>(playerP.length()), &root, &err))
+				if (reader->parse(player_p.c_str(), player_p.c_str() + static_cast<int>(player_p.length()), &root, &err))
 				{
-					Json::Value jsonArray;
-					if (sendChangeBadges != -1)
+					Json::Value json_array;
+					if (send_change_badges != -1)
 					{
 						for (size_t i = 0; i < 3; i++)
 						{
-							if (sendChangeBadges == -2)
+							if (send_change_badges == -2)
 							{
-								if (root["challengeIds"].isArray() && root["challengeIds"].size() >= 1)
+								if (root["challengeIds"].isArray() && !root["challengeIds"].empty())
 								{
-									jsonArray.append(root["challengeIds"][0]);
+									json_array.append(root["challengeIds"][0]);
 								}
 							}
 							else
 							{
-								jsonArray.append(sendChangeBadges);
+								json_array.append(send_change_badges);
 							}
 						}
 					}
-					root["challengeIds"] = jsonArray;
-					LCU::Request("POST", "/lol-challenges/v1/update-player-preferences/", root.toStyledString());
+					root["challengeIds"] = json_array;
+					lcu::request("POST", "/lol-challenges/v1/update-player-preferences/", root.toStyledString());
 				}
-				sendChangeBadges = -99;
+				send_change_badges = -99;
 			}
 
 			ImGui::Separator();
@@ -307,70 +335,64 @@ public:
 			ImGui::SameLine();
 			if (ImGui::Button("Submit##submitMasteryLvl"))
 			{
-				std::string result = LCU::Request("PUT", "https://127.0.0.1/lol-chat/v1/me", "{\"lol\":{\"masteryScore\":\"" + std::to_string(masteryLvl) + "\"}}");
+				std::string result = lcu::request("PUT", "https://127.0.0.1/lol-chat/v1/me",
+				                                  R"({"lol":{"masteryScore":")" + std::to_string(
+					                                  masteryLvl) + "\"}}");
 				if (result.find("errorCode") != std::string::npos)
 				{
-					MessageBoxA(0, result.c_str(), 0, 0);
+					MessageBoxA(nullptr, result.c_str(), nullptr, 0);
 				}
 			}
 			ImGui::SameLine();
-			ImGui::HelpMarker("Shown on splash art when hovered over in friend's list");
+			ImGui::help_marker("Shown on splash art when hovered over in friend's list");
 
 			ImGui::Separator();
 
-			static int iconID;
+			static int icon_id;
 			ImGui::Text("Icon:");
-			ImGui::InputInt("##inputIcon:", &iconID, 1, 100);
+			ImGui::InputInt("##inputIcon:", &icon_id, 1, 100);
 			ImGui::SameLine();
 			if (ImGui::Button("Submit##submitIcon"))
 			{
-				std::string body = R"({"profileIconId":)" + std::to_string(iconID) + "}";
-				std::string result = LCU::Request("PUT", "https://127.0.0.1/lol-summoner/v1/current-summoner/icon", body);
+				std::string body = R"({"profileIconId":)" + std::to_string(icon_id) + "}";
+				std::string result = lcu::request("PUT", "https://127.0.0.1/lol-summoner/v1/current-summoner/icon",
+				                                  body);
 				if (result.find("errorCode") != std::string::npos)
 				{
-					MessageBoxA(0, result.c_str(), 0, 0);
+					MessageBoxA(nullptr, result.c_str(), nullptr, 0);
 				}
 			}
 			ImGui::SameLine();
 			if (ImGui::Button("Submit 2##submitIcon2"))
 			{
-				std::string body = R"({"icon":)" + std::to_string(iconID) + "}";
-				std::string result = LCU::Request("PUT", "https://127.0.0.1/lol-chat/v1/me/", body);
+				std::string body = R"({"icon":)" + std::to_string(icon_id) + "}";
+				std::string result = lcu::request("PUT", "https://127.0.0.1/lol-chat/v1/me/", body);
 				if (result.find("errorCode") != std::string::npos)
 				{
-					MessageBoxA(0, result.c_str(), 0, 0);
+					MessageBoxA(nullptr, result.c_str(), nullptr, 0);
 				}
 			}
 
-			/*static int backgroundID;
-			ImGui::Text("Background:");
-
-			ImGui::InputInt("##inputBackground", &backgroundID, 1, 100);
-			ImGui::SameLine();
-			if (ImGui::Button("Submit##submitBackground"))
-			{
-				std::string body = R"({"key":"backgroundSkinId","value":)" + std::to_string(backgroundID) + "}";
-				std::string result = LCU::Request("POST", "https://127.0.0.1/lol-summoner/v1/current-summoner/summoner-profile/", body);
-			}*/
-
 			if (ImGui::CollapsingHeader("Backgrounds"))
 			{
-				if (champSkins.empty())
+				if (champ_skins.empty())
 				{
 					ImGui::Text("Skin data is still being fetched");
 				}
 				else
 				{
-					for (const auto& c : champSkins)
+					for (const auto& [key, name, skins] : champ_skins)
 					{
-						if (ImGui::TreeNode(c.name.c_str()))
+						if (ImGui::TreeNode(name.c_str()))
 						{
-							for (const auto& s : c.skins)
+							for (const auto& [fst, snd] : skins)
 							{
-								if (ImGui::Button(s.second.c_str()))
+								if (ImGui::Button(snd.c_str()))
 								{
-									std::string body = R"({"key":"backgroundSkinId","value":)" + s.first + "}";
-									std::string result = LCU::Request("POST", "https://127.0.0.1/lol-summoner/v1/current-summoner/summoner-profile/", body);
+									std::string body = R"({"key":"backgroundSkinId","value":)" + fst + "}";
+									std::string result = lcu::request(
+										"POST", "https://127.0.0.1/lol-summoner/v1/current-summoner/summoner-profile/",
+										body);
 								}
 							}
 							ImGui::TreePop();
@@ -383,17 +405,18 @@ public:
 		}
 	}
 
-	static std::string GetPlayerPreferences()
+	static std::string get_player_preferences()
 	{
-		std::string challengesData = LCU::Request("GET", "/lol-challenges/v1/summary-player-data/local-player");
+		std::string challenges_data = lcu::request("GET", "/lol-challenges/v1/summary-player-data/local-player");
 		Json::CharReaderBuilder builder;
 		const std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
 		JSONCPP_STRING err;
 		Json::Value root;
-		if (reader->parse(challengesData.c_str(), challengesData.c_str() + static_cast<int>(challengesData.length()), &root, &err))
+		if (reader->parse(challenges_data.c_str(), challenges_data.c_str() + static_cast<int>(challenges_data.length()),
+		                  &root, &err))
 		{
-			std::string titleId = root["title"]["itemId"].asString();
-			std::string bannerId = root["bannerId"].asString();
+			std::string title_id = root["title"]["itemId"].asString();
+			std::string banner_id = root["bannerId"].asString();
 
 			std::string result = "{";
 			for (Json::Value::ArrayIndex i = 0; i < root["topChallenges"].size(); i++)
@@ -409,18 +432,18 @@ public:
 					result += "]";
 			}
 
-			if (titleId != "-1")
+			if (title_id != "-1")
 			{
 				if (result.size() != 1)
 					result += ",";
-				result += "\"title\":\"" + titleId + "\"";
+				result += R"("title":")" + title_id + "\"";
 			}
 
-			if (bannerId != "")
+			if (banner_id != "")
 			{
 				if (result.size() != 1)
 					result += ",";
-				result += "\"bannerAccent\":\"" + bannerId + "\"";
+				result += R"("bannerAccent":")" + banner_id + "\"";
 			}
 			result += "}";
 
