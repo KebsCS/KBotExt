@@ -1499,7 +1499,7 @@ public:
 					}
 					else // region code (euw, eune na)
 					{
-						std::string getRegion = LCU::Request("GET", "/riotclient/get_region_locale");
+						std::string getRegion = LCU::Request("GET", "/riotclient/region-locale");
 						if (reader->parse(getRegion.c_str(), getRegion.c_str() + static_cast<int>(getRegion.length()), &rootRegion, &err))
 						{
 							region = Utils::StringToWstring(rootRegion["webRegion"].asString());
