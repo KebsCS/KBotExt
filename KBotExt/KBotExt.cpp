@@ -43,13 +43,12 @@ int WINAPI wWinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/, LPWSTR
 		FILE* f;
 		freopen_s(&f, "CONOUT$", "w", stdout);
 
-		STARTUPINFOA startupInfo;
-		memset(&startupInfo, 0, sizeof(STARTUPINFOA));
+		STARTUPINFOA startupInfo = {};
 		startupInfo.cb = sizeof(startupInfo);
-		PROCESS_INFORMATION processInformation;
-		memset(&processInformation, 0, sizeof(PROCESS_INFORMATION));
+		PROCESS_INFORMATION processInformation = {};
 
-		if (!CreateProcessA(applicationName.c_str(), const_cast<char*>(cmdLine.c_str()), 0, 0, false, 2U, 0, 0, &startupInfo, &processInformation))
+		if (!CreateProcessA(applicationName.c_str(), const_cast<char*>(cmdLine.c_str()), nullptr, nullptr, false, 2U, nullptr, nullptr, &startupInfo,
+		                    &processInformation))
 			return 0;
 
 		std::cout << "App: " << applicationName << std::endl;
@@ -83,27 +82,32 @@ int WINAPI wWinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/, LPWSTR
 		freopen_s(&f, "CONOUT$", "w", stdout);
 #endif
 
-		//Randomize using current time, todo swap with recent c++ random
-		//srand(static_cast<unsigned>(time(0)));
+		//Randomize using current time
+		//TODO: swap with recent c++ random
+		//srand(static_cast<unsigned>(time(nullptr)));
 
 		Config::Load();
-		std::wstring sClassName = Utils::RandomWString(Utils::RandomInt(5, 10), { 0x2e80, 0xfffff });
+		std::wstring sClassName = Utils::RandomWString(Utils::RandomInt(5, 10), {0x2e80, 0xfffff});
 		LPCWSTR lpszOverlayClassName = sClassName.c_str();
 		//Register window class information
-		WNDCLASSEXW wc = { sizeof(WNDCLASSEXW), CS_CLASSDC, WndProc, 0L, 0L, GetModuleHandle(NULL), NULL, NULL, NULL, NULL, sClassName.c_str(), NULL };
+		WNDCLASSEXW wc = {
+			sizeof(WNDCLASSEXW), CS_CLASSDC, WndProc, 0L, 0L, GetModuleHandle(nullptr), nullptr, nullptr, nullptr, nullptr, sClassName.c_str(),
+			nullptr
+		};
 
 		if (S.autoRename)
 			Utils::RenameExe();
 
-		::RegisterClassExW(&wc);
+		RegisterClassExW(&wc);
 
 		// Create application window
-		S.hwnd = ::CreateWindowW(sClassName.c_str(), lpszOverlayClassName, WS_OVERLAPPED | WS_SYSMENU | WS_MINIMIZEBOX | WS_SIZEBOX, 100, 100, S.Window.width, S.Window.height, NULL, NULL, wc.hInstance, NULL);
+		S.hwnd = ::CreateWindowW(sClassName.c_str(), lpszOverlayClassName, WS_OVERLAPPED | WS_SYSMENU | WS_MINIMIZEBOX | WS_SIZEBOX, 100, 100,
+		                         S.Window.width, S.Window.height, NULL, NULL, wc.hInstance, NULL);
 
-		if (S.hwnd == NULL)
+		if (S.hwnd == nullptr)
 		{
-			::UnregisterClassW(wc.lpszClassName, wc.hInstance);
-			MessageBoxA(0, "Couldn't create window", 0, 0);
+			UnregisterClassW(wc.lpszClassName, wc.hInstance);
+			MessageBoxA(nullptr, "Couldn't create window", nullptr, 0);
 			return 0;
 		}
 
@@ -116,14 +120,14 @@ int WINAPI wWinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/, LPWSTR
 		if (!Direct3D11.DirectXInit(S.hwnd))
 		{
 			Direct3D11.Shutdown();
-			::UnregisterClassW(wc.lpszClassName, wc.hInstance);
-			MessageBoxA(0, "Couldn't initalize DirectX", 0, 0);
+			UnregisterClassW(wc.lpszClassName, wc.hInstance);
+			MessageBoxA(nullptr, "Couldn't initialize DirectX", nullptr, 0);
 			return 0;
 		}
 
 		// Show the window
-		::ShowWindow(S.hwnd, SW_SHOWDEFAULT);
-		::UpdateWindow(S.hwnd);
+		ShowWindow(S.hwnd, SW_SHOWDEFAULT);
+		UpdateWindow(S.hwnd);
 
 		LCU::GetLeagueProcesses();
 
@@ -146,9 +150,9 @@ int WINAPI wWinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/, LPWSTR
 		{
 			//auto timeBefore = std::chrono::high_resolution_clock::now();
 
-			if (::PeekMessage(&msg, NULL, 0U, 0U, PM_REMOVE))
+			if (::PeekMessage(&msg, nullptr, 0U, 0U, PM_REMOVE))
 			{
-				::TranslateMessage(&msg);
+				TranslateMessage(&msg);
 				::DispatchMessage(&msg);
 				if (msg.message == WM_QUIT)
 					done = true;
@@ -167,13 +171,13 @@ int WINAPI wWinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/, LPWSTR
 			Direct3D11.EndFrame();
 
 			// idle if client closed and reconnect to it
-			if (!::FindWindowA("RCLIENT", "League of Legends"))
+			if (!FindWindowA("RCLIENT", "League of Legends"))
 			{
 				Direct3D11.closedClient = true;
 				closedNow = true;
 				if (!LCU::leagueProcesses.empty())
 					LCU::leagueProcesses.clear();
-				if (::FindWindowA("RCLIENT", "Riot Client"))
+				if (FindWindowA("RCLIENT", "Riot Client"))
 				{
 					if (LCU::riot.port == 0)
 					{
@@ -216,8 +220,8 @@ int WINAPI wWinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/, LPWSTR
 
 		//Exit
 		Direct3D11.Shutdown();
-		::DestroyWindow(S.hwnd);
-		::UnregisterClassW(wc.lpszClassName, wc.hInstance);
+		DestroyWindow(S.hwnd);
+		UnregisterClassW(wc.lpszClassName, wc.hInstance);
 	}
 	return 0;
 }
@@ -226,7 +230,7 @@ int WINAPI wWinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/, LPWSTR
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 // Win32 message handler
-LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
+LRESULT WINAPI WndProc(const HWND hWnd, const UINT msg, const WPARAM wParam, const LPARAM lParam)
 {
 	if (ImGui_ImplWin32_WndProcHandler(hWnd, msg, wParam, lParam))
 		return true;
@@ -234,10 +238,10 @@ LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	switch (msg)
 	{
 	case WM_SIZE:
-		if (g_pd3dDevice != NULL && wParam != SIZE_MINIMIZED)
+		if (g_pd3dDevice != nullptr && wParam != SIZE_MINIMIZED)
 		{
 			Direct3D11.CleanupRenderTarget();
-			g_pSwapChain->ResizeBuffers(0, (UINT)LOWORD(lParam), (UINT)HIWORD(lParam), DXGI_FORMAT_UNKNOWN, 0);
+			g_pSwapChain->ResizeBuffers(0, LOWORD(lParam), HIWORD(lParam), DXGI_FORMAT_UNKNOWN, 0);
 			Direct3D11.CreateRenderTarget();
 
 			RECT rect;
@@ -254,8 +258,9 @@ LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			return 0;
 		break;
 	case WM_DESTROY:
-		::PostQuitMessage(0);
+		PostQuitMessage(0);
 		return 0;
+	default: ;
 	}
-	return ::DefWindowProcW(hWnd, msg, wParam, lParam);
+	return DefWindowProcW(hWnd, msg, wParam, lParam);
 }

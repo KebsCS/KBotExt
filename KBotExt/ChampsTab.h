@@ -48,15 +48,15 @@ public:
 					std::string summId = root["summonerId"].asString();
 
 					std::string getChampions = LCU::Request("GET",
-						std::format("https://127.0.0.1/lol-champions/v1/inventories/{}/champions-minimal", summId));
+					                                        std::format("https://127.0.0.1/lol-champions/v1/inventories/{}/champions-minimal",
+					                                                    summId));
 
 					if (reader->parse(getChampions.c_str(), getChampions.c_str() + static_cast<int>(getChampions.length()), &root, &err))
 					{
 						if (root.isArray())
 						{
-							for (Json::Value::ArrayIndex i = 0; i < root.size(); ++i)
+							for (auto& champObj : root)
 							{
-								auto champObj = root[i];
 								ChampMinimal champ;
 
 								champ.active = champObj["active"].asBool();
@@ -68,7 +68,7 @@ public:
 								champ.freeToPlay = champObj["freeToPlay"].asBool();
 								champ.id = champObj["id"].asInt();
 								champ.name = champObj["name"].asString();
-								auto ownershipObj = champObj["ownership"];
+								auto& ownershipObj = champObj["ownership"];
 								champ.freeToPlayReward = ownershipObj["freeToPlayReward"].asBool();
 								champ.owned = ownershipObj["owned"].asInt();
 								if (champ.owned)
@@ -78,7 +78,7 @@ public:
 								else
 									champ.purchased = champObj["purchased"].asString();
 								champ.rankedPlayEnabled = champObj["rankedPlayEnabled"].asBool();
-								//auto rolesObj = champObj.GetObject("roles"); //todo
+								//auto rolesObj = champObj.GetObject("roles"); // TODO
 								champ.squarePortraitPath = champObj["squarePortraitPath"].asString();
 								champ.stingerSfxPath = champObj["stingerSfxPath"].asString();
 								champ.title = champObj["title"].asString();
@@ -89,16 +89,15 @@ public:
 					}
 
 					std::string getCollections = LCU::Request("GET",
-						std::format("https://127.0.0.1/lol-collections/v1/inventories/{}/champion-mastery", summId));
+					                                          std::format("https://127.0.0.1/lol-collections/v1/inventories/{}/champion-mastery",
+					                                                      summId));
 
 					if (reader->parse(getCollections.c_str(), getCollections.c_str() + static_cast<int>(getCollections.length()), &root, &err))
 					{
 						if (root.isArray())
 						{
-							for (Json::Value::ArrayIndex j = 0; j < root.size(); ++j)
+							for (auto& champObj : root)
 							{
-								auto champObj = root[j];
-
 								ChampMastery champ;
 								champ.championId = champObj["championId"].asInt();
 								champ.championLevel = champObj["championLevel"].asInt();
@@ -109,8 +108,8 @@ public:
 								champ.formattedChampionPoints = champObj["formattedChampionPoints"].asString();
 								champ.formattedMasteryGoal = champObj["formattedMasteryGoal"].asString();
 								champ.highestGrade = champObj["highestGrade"].asString();
-								champ.lastPlayTime = std::to_string(champObj["lastPlayTime"].asUInt64()).c_str();
-								champ.playerId = std::to_string(champObj["playerId"].asInt64()).c_str();
+								champ.lastPlayTime = std::to_string(champObj["lastPlayTime"].asUInt64());
+								champ.playerId = std::to_string(champObj["playerId"].asInt64());
 								champ.tokensEarned = champObj["tokensEarned"].asInt();
 
 								champsMastery.emplace_back(champ);
@@ -144,30 +143,31 @@ public:
 				iLastSort = iSort;
 				switch (iSort)
 				{
-					// alphabetically
+				// alphabetically
 				case 0:
-					std::sort(champsAll.begin(), champsAll.end(), [](const ChampAll& lhs, const ChampAll& rhs) {
+					std::ranges::sort(champsAll, [](const ChampAll& lhs, const ChampAll& rhs) {
 						return lhs.min.name < rhs.min.name;
-						});
+					});
 					break;
-					// purchase date
+				// purchase date
 				case 1:
-					std::sort(champsAll.begin(), champsAll.end(), [](const ChampAll& lhs, const ChampAll& rhs) {
+					std::ranges::sort(champsAll, [](const ChampAll& lhs, const ChampAll& rhs) {
 						return std::stoll(lhs.min.purchased) < std::stoll(rhs.min.purchased);
-						});
+					});
 					break;
-					// mastery points
+				// mastery points
 				case 2:
-					std::sort(champsAll.begin(), champsAll.end(), [](const ChampAll& lhs, const ChampAll& rhs) {
+					std::ranges::sort(champsAll, [](const ChampAll& lhs, const ChampAll& rhs) {
 						return lhs.mas.championPoints > rhs.mas.championPoints;
-						});
+					});
 					break;
-					// id
+				// id
 				case 3:
-					std::sort(champsAll.begin(), champsAll.end(), [](const ChampAll& lhs, const ChampAll& rhs) {
+					std::ranges::sort(champsAll, [](const ChampAll& lhs, const ChampAll& rhs) {
 						return lhs.min.id < rhs.min.id;
-						});
+					});
 					break;
+				default: ;
 				}
 			}
 
@@ -175,47 +175,47 @@ public:
 			static char allNamesSeparator[64] = ",";
 			if (ImGui::Button("Copy names to clipboard##champsTab"))
 			{
-				std::string allNames = "";
-				for (const auto& champ : champsAll)
+				std::string allNames;
+				for (const auto& [min, mas] : champsAll)
 				{
-					if (!champ.min.owned)
+					if (!min.owned)
 						continue;
-					allNames += champ.min.name + allNamesSeparator;
+					allNames += min.name + allNamesSeparator;
 				}
 				Utils::CopyToClipboard(allNames);
 			}
 			ImGui::SameLine();
 
-			const ImVec2 label_size = ImGui::CalcTextSize("W", NULL, true);
+			const ImVec2 label_size = ImGui::CalcTextSize("W", nullptr, true);
 			ImGui::InputTextMultiline("##separatorChampsTab", allNamesSeparator, IM_ARRAYSIZE(allNamesSeparator),
-				ImVec2(0, label_size.y + ImGui::GetStyle().FramePadding.y * 2.0f), ImGuiInputTextFlags_AllowTabInput);
+			                          ImVec2(0, label_size.y + ImGui::GetStyle().FramePadding.y * 2.0f), ImGuiInputTextFlags_AllowTabInput);
 
 			ImGui::Separator();
 			ImGui::Text("Champions owned: %d", iChampsOwned);
-			for (const auto& champ : champsAll)
+			for (const auto& [min, mas] : champsAll)
 			{
-				if (!champ.min.owned)
+				if (!min.owned)
 					continue;
 
-				int64_t t = std::stoll(champ.min.purchased);
+				int64_t t = std::stoll(min.purchased);
 				t /= 1000;
 				char buffer[50];
 				strftime(buffer, 100, "%Y-%m-%d %H:%M:%S", localtime(&t));
 
 				std::string inputId = "champInput";
-				inputId.append(std::to_string(champ.min.id));
+				inputId.append(std::to_string(min.id));
 				char input[768];
 
 				float textHeight = (label_size.y + ImGui::GetStyle().FramePadding.y) * 3.f;
 				std::string text = std::format(R"(name: {}
 purchased: {}
-id: {})", champ.min.name, buffer, champ.min.id);
+id: {})", min.name, buffer, min.id);
 
-				if (!champ.mas.lastPlayTime.empty())
+				if (!mas.lastPlayTime.empty())
 				{
 					textHeight = (label_size.y + ImGui::GetStyle().FramePadding.y) * 12.f;
 
-					t = std::stoll(champ.mas.lastPlayTime);
+					t = std::stoll(mas.lastPlayTime);
 					t /= 1000;
 					strftime(buffer, 100, "%Y-%m-%d %H:%M:%S", localtime(&t));
 
@@ -230,15 +230,15 @@ formattedMasteryGoal: {}
 highestGrade: {}
 lastPlayTime: {}
 playerId: {}
-tokensEarned: {})", champ.mas.championLevel, champ.mas.championPoints, champ.mas.championPointsSinceLastLevel,
-champ.mas.championPointsUntilNextLevel, champ.mas.chestGranted, champ.mas.formattedChampionPoints, champ.mas.formattedMasteryGoal,
-champ.mas.highestGrade, buffer, champ.mas.playerId, champ.mas.tokensEarned);
+tokensEarned: {})", mas.championLevel, mas.championPoints, mas.championPointsSinceLastLevel,
+					                    mas.championPointsUntilNextLevel, mas.chestGranted, mas.formattedChampionPoints, mas.formattedMasteryGoal,
+					                    mas.highestGrade, buffer, mas.playerId, mas.tokensEarned);
 				}
 
 				strcpy(input, text.c_str());
 				ImGui::PushID(inputId.c_str());
 				ImGui::InputTextMultiline("", input, IM_ARRAYSIZE(input), ImVec2(ImGui::GetWindowSize().x, textHeight),
-					ImGuiInputTextFlags_ReadOnly);
+				                          ImGuiInputTextFlags_ReadOnly);
 				ImGui::PopID();
 			}
 

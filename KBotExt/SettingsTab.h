@@ -1,39 +1,36 @@
 #pragma once
 
-#include "Definitions.h"
 #include "Includes.h"
-#include "Utils.h"
-#include "LCU.h"
 #include "Misc.h"
 #include "Config.h"
 
 class SettingsTab
 {
 public:
-
 	static void Render()
 	{
-		typedef LSTATUS(WINAPI* tRegCreateKeyExA)(HKEY hKey, LPCSTR lpSubKey, DWORD Reserved, LPSTR lpClass,
-			DWORD dwOptions, REGSAM samDesired, const LPSECURITY_ATTRIBUTES lpSecurityAttributes, PHKEY phkResult, LPDWORD lpdwDisposition);
-		static tRegCreateKeyExA RegCreateKeyExA = (tRegCreateKeyExA)GetProcAddress(LoadLibraryW(L"advapi32.dll"), "RegCreateKeyExA");
+		using tRegCreateKeyExA = LSTATUS(WINAPI*)(HKEY hKey, LPCSTR lpSubKey, DWORD Reserved, LPSTR lpClass,
+		                                          DWORD dwOptions, REGSAM samDesired, LPSECURITY_ATTRIBUTES lpSecurityAttributes, PHKEY phkResult,
+		                                          LPDWORD lpdwDisposition);
+		static auto RegCreateKeyExA = reinterpret_cast<tRegCreateKeyExA>(GetProcAddress(LoadLibraryW(L"advapi32.dll"), "RegCreateKeyExA"));
 
-		typedef LSTATUS(WINAPI* tRegOpenKeyExA)(HKEY hKey, LPCSTR lpSubKey, DWORD ulOptions,
-			REGSAM samDesired, PHKEY phkResult);
-		static tRegOpenKeyExA RegOpenKeyExA = (tRegOpenKeyExA)GetProcAddress(LoadLibraryW(L"advapi32.dll"), "RegOpenKeyExA");
+		using tRegOpenKeyExA = LSTATUS(WINAPI*)(HKEY hKey, LPCSTR lpSubKey, DWORD ulOptions,
+		                                        REGSAM samDesired, PHKEY phkResult);
+		static auto RegOpenKeyExA = reinterpret_cast<tRegOpenKeyExA>(GetProcAddress(LoadLibraryW(L"advapi32.dll"), "RegOpenKeyExA"));
 
-		typedef LSTATUS(WINAPI* tRegQueryValueExA)(HKEY hKey, LPCSTR lpValueName,
-			LPDWORD lpReserved, LPDWORD lpType, LPBYTE lpData, LPDWORD lpcbDatan);
-		static tRegQueryValueExA RegQueryValueExA = (tRegQueryValueExA)GetProcAddress(LoadLibraryW(L"advapi32.dll"), "RegQueryValueExA");
+		using tRegQueryValueExA = LSTATUS(WINAPI*)(HKEY hKey, LPCSTR lpValueName,
+		                                           LPDWORD lpReserved, LPDWORD lpType, LPBYTE lpData, LPDWORD lpcbDatan);
+		static auto RegQueryValueExA = reinterpret_cast<tRegQueryValueExA>(GetProcAddress(LoadLibraryW(L"advapi32.dll"), "RegQueryValueExA"));
 
-		typedef LSTATUS(WINAPI* tRegSetValueExA)(HKEY hKey, LPCSTR lpValueName, DWORD Reserved,
-			DWORD dwType, const BYTE* lpData, DWORD cbData);
-		static tRegSetValueExA RegSetValueExA = (tRegSetValueExA)GetProcAddress(LoadLibraryW(L"advapi32.dll"), "RegSetValueExA");
+		using tRegSetValueExA = LSTATUS(WINAPI*)(HKEY hKey, LPCSTR lpValueName, DWORD Reserved,
+		                                         DWORD dwType, const BYTE* lpData, DWORD cbData);
+		static auto RegSetValueExA = reinterpret_cast<tRegSetValueExA>(GetProcAddress(LoadLibraryW(L"advapi32.dll"), "RegSetValueExA"));
 
-		typedef LSTATUS(WINAPI* tRegDeleteValueA)(HKEY hKey, LPCSTR lpValueName);
-		static tRegDeleteValueA RegDeleteValueA = (tRegDeleteValueA)GetProcAddress(LoadLibraryW(L"advapi32.dll"), "RegDeleteValueA");
+		using tRegDeleteValueA = LSTATUS(WINAPI*)(HKEY hKey, LPCSTR lpValueName);
+		static auto RegDeleteValueA = reinterpret_cast<tRegDeleteValueA>(GetProcAddress(LoadLibraryW(L"advapi32.dll"), "RegDeleteValueA"));
 
-		typedef LSTATUS(WINAPI* tRegCloseKey)(HKEY hKe);
-		static tRegCloseKey RegCloseKey = (tRegCloseKey)GetProcAddress(LoadLibraryW(L"advapi32.dll"), "RegCloseKey");
+		using tRegCloseKey = LSTATUS(WINAPI*)(HKEY hKe);
+		static auto RegCloseKey = reinterpret_cast<tRegCloseKey>(GetProcAddress(LoadLibraryW(L"advapi32.dll"), "RegCloseKey"));
 
 		static bool once = true;
 		if (ImGui::BeginTabItem("Settings"))
@@ -42,12 +39,14 @@ public:
 			{
 				once = false;
 				HKEY hkResult;
-				if (RegOpenKeyExA(HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\LeagueClientUx.exe", 0, KEY_READ, &hkResult) == ERROR_SUCCESS)
+				if (RegOpenKeyExA(
+					HKEY_LOCAL_MACHINE, R"(Software\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\LeagueClientUx.exe)", 0,
+					KEY_READ, &hkResult) == ERROR_SUCCESS)
 				{
 					char buffer[MAX_PATH];
 					DWORD dwLen = sizeof(buffer);
-					LSTATUS regQuery = RegQueryValueExA(hkResult, "debugger", 0, NULL, (LPBYTE)buffer, &dwLen);
-					if (regQuery == ERROR_SUCCESS)
+					if (const LSTATUS regQuery = RegQueryValueExA(hkResult, "debugger", nullptr, nullptr, reinterpret_cast<LPBYTE>(buffer), &dwLen);
+						regQuery == ERROR_SUCCESS)
 					{
 						S.currentDebugger = std::string(buffer, dwLen);
 					}
@@ -86,32 +85,32 @@ public:
 			if (ImGui::Checkbox("Register debugger IFEO", &S.debugger))
 			{
 				HKEY hkResult;
-				LSTATUS regCreate = RegCreateKeyExA(HKEY_LOCAL_MACHINE,
-					"Software\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\LeagueClientUx.exe",
-					0, 0, 0, KEY_SET_VALUE | KEY_QUERY_VALUE | KEY_CREATE_SUB_KEY, 0, &hkResult, 0);
-				if (regCreate == ERROR_SUCCESS)
+				if (const LSTATUS regCreate = RegCreateKeyExA(HKEY_LOCAL_MACHINE,
+				                                              R"(Software\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\LeagueClientUx.exe)",
+				                                              0, nullptr, 0, KEY_SET_VALUE | KEY_QUERY_VALUE | KEY_CREATE_SUB_KEY, nullptr, &hkResult,
+				                                              nullptr); regCreate == ERROR_SUCCESS)
 				{
 					char* buffer[MAX_PATH];
 					DWORD bufferLen = sizeof(buffer);
 
 					char filePath[MAX_PATH + 1];
-					GetModuleFileNameA(NULL, filePath, MAX_PATH);
-					DWORD len = (DWORD)(strlen(filePath) + 1);
+					GetModuleFileNameA(nullptr, filePath, MAX_PATH);
+					const auto len = static_cast<DWORD>(strlen(filePath) + 1);
 
-					LSTATUS regQuery = RegQueryValueExA(hkResult, "debugger", 0, 0, (LPBYTE)buffer, &bufferLen);
-					if (regQuery == ERROR_SUCCESS || regQuery == ERROR_FILE_NOT_FOUND)
+					if (const LSTATUS regQuery = RegQueryValueExA(hkResult, "debugger", nullptr, nullptr, reinterpret_cast<LPBYTE>(buffer),
+					                                              &bufferLen); regQuery == ERROR_SUCCESS || regQuery == ERROR_FILE_NOT_FOUND)
 					{
 						if (S.debugger)
 						{
 							auto messageBoxStatus = IDYES;
 							if (S.autoRename || S.noAdmin)
-								messageBoxStatus = MessageBoxA(0, "Having \"Auto-rename\" or \"Launch client without admin\" "
-									"enabled with \"debugger IFEO\" will prevent League client from starting\n\n"
-									"Do you wish to continue?", "Warning", MB_YESNO | MB_SETFOREGROUND);
+								messageBoxStatus = MessageBoxA(nullptr, "Having \"Auto-rename\" or \"Launch client without admin\" "
+								                               "enabled with \"debugger IFEO\" will prevent League client from starting\n\n"
+								                               "Do you wish to continue?", "Warning", MB_YESNO | MB_SETFOREGROUND);
 
 							if (messageBoxStatus == IDYES)
 							{
-								if (RegSetValueExA(hkResult, "debugger", 0, REG_SZ, (const BYTE*)filePath, len) == ERROR_SUCCESS)
+								if (RegSetValueExA(hkResult, "debugger", 0, REG_SZ, reinterpret_cast<const BYTE*>(filePath), len) == ERROR_SUCCESS)
 								{
 									S.currentDebugger = filePath;
 								}
@@ -138,7 +137,7 @@ public:
 
 			if (ImGui::Button("Clean logs"))
 			{
-				if (MessageBoxA(0, "Are you sure?", "Cleaning logs", MB_OKCANCEL) == IDOK)
+				if (MessageBoxA(nullptr, "Are you sure?", "Cleaning logs", MB_OKCANCEL) == IDOK)
 				{
 					result = Misc::ClearLogs();
 				}
@@ -149,7 +148,7 @@ public:
 				Misc::TaskKillLeague();
 
 			static char bufLeaguePath[MAX_PATH];
-			std::copy(S.leaguePath.begin(), S.leaguePath.end(), bufLeaguePath);
+			std::ranges::copy(S.leaguePath, bufLeaguePath);
 			ImGui::Text("League path:");
 			ImGui::InputText("##leaguePath", bufLeaguePath, MAX_PATH);
 			S.leaguePath = bufLeaguePath;
@@ -173,7 +172,7 @@ public:
 			{
 				S.Window.width = 730;
 				S.Window.height = 530;
-				::SetWindowPos(S.hwnd, 0, 0, 0, S.Window.width, S.Window.height, SWP_NOMOVE | SWP_NOOWNERZORDER | SWP_NOZORDER);
+				SetWindowPos(S.hwnd, nullptr, 0, 0, S.Window.width, S.Window.height, SWP_NOMOVE | SWP_NOOWNERZORDER | SWP_NOZORDER);
 
 				S.fontScale = 1.f;
 				ImGuiIO& io = ImGui::GetIO();
@@ -186,7 +185,7 @@ public:
 
 			ImGui::Separator();
 			ImGui::Text("Program's version: %s | Latest version: %s",
-				Misc::programVersion.c_str(), Misc::latestVersion.c_str());
+			            Misc::programVersion.c_str(), Misc::latestVersion.c_str());
 			ImGui::Text("GitHub repository:");
 			ImGui::TextURL("Click me!", "https://github.com/KebsCS/KBotExt", 1, 0);
 

@@ -1,6 +1,5 @@
 #pragma once
 
-#include "Definitions.h"
 #include "Includes.h"
 #include "Utils.h"
 #include "LCU.h"
@@ -25,7 +24,7 @@ public:
 			if (once)
 			{
 				once = false;
-				std::copy(S.infoTab.playerName.begin(), S.infoTab.playerName.end(), playerName);
+				std::ranges::copy(S.infoTab.playerName, playerName);
 			}
 
 			ImGui::Text("Input player name:");
@@ -89,36 +88,36 @@ public:
 					summID = std::to_string(root["summonerId"].asUInt64()).c_str();
 					summName = root["internalName"].asString().c_str();
 
-					sResultJson = Json::writeString(wBuilder, root);
+					sResultJson = writeString(wBuilder, root);
 				}
 
-				/*accID = std::to_string(root["accountId"].asUInt64()).c_str();
-				ImGui::Text("accountId: %s", accID.c_str());
-				ImGui::TextWrapped("displayName: %s", root["displayName"].asString().c_str());
-				summName = root["internalName"].asString().c_str();
-				ImGui::TextWrapped("internalName: %s", summName.c_str());
-				ImGui::Text("nameChangeFlag: %d", root["nameChangeFlag"].asBool());
-				ImGui::Text("percentCompleteForNextLevel: %d", root["percentCompleteForNextLevel"].asInt());
-				ImGui::Text("profileIconId: %d", root["profileIconId"].asInt());
-				ImGui::Text("puuid: %s", root["puuid"].asString().c_str());
-				summID = std::to_string(root["summonerId"].asUInt64()).c_str();;
-				ImGui::Text("summonerId: %d", summID);
-				ImGui::Text("summonerLevel: %d", root["summonerLevel"].asInt());
-				ImGui::Text("unnamed: %d", root["unnamed"].asBool());
-				ImGui::Text("xpSinceLastLevel: %d", root["xpSinceLastLevel"].asInt());
-				ImGui::Text("xpUntilNextLevel: %d", root["xpUntilNextLevel"].asInt());
+				//accID = std::to_string(root["accountId"].asUInt64()).c_str();
+				//ImGui::Text("accountId: %s", accID.c_str());
+				//ImGui::TextWrapped("displayName: %s", root["displayName"].asString().c_str());
+				//summName = root["internalName"].asString().c_str();
+				//ImGui::TextWrapped("internalName: %s", summName.c_str());
+				//ImGui::Text("nameChangeFlag: %d", root["nameChangeFlag"].asBool());
+				//ImGui::Text("percentCompleteForNextLevel: %d", root["percentCompleteForNextLevel"].asInt());
+				//ImGui::Text("profileIconId: %d", root["profileIconId"].asInt());
+				//ImGui::Text("puuid: %s", root["puuid"].asString().c_str());
+				//summID = std::to_string(root["summonerId"].asUInt64()).c_str();;
+				//ImGui::Text("summonerId: %d", summID);
+				//ImGui::Text("summonerLevel: %d", root["summonerLevel"].asInt());
+				//ImGui::Text("unnamed: %d", root["unnamed"].asBool());
+				//ImGui::Text("xpSinceLastLevel: %d", root["xpSinceLastLevel"].asInt());
+				//ImGui::Text("xpUntilNextLevel: %d", root["xpUntilNextLevel"].asInt());
 
-				auto rerollPointsObj = root["rerollPoints"];
-				ImGui::Text("currentPoints: %d", rerollPointsObj["currentPoints"].asInt());
-				ImGui::Text("maxRolls: %d", rerollPointsObj["maxRolls"].asInt());
-				ImGui::Text("numberOfRolls: %d", rerollPointsObj["numberOfRolls"].asInt());
-				ImGui::Text("pointsCostToRoll: %d", rerollPointsObj["pointsCostToRoll"].asInt());
-				ImGui::Text("pointsToReroll: %d", rerollPointsObj["pointsToReroll"].asInt());*/
+				//auto& rerollPointsObj = root["rerollPoints"];
+				//ImGui::Text("currentPoints: %d", rerollPointsObj["currentPoints"].asInt());
+				//ImGui::Text("maxRolls: %d", rerollPointsObj["maxRolls"].asInt());
+				//ImGui::Text("numberOfRolls: %d", rerollPointsObj["numberOfRolls"].asInt());
+				//ImGui::Text("pointsCostToRoll: %d", rerollPointsObj["pointsCostToRoll"].asInt());
+				//ImGui::Text("pointsToReroll: %d", rerollPointsObj["pointsToReroll"].asInt());
 			}
 
 			if (!sResultJson.empty())
 			{
-				cResultJson = &sResultJson[0];
+				cResultJson = sResultJson.data();
 				ImGui::InputTextMultiline("##infoResult", cResultJson, sResultJson.size() + 1, ImVec2(600, 350));
 			}
 

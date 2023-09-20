@@ -8,7 +8,6 @@
 class LCU
 {
 public:
-
 	static inline cpr::Session session;
 
 	static inline ClientInfo league;
@@ -30,6 +29,7 @@ public:
 	static bool IsProcessGood();
 
 	static std::string GetStoreHeader();
+
 private:
 	static inline bool isCurrentRiotInfoSet = false;
 };

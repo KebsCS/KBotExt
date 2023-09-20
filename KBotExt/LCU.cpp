@@ -4,7 +4,7 @@
 
 #include "LCU.h"
 
-static void FixCachingProblem();
+[[maybe_unused]] static void FixCachingProblem();
 
 std::string LCU::Request(const std::string& method, const std::string& endpoint, const std::string& body)
 {
@@ -30,40 +30,38 @@ std::string LCU::Request(const std::string& method, const std::string& endpoint,
 	/*wrap::Response r = wrap::HttpsRequest(wrap::Method{ method }, wrap::Url{ sURL }, wrap::Body{ body }, wrap::Header{ league.header }, wrap::Port{ league.port },
 		wrap::Timeout{1000});*/
 
-	cpr::Response r;
+	cpr::Response r = {};
 
-	LCU::session.SetUrl(sURL);
-	LCU::session.SetBody(body);
+	session.SetUrl(sURL);
+	session.SetBody(body);
 
-	const std::string upperMethod = Utils::ToUpper(method);
-
-	if (upperMethod == "GET")
+	if (const std::string upperMethod = Utils::ToUpper(method); upperMethod == "GET")
 	{
-		r = LCU::session.Get();
+		r = session.Get();
 	}
 	else if (upperMethod == "POST")
 	{
-		r = LCU::session.Post();
+		r = session.Post();
 	}
 	else if (upperMethod == "OPTIONS")
 	{
-		r = LCU::session.Options();
+		r = session.Options();
 	}
 	else if (upperMethod == "DELETE")
 	{
-		r = LCU::session.Delete();
+		r = session.Delete();
 	}
 	else if (upperMethod == "PUT")
 	{
-		r = LCU::session.Put();
+		r = session.Put();
 	}
 	else if (upperMethod == "HEAD")
 	{
-		r = LCU::session.Head();
+		r = session.Head();
 	}
 	else if (upperMethod == "PATCH")
 	{
-		r = LCU::session.Patch();
+		r = session.Patch();
 	}
 
 	return r.text;
@@ -92,7 +90,7 @@ bool LCU::SetLeagueClientInfo(const ClientInfo& info)
 
 	league = info;
 
-	if (league.port == 0 || league.token == "")
+	if (league.port == 0 || league.token.empty())
 		return false;
 
 	league.header = Auth::MakeLeagueHeader(info);
@@ -107,9 +105,9 @@ bool LCU::SetLeagueClientInfo(const ClientInfo& info)
 
 bool LCU::SetLeagueClientInfo()
 {
-	if (!LCU::IsProcessGood())
+	if (!IsProcessGood())
 		return false;
-	return SetLeagueClientInfo(Auth::GetClientInfo(LCU::leagueProcesses[LCU::indexLeagueProcesses].first));
+	return SetLeagueClientInfo(Auth::GetClientInfo(leagueProcesses[indexLeagueProcesses].first));
 }
 
 bool LCU::SetCurrentClientRiotInfo()
@@ -117,7 +115,7 @@ bool LCU::SetCurrentClientRiotInfo()
 	if (isCurrentRiotInfoSet)
 		return true;
 
-	bool isSet = SetRiotClientInfo(Auth::GetClientInfo(LCU::leagueProcesses[LCU::indexLeagueProcesses].first, true));
+	const bool isSet = SetRiotClientInfo(Auth::GetClientInfo(leagueProcesses[indexLeagueProcesses].first, true));
 	if (isSet)
 		isCurrentRiotInfoSet = true;
 
@@ -126,14 +124,14 @@ bool LCU::SetCurrentClientRiotInfo()
 
 void LCU::GetLeagueProcesses()
 {
-	std::vector<DWORD>allProcessIds = Auth::GetAllProcessIds(L"LeagueClientUx.exe");
+	const std::vector<DWORD> allProcessIds = Auth::GetAllProcessIds(L"LeagueClientUx.exe");
 	// remove unexisting clients
-	for (size_t i = 0; i < LCU::leagueProcesses.size(); i++)
+	for (size_t i = 0; i < leagueProcesses.size(); i++)
 	{
 		bool exists = false;
 		for (const DWORD& proc : allProcessIds)
 		{
-			if (proc == LCU::leagueProcesses[i].first)
+			if (proc == leagueProcesses[i].first)
 			{
 				exists = true;
 				break;
@@ -141,102 +139,101 @@ void LCU::GetLeagueProcesses()
 		}
 		if (!exists)
 		{
-			LCU::leagueProcesses.erase(LCU::leagueProcesses.begin() + i);
-			if (i == LCU::indexLeagueProcesses)
-				LCU::SetLeagueClientInfo();
+			leagueProcesses.erase(leagueProcesses.begin() + i);
+			if (i == indexLeagueProcesses)
+				SetLeagueClientInfo();
 		}
 	}
 
 	for (const DWORD& proc : allProcessIds)
 	{
 		int foundIndex = -1;
-		for (size_t i = 0; i < LCU::leagueProcesses.size(); i++)
+		for (size_t i = 0; i < leagueProcesses.size(); i++)
 		{
-			if (LCU::leagueProcesses[i].first == proc)
+			if (leagueProcesses[i].first == proc)
 			{
 				foundIndex = static_cast<int>(i);
 				break;
 			}
 		}
 
-		if (foundIndex != -1 && !LCU::leagueProcesses[foundIndex].second.empty())
+		if (foundIndex != -1 && !leagueProcesses[foundIndex].second.empty())
 			continue;
 
-		ClientInfo currInfo = Auth::GetClientInfo(proc);
-		currInfo.header = Auth::MakeLeagueHeader(currInfo);
+		ClientInfo currentInfo = Auth::GetClientInfo(proc);
+		currentInfo.header = Auth::MakeLeagueHeader(currentInfo);
 
 		size_t currentIndex = foundIndex;
 		if (foundIndex == -1)
 		{
-			currentIndex = LCU::leagueProcesses.size();
-			std::pair<DWORD, std::string>temp = { proc, "" };
-			LCU::leagueProcesses.emplace_back(temp);
+			currentIndex = leagueProcesses.size();
+			std::pair<DWORD, std::string> temp = {proc, ""};
+			leagueProcesses.emplace_back(temp);
 		}
 
-		std::thread t([currentIndex, currInfo]()
+		std::thread t([currentIndex, currentInfo]() {
+			short sessionFailCount = 0;
+			while (true)
 			{
-				short sessionFailCount = 0;
-				while (true)
+				cpr::Session session;
+				session.SetVerifySsl(false);
+				session.SetHeader(Utils::StringToHeader(currentInfo.header));
+				session.SetUrl(std::format("https://127.0.0.1:{}/lol-login/v1/session", currentInfo.port));
+				std::string procSession = session.Get().text;
+
+				// probably legacy client
+				if (procSession.find("errorCode") != std::string::npos)
 				{
-					cpr::Session session;
-					session.SetVerifySsl(false);
-					session.SetHeader(Utils::StringToHeader(currInfo.header));
-					session.SetUrl(std::format("https://127.0.0.1:{}/lol-login/v1/session", currInfo.port));
-					std::string procSession = session.Get().text;
-
-					// probably legacy client
-					if (procSession.find("errorCode") != std::string::npos)
+					sessionFailCount++;
+					if (sessionFailCount > 5)
 					{
-						sessionFailCount++;
-						if (sessionFailCount > 5)
-						{
-							LCU::leagueProcesses[currentIndex].second = "!FAILED!";
-							break;
-						}
-						std::this_thread::sleep_for(std::chrono::milliseconds(300));
-						continue;
-					}
-
-					Json::CharReaderBuilder builder;
-					const std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
-					JSONCPP_STRING err;
-					Json::Value root;
-
-					if (reader->parse(procSession.c_str(), procSession.c_str() + static_cast<int>(procSession.length()), &root, &err))
-					{
-						std::string currSummId = root["summonerId"].asString();
-						// player has summId when client is loaded
-						if (!currSummId.empty())
-						{
-							session.SetUrl(std::format("https://127.0.0.1:{}/lol-summoner/v1/summoners/{}", currInfo.port, currSummId));
-							std::string currSummoner = session.Get().text;
-
-							if (reader->parse(currSummoner.c_str(), currSummoner.c_str() + static_cast<int>(currSummoner.length()), &root, &err))
-							{
-								LCU::leagueProcesses[currentIndex].second = std::string(root["displayName"].asString().substr(0, 25));
-								break;
-							}
-						}
+						leagueProcesses[currentIndex].second = "!FAILED!";
+						break;
 					}
 					std::this_thread::sleep_for(std::chrono::milliseconds(300));
+					continue;
 				}
-			});
+
+				Json::CharReaderBuilder builder;
+				const std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
+				JSONCPP_STRING err;
+				Json::Value root;
+
+				if (reader->parse(procSession.c_str(), procSession.c_str() + static_cast<int>(procSession.length()), &root, &err))
+				{
+					std::string currentSummId = root["summonerId"].asString();
+					// player has summId when client is loaded
+					if (!currentSummId.empty())
+					{
+						session.SetUrl(std::format("https://127.0.0.1:{}/lol-summoner/v1/summoners/{}", currentInfo.port, currentSummId));
+						std::string currentSummoner = session.Get().text;
+
+						if (reader->parse(currentSummoner.c_str(), currentSummoner.c_str() + static_cast<int>(currentSummoner.length()), &root, &err))
+						{
+							leagueProcesses[currentIndex].second = std::string(root["displayName"].asString().substr(0, 25));
+							break;
+						}
+					}
+				}
+				std::this_thread::sleep_for(std::chrono::milliseconds(300));
+			}
+		});
 		t.detach();
 	}
 }
 
 bool LCU::IsProcessGood()
 {
-	return !LCU::leagueProcesses.empty() && LCU::indexLeagueProcesses < LCU::leagueProcesses.size();
+	return !leagueProcesses.empty() && indexLeagueProcesses < leagueProcesses.size();
 }
 
-// todo, sync with LCU header, it's almost the same
+// TODO: sync with LCU header, it's almost the same
 std::string LCU::GetStoreHeader()
 {
-	std::string storeUrl = LCU::Request("GET", "/lol-store/v1/getStoreUrl");
-	storeUrl.erase(std::remove(storeUrl.begin(), storeUrl.end(), '"'), storeUrl.end());
+	std::string storeUrl = Request("GET", "/lol-store/v1/getStoreUrl");
+	std::erase(storeUrl, '"');
 
-	std::string accessToken = LCU::Request("GET", "/lol-rso-auth/v1/authorization/access-token");
+	std::string accessToken = Request("GET", "/lol-rso-auth/v1/authorization/access-token");
 	Json::CharReaderBuilder builder;
 	const std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
 	JSONCPP_STRING err;
@@ -244,9 +241,8 @@ std::string LCU::GetStoreHeader()
 	if (reader->parse(accessToken.c_str(), accessToken.c_str() + static_cast<int>(accessToken.length()), &root, &err))
 	{
 		std::string storeToken = root["token"].asString();
-		std::string storeHost = "";
-		auto n = storeUrl.find("https://");
-		if (n != std::string::npos)
+		std::string storeHost;
+		if (auto n = storeUrl.find("https://"); n != std::string::npos)
 		{
 			storeHost = storeUrl.substr(n + strlen("https://"));
 		}
@@ -256,16 +252,17 @@ std::string LCU::GetStoreHeader()
 			"Accept: application/json" + "\r\n" +
 			"Accept-Language: en-US,en;q=0.9" + "\r\n" +
 			"Content-Type: application/json" + "\r\n" +
-			"Origin: https://127.0.0.1:" + std::to_string(LCU::league.port) + "\r\n" +
-			"User-Agent: Mozilla/5.0 (Windows NT 6.2; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) LeagueOfLegendsClient/" + LCU::league.version + " (CEF 91) Safari/537.36" + "\r\n" +
+			"Origin: https://127.0.0.1:" + std::to_string(league.port) + "\r\n" +
+			"User-Agent: Mozilla/5.0 (Windows NT 6.2; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) LeagueOfLegendsClient/" + league.version +
+			" (CEF 91) Safari/537.36" + "\r\n" +
 			//X-B3-SpanId:
 			//X-B3-TraceId:
-			"sec-ch-ua: \"Chromium\";v=\"91\"" + "\r\n" +
+			R"(sec-ch-ua: "Chromium";v="91")" + "\r\n" +
 			"sec-ch-ua-mobile: ?0" + "\r\n" +
 			"Sec-Fetch-Site: same-origin" + "\r\n" +
 			"Sec-Fetch-Mode: no-cors" + "\r\n" +
 			"Sec-Fetch-Dest: empty" + "\r\n" +
-			"Referer: https://127.0.0.1:" + std::to_string(LCU::league.port) + "\r\n" +
+			"Referer: https://127.0.0.1:" + std::to_string(league.port) + "\r\n" +
 			"Accept-Encoding: "/*gzip,*/ + "deflate, br";
 		return storeHeader;
 	}
@@ -273,43 +270,46 @@ std::string LCU::GetStoreHeader()
 	return "";
 }
 
-// Fixes Wininet error 12158, #80 in GitHub issues
+/**
+ * \brief Fixes Wininet error 12158, #80 in GitHub issues
+ */
 static void FixCachingProblem()
 {
-	typedef LSTATUS(WINAPI* tRegOpenKeyExA)(HKEY hKey, LPCSTR lpSubKey, DWORD ulOptions,
-		REGSAM samDesired, PHKEY phkResult);
-	static tRegOpenKeyExA RegOpenKeyExA = (tRegOpenKeyExA)GetProcAddress(LoadLibraryW(L"advapi32.dll"), "RegOpenKeyExA");
+	using tRegOpenKeyExA = LSTATUS(WINAPI*)(HKEY hKey, LPCSTR lpSubKey, DWORD ulOptions,
+	                                        REGSAM samDesired, PHKEY phkResult);
+	static auto RegOpenKeyExA = reinterpret_cast<tRegOpenKeyExA>(GetProcAddress(LoadLibraryW(L"advapi32.dll"), "RegOpenKeyExA"));
 
-	typedef LSTATUS(WINAPI* tRegQueryValueExA)(HKEY hKey, LPCSTR lpValueName,
-		LPDWORD lpReserved, LPDWORD lpType, LPBYTE lpData, LPDWORD lpcbDatan);
-	static tRegQueryValueExA RegQueryValueExA = (tRegQueryValueExA)GetProcAddress(LoadLibraryW(L"advapi32.dll"), "RegQueryValueExA");
+	using tRegQueryValueExA = LSTATUS(WINAPI*)(HKEY hKey, LPCSTR lpValueName,
+	                                           LPDWORD lpReserved, LPDWORD lpType, LPBYTE lpData, LPDWORD lpcbDatan);
+	static auto RegQueryValueExA = reinterpret_cast<tRegQueryValueExA>(GetProcAddress(LoadLibraryW(L"advapi32.dll"), "RegQueryValueExA"));
 
-	typedef LSTATUS(WINAPI* tRegSetValueExA)(HKEY hKey, LPCSTR lpValueName, DWORD Reserved,
-		DWORD dwType, const BYTE* lpData, DWORD cbData);
-	static tRegSetValueExA RegSetValueExA = (tRegSetValueExA)GetProcAddress(LoadLibraryW(L"advapi32.dll"), "RegSetValueExA");
+	using tRegSetValueExA = LSTATUS(WINAPI*)(HKEY hKey, LPCSTR lpValueName, DWORD Reserved,
+	                                         DWORD dwType, const BYTE* lpData, DWORD cbData);
+	static auto RegSetValueExA = reinterpret_cast<tRegSetValueExA>(GetProcAddress(LoadLibraryW(L"advapi32.dll"), "RegSetValueExA"));
 
-	typedef LSTATUS(WINAPI* tRegCloseKey)(HKEY hKe);
-	static tRegCloseKey RegCloseKey = (tRegCloseKey)GetProcAddress(LoadLibraryW(L"advapi32.dll"), "RegCloseKey");
+	using tRegCloseKey = LSTATUS(WINAPI*)(HKEY hKe);
+	static auto RegCloseKey = reinterpret_cast<tRegCloseKey>(GetProcAddress(LoadLibraryW(L"advapi32.dll"), "RegCloseKey"));
 
 	bool bChanged = false;
 	HKEY hkResult;
-	if (RegOpenKeyExA(HKEY_LOCAL_MACHINE, "Software\\Policies\\Microsoft\\Windows\\CurrentVersion\\Internet Settings", 0, KEY_READ | KEY_WRITE, &hkResult) == ERROR_SUCCESS)
+	if (RegOpenKeyExA(HKEY_LOCAL_MACHINE, R"(Software\Policies\Microsoft\Windows\CurrentVersion\Internet Settings)", 0, KEY_READ | KEY_WRITE,
+	                  &hkResult) == ERROR_SUCCESS)
 	{
 		DWORD value;
 		DWORD newValue = 0;
 		DWORD dwSize = sizeof(value);
-		LSTATUS regQuery = RegQueryValueExA(hkResult, "DisableCachingOfSSLPages", 0, NULL, (LPBYTE)&value, &dwSize);
-		if (regQuery == ERROR_SUCCESS)
+		if (const LSTATUS regQuery = RegQueryValueExA(hkResult, "DisableCachingOfSSLPages", nullptr, nullptr, reinterpret_cast<LPBYTE>(&value),
+		                                              &dwSize); regQuery == ERROR_SUCCESS)
 		{
 			if (value == 0x1)
 			{
-				RegSetValueExA(hkResult, "DisableCachingOfSSLPages", 0, REG_DWORD, (LPBYTE)&newValue, dwSize);
+				RegSetValueExA(hkResult, "DisableCachingOfSSLPages", 0, REG_DWORD, reinterpret_cast<LPBYTE>(&newValue), dwSize);
 				bChanged = true;
 			}
 		}
 		else if (regQuery == ERROR_FILE_NOT_FOUND) // if key doesnt exist, create it
 		{
-			RegSetValueExA(hkResult, "DisableCachingOfSSLPages", 0, REG_DWORD, (LPBYTE)&newValue, dwSize);
+			RegSetValueExA(hkResult, "DisableCachingOfSSLPages", 0, REG_DWORD, reinterpret_cast<LPBYTE>(&newValue), dwSize);
 			bChanged = true;
 		}
 		RegCloseKey(hkResult);
@@ -317,9 +317,9 @@ static void FixCachingProblem()
 
 	if (bChanged == true)
 	{
-		MessageBoxA(NULL, "Restart the program\n\nIf this pop-up window keeps showing up: Open \"Internet Options\", "
-			"Go to \"Advanced\" tab and disable \"Do not save encrypted pages to disk\". Press \"Apply\" and \"OK\"",
-			"Updated faulty options", MB_OK);
-		exit(EXIT_SUCCESS);
+		MessageBoxA(nullptr, "Restart the program\n\nIf this pop-up window keeps showing up: Open \"Internet Options\", "
+		            "Go to \"Advanced\" tab and disable \"Do not save encrypted pages to disk\". Press \"Apply\" and \"OK\"",
+		            "Updated faulty options", MB_OK);
+		exit(EXIT_SUCCESS); // ConcurrencyMtUnsafe)
 	}
 }

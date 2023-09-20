@@ -1,6 +1,5 @@
 #pragma once
 
-#include "Definitions.h"
 #include "Includes.h"
 #include "LCU.h"
 
@@ -30,11 +29,11 @@ public:
 		if (once)
 		{
 			once = false;
-			std::copy(S.customTab.method.begin(), S.customTab.method.end(), method);
-			std::copy(S.customTab.urlText.begin(), S.customTab.urlText.end(), urlText);
-			std::copy(S.customTab.requestText.begin(), S.customTab.requestText.end(), requestText);
-			std::copy(S.customTab.port.begin(), S.customTab.port.end(), inputPort);
-			std::copy(S.customTab.header.begin(), S.customTab.header.end(), inputHeader);
+			std::ranges::copy(S.customTab.method, method);
+			std::ranges::copy(S.customTab.urlText, urlText);
+			std::ranges::copy(S.customTab.requestText, requestText);
+			std::ranges::copy(S.customTab.port, inputPort);
+			std::ranges::copy(S.customTab.header, inputHeader);
 		}
 
 		if (onOpen)
@@ -44,19 +43,22 @@ public:
 
 			ledgeUrl = GetLedgeUrl();
 			storeUrl = LCU::Request("GET", "/lol-store/v1/getStoreUrl");
-			storeUrl.erase(std::remove(storeUrl.begin(), storeUrl.end(), '"'), storeUrl.end());
+			std::erase(storeUrl, '"');
 		}
 
 		ImGui::Text("Method:");
-		const ImVec2 label_size = ImGui::CalcTextSize("W", NULL, true);
-		ImGui::InputTextEx("##inputMethod", NULL, method, IM_ARRAYSIZE(method), ImVec2(S.Window.width - 130.f, label_size.y + ImGui::GetStyle().FramePadding.y * 2.0f), 0, NULL, NULL);
+		const ImVec2 label_size = ImGui::CalcTextSize("W", nullptr, true);
+		ImGui::InputTextEx("##inputMethod", nullptr, method, IM_ARRAYSIZE(method),
+		                   ImVec2(S.Window.width - 130.f, label_size.y + ImGui::GetStyle().FramePadding.y * 2.0f), 0, nullptr, nullptr);
 
 		ImGui::Text("URL:");
-		ImGui::InputTextMultiline("##inputUrl", urlText, IM_ARRAYSIZE(urlText), ImVec2(S.Window.width - 130.f, label_size.y + ImGui::GetStyle().FramePadding.y * 2.0f));
+		ImGui::InputTextMultiline("##inputUrl", urlText, IM_ARRAYSIZE(urlText),
+		                          ImVec2(S.Window.width - 130.f, label_size.y + ImGui::GetStyle().FramePadding.y * 2.0f));
 
 		ImGui::Text("Body:");
 		ImGui::InputTextMultiline("##inputBody", (requestText), IM_ARRAYSIZE(requestText), ImVec2(S.Window.width - 130.f,
-			(label_size.y + ImGui::GetStyle().FramePadding.y) * 6.f), ImGuiInputTextFlags_AllowTabInput);
+		                                                                                          (label_size.y + ImGui::GetStyle().FramePadding.y) *
+		                                                                                          6.f), ImGuiInputTextFlags_AllowTabInput);
 
 		S.customTab.method = method;
 		S.customTab.urlText = urlText;
@@ -108,7 +110,7 @@ public:
 						|| strcmp(urlText, storeUrl.c_str()) == 0 || strcmp(urlText, ledgeUrl.c_str()) == 0)
 					{
 						storeUrl = LCU::Request("GET", "/lol-store/v1/getStoreUrl");
-						storeUrl.erase(std::remove(storeUrl.begin(), storeUrl.end(), '"'), storeUrl.end());
+						std::erase(storeUrl, '"');
 						std::strcpy(urlText, storeUrl.c_str());
 					}
 					std::strcpy(inputPort, "443");
@@ -120,14 +122,13 @@ public:
 
 			if (ImGui::Button("Ledge"))
 			{
-				std::string ledgeHeader = "";
+				std::string ledgeHeader;
 
 				ledgeUrl = GetLedgeUrl();
-				if (ledgeUrl != "")
+				if (!ledgeUrl.empty())
 				{
-					std::string ledgeHost = "";
-					auto n = ledgeUrl.find("https://");
-					if (n != std::string::npos)
+					std::string ledgeHost;
+					if (auto n = ledgeUrl.find("https://"); n != std::string::npos)
 					{
 						ledgeHost = ledgeUrl.substr(n + strlen("https://"));
 					}
@@ -141,7 +142,7 @@ public:
 				}
 
 				std::string sessionToken = LCU::Request("GET", "/lol-league-session/v1/league-session-token");
-				sessionToken.erase(std::remove(sessionToken.begin(), sessionToken.end(), '\"'), sessionToken.end());
+				std::erase(sessionToken, '\"');
 
 				ledgeHeader += "Accept-Encoding: deflate, "/*gzip, */"zstd\r\n";
 				ledgeHeader += "user-agent: LeagueOfLegendsClient/" + LCU::league.version + "\r\n";
@@ -160,7 +161,7 @@ public:
 
 			ImGui::Text("Header:");
 			ImGui::InputTextMultiline("##inputHeader", (inputHeader), IM_ARRAYSIZE(inputHeader), ImVec2(S.Window.width - 130.f,
-				(label_size.y + ImGui::GetStyle().FramePadding.y) * 6.f), ImGuiInputTextFlags_AllowTabInput);
+				                          (label_size.y + ImGui::GetStyle().FramePadding.y) * 6.f), ImGuiInputTextFlags_AllowTabInput);
 
 			S.customTab.port = inputPort;
 			S.customTab.header = inputHeader;
@@ -179,12 +180,12 @@ public:
 			customPort = LCU::league.port;
 		}
 
-		ImGui::Columns(2, 0, false);
+		ImGui::Columns(2, nullptr, false);
 
 		static std::string result;
 		if (ImGui::Button("Send custom request##customTab"))
 		{
-			std::string sURL = std::string(urlText);
+			auto sURL = std::string(urlText);
 
 			if (sURL.find("https://127.0.0.1") == std::string::npos && !isCustomOpen)
 			{
@@ -266,7 +267,7 @@ public:
 				Json::Value root;
 				if (reader->parse(sResultJson.c_str(), sResultJson.c_str() + static_cast<int>(sResultJson.length()), &root, &err))
 				{
-					sResultJson = Json::writeString(wBuilder, root);
+					sResultJson = writeString(wBuilder, root);
 				}
 			}
 		}
@@ -291,16 +292,16 @@ public:
 				sResultJson = result;
 			else
 			{
-				sResultJson = Json::writeString(wBuilder, root);
+				sResultJson = writeString(wBuilder, root);
 			}
 			result = "";
 		}
 
 		if (!sResultJson.empty())
 		{
-			cResultJson = &sResultJson[0];
+			cResultJson = sResultJson.data();
 			ImGui::InputTextMultiline("##customResult", cResultJson, sResultJson.size() + 1, ImVec2(S.Window.width - 130.f,
-				(label_size.y + ImGui::GetStyle().FramePadding.y) * 19.f));
+				                          (label_size.y + ImGui::GetStyle().FramePadding.y) * 19.f));
 		}
 	}
 
@@ -315,9 +316,9 @@ public:
 		if (once)
 		{
 			once = false;
-			std::copy(S.invokeTab.destination.begin(), S.invokeTab.destination.end(), destination);
-			std::copy(S.invokeTab.method.begin(), S.invokeTab.method.end(), method);
-			std::copy(S.invokeTab.args.begin(), S.invokeTab.args.end(), args);
+			std::ranges::copy(S.invokeTab.destination, destination);
+			std::ranges::copy(S.invokeTab.method, method);
+			std::ranges::copy(S.invokeTab.args, args);
 		}
 
 		ImGui::Text("Destination:");
@@ -336,8 +337,8 @@ public:
 		static std::string result;
 		if (ImGui::Button("Submit##submitInvoke"))
 		{
-			std::string req = std::format("https://127.0.0.1/lol-login/v1/session/invoke?destination={0}&method={1}&args=[{2}]",
-				destination, method, args);
+			const std::string req = std::format("https://127.0.0.1/lol-login/v1/session/invoke?destination={0}&method={1}&args=[{2}]",
+			                                    destination, method, args);
 			result = LCU::Request("POST", req, "");
 		}
 
@@ -355,7 +356,7 @@ public:
 
 		if (!result.empty())
 		{
-			Json::CharReaderBuilder builder;
+			const Json::CharReaderBuilder builder;
 			const std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
 			JSONCPP_STRING err;
 			Json::Value root;
@@ -363,14 +364,14 @@ public:
 				sResultJson = result;
 			else
 			{
-				sResultJson = Json::writeString(wBuilder, root);
+				sResultJson = writeString(wBuilder, root);
 			}
 			result = "";
 		}
 
 		if (!sResultJson.empty())
 		{
-			cResultJson = &sResultJson[0];
+			cResultJson = sResultJson.data();
 			ImGui::InputTextMultiline("##gameResult", cResultJson, sResultJson.size() + 1, ImVec2(600, 232));
 		}
 	}
@@ -379,7 +380,6 @@ private:
 	static inline bool onOpen = true;
 
 public:
-
 	static void Render()
 	{
 		if (ImGui::BeginTabItem("Custom"))
@@ -391,7 +391,7 @@ public:
 					Custom();
 					ImGui::EndTabItem();
 				}
-				if (ImGui::BeginTabItem("LCDS"))
+				if (ImGui::BeginTabItem("LCDS")) // LCDS?
 				{
 					Invoke();
 					ImGui::EndTabItem();
@@ -411,21 +411,20 @@ public:
 	}
 
 private:
-
 	static std::string GetLedgeUrl()
 	{
 		Json::CharReaderBuilder builder;
 		const std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
 		JSONCPP_STRING err;
 		Json::Value rootRegion;
-		std::string region = "";
+		std::string region;
 		std::string getRegion = LCU::Request("GET", "/riotclient/get_region_locale");
 		if (reader->parse(getRegion.c_str(), getRegion.c_str() + static_cast<int>(getRegion.length()), &rootRegion, &err))
 		{
 			region = rootRegion["webRegion"].asString();
 		}
 
-		if (region != "")
+		if (!region.empty())
 		{
 			std::ifstream systemYaml(S.leaguePath + "system.yaml");
 			std::string line;
