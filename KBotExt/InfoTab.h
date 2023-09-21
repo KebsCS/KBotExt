@@ -88,7 +88,7 @@ public:
 					summID = std::to_string(root["summonerId"].asUInt64()).c_str();
 					summName = root["internalName"].asString().c_str();
 
-					sResultJson = writeString(wBuilder, root);
+					sResultJson = Json::writeString(wBuilder, root);
 				}
 
 				//accID = std::to_string(root["accountId"].asUInt64()).c_str();

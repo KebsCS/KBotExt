@@ -509,7 +509,7 @@ public:
 					sResultJson = result;
 				else
 				{
-					sResultJson = writeString(wBuilder, root);
+					sResultJson = Json::writeString(wBuilder, root);
 				}
 				result = "";
 			}

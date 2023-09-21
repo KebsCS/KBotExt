@@ -39,7 +39,7 @@ public:
 								if (root[i]["queueAvailability"].asString() != "Available")
 									continue;
 
-								long id = root[i]["id"].asInt64();
+								int64_t id = root[i]["id"].asInt64();
 								std::string name = root[i]["name"].asString();
 								name += " " + std::to_string(id);
 								//std::cout << id << " " << name << std::endl;
@@ -481,13 +481,13 @@ public:
 					std::string storeUrl = LCU::Request("GET", "/lol-store/v1/getStoreUrl");
 					std::erase(storeUrl, '"');
 
-					std::string purchaseHistory = Get(cpr::Url{storeUrl + "/storefront/v3/history/purchase"}, cpr::Header{storeHeader}).text;
+					std::string purchaseHistory = cpr::Get(cpr::Url{storeUrl + "/storefront/v3/history/purchase"}, cpr::Header{storeHeader}).text;
 					if (reader->parse(purchaseHistory.c_str(), purchaseHistory.c_str() + static_cast<int>(purchaseHistory.length()),
 					                  &rootPurchaseHistory, &err))
 					{
 						std::string accountId = rootPurchaseHistory["player"]["accountId"].asString();
 						std::string transactionId = rootPurchaseHistory["transactions"][0]["transactionId"].asString();
-						result = Post(cpr::Url{storeUrl + "/storefront/v3/refund"}, cpr::Header{storeHeader},
+						result = cpr::Post(cpr::Url{storeUrl + "/storefront/v3/refund"}, cpr::Header{storeHeader},
 						              cpr::Body{
 							              "{\"accountId\":" + accountId + R"(,"transactionId":")" + transactionId +
 							              R"(","inventoryType":"CHAMPION","language":"en_US"})"
@@ -565,7 +565,7 @@ public:
 			ImGui::Checkbox("Instalock", &S.gameTab.instalockEnabled);
 			ImGui::SameLine();
 			ImGui::SetNextItemWidth(static_cast<float>(S.Window.width / 6));
-			if (ComboAutoSelect("##comboInstalock", instalockComboData))
+			if (ImGui::ComboAutoSelect("##comboInstalock", instalockComboData))
 			{
 				if (instalockComboData.index != -1)
 				{
@@ -642,7 +642,7 @@ public:
 
 			ImGui::SameLine();
 			ImGui::SetNextItemWidth(static_cast<float>(S.Window.width / 6));
-			if (ComboAutoSelect("##comboAutoban", autobanComboData))
+			if (ImGui::ComboAutoSelect("##comboAutoban", autobanComboData))
 			{
 				if (autobanComboData.index != -1)
 				{
@@ -946,7 +946,7 @@ public:
 									std::to_string(idToBuy)
 									+ R"(,"ipCost":null,"rpCost":)" + std::to_string(priceToBuy) + R"(,"quantity":1}]})";
 								std::string purchaseUrl = getStoreUrl + "/storefront/v3/purchase?language=en_US";
-								std::string purchase = Post(cpr::Url{purchaseUrl}, cpr::Body{purchaseBody}, cpr::Header{storeHeader}).text;
+								std::string purchase = cpr::Post(cpr::Url{purchaseUrl}, cpr::Body{purchaseBody}, cpr::Header{storeHeader}).text;
 								boosted = "Bought " + ChampIdToName(idToBuy) + " - dont play this champion, or you wont be able to refund RP";
 							}
 
@@ -993,7 +993,7 @@ public:
 				}
 
 				std::string historyUrl = getStoreUrl + "/storefront/v3/history/purchase?language=en_US";
-				std::string getHistory = Get(cpr::Url{historyUrl}, cpr::Header{storeHeader}).text;
+				std::string getHistory = cpr::Get(cpr::Url{historyUrl}, cpr::Header{storeHeader}).text;
 				if (reader->parse(getHistory.c_str(), getHistory.c_str() + static_cast<int>(getHistory.length()), &root, &err))
 				{
 					if (root["transactions"].isArray())
@@ -1072,7 +1072,7 @@ public:
 					sResultJson = result;
 				else
 				{
-					sResultJson = writeString(wBuilder, root);
+					sResultJson = Json::writeString(wBuilder, root);
 				}
 				result = "";
 			}
@@ -1145,7 +1145,7 @@ public:
 			JSONCPP_STRING err;
 
 			LCU::SetCurrentClientRiotInfo();
-			std::string getChat = Get(cpr::Url{std::format("https://127.0.0.1:{}/chat/v5/participants/champ-select", LCU::riot.port)},
+			std::string getChat = cpr::Get(cpr::Url{std::format("https://127.0.0.1:{}/chat/v5/participants/champ-select", LCU::riot.port)},
 			                          cpr::Header{Utils::StringToHeader(LCU::riot.header)}, cpr::VerifySsl{false}).text;
 			if (!reader->parse(getChat.c_str(), getChat.c_str() + static_cast<int>(getChat.length()), &root, &err))
 			{
@@ -1493,7 +1493,7 @@ public:
 						summNames = L"";
 
 						LCU::SetCurrentClientRiotInfo();
-						std::string participants = Get(
+						std::string participants = cpr::Get(
 							cpr::Url{std::format("https://127.0.0.1:{}/chat/v5/participants/champ-select", LCU::riot.port)},
 							cpr::Header{Utils::StringToHeader(LCU::riot.header)}, cpr::VerifySsl{false}).text;
 						if (reader->parse(participants.c_str(), participants.c_str() + static_cast<int>(participants.length()), &rootPartcipants,
@@ -1608,7 +1608,7 @@ public:
 		}
 		std::string currentPageId = rootCurrentPage["id"].asString();
 
-		std::stringstream ssOpgg(Get(cpr::Url{"https://www.op.gg/champions/" + Utils::ToLower(currentChampionName)}).text);
+		std::stringstream ssOpgg(cpr::Get(cpr::Url{"https://www.op.gg/champions/" + Utils::ToLower(currentChampionName)}).text);
 		std::vector<std::string> runes;
 		std::string primaryPerk, secondaryPerk;
 
@@ -1740,9 +1740,9 @@ public:
 			Json::Value root;
 			Json::CharReaderBuilder builder;
 			const std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
-			JSONCPP_STRING err;
+			JSONCPP_STRING local_err;
 
-			if (reader->parse(config.c_str(), config.c_str() + static_cast<int>(config.length()), &root, &err))
+			if (reader->parse(config.c_str(), config.c_str() + static_cast<int>(config.length()), &root, &local_err))
 			{
 				if (auto t = root[accId]; !t.empty())
 				{

@@ -73,7 +73,7 @@ public:
 
 	static void CheckVersion()
 	{
-		const std::string getLatest = Get(cpr::Url{"https://api.github.com/repos/KebsCS/KBotExt/releases/latest"}).text;
+		const std::string getLatest = cpr::Get(cpr::Url{"https://api.github.com/repos/KebsCS/KBotExt/releases/latest"}).text;
 
 		const Json::CharReaderBuilder builder;
 		const std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
@@ -116,7 +116,7 @@ public:
 
 	static std::string GetCurrentPatch()
 	{
-		const std::string result = Get(cpr::Url{"http://ddragon.leagueoflegends.com/api/versions.json"}).text;
+		const std::string result = cpr::Get(cpr::Url{"http://ddragon.leagueoflegends.com/api/versions.json"}).text;
 		const Json::CharReaderBuilder builder;
 		const std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
 		JSONCPP_STRING err;
@@ -130,7 +130,7 @@ public:
 
 	static void GetAllChampionSkins()
 	{
-		std::string getSkins = Get(cpr::Url{"https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/skins.json"}).text;
+		std::string getSkins = cpr::Get(cpr::Url{"https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/skins.json"}).text;
 		Json::CharReaderBuilder builder;
 		const std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
 		JSONCPP_STRING err;
@@ -184,9 +184,9 @@ public:
 		}
 
 		std::vector<Champ> temp;
-		for (const auto& snd : champs | std::views::values)
+		for (const auto& c : champs)
 		{
-			temp.emplace_back(snd);
+			temp.emplace_back(c.second);
 		}
 		champSkins = temp;
 	}
@@ -673,7 +673,7 @@ namespace ImGui
 
 			const char* buf_end = nullptr;
 			state->CurLenW = ImTextStrFromUtf8(state->TextW.Data, state->TextW.Size, input, nullptr, &buf_end);
-			state->CurLenA = buf_end - input;
+			state->CurLenA = static_cast<int>(buf_end - input);
 			state->CursorClamp();
 		}
 
@@ -692,6 +692,6 @@ namespace ImGui
 
 	static bool ComboAutoSelect(const char* label, ComboAutoSelectData& data, const ImGuiComboFlags flags = 0)
 	{
-		return ComboAutoSelectComplex(label, data.input, sizeof(data.input) - 1, &data.index, data.items, data.items.size(), flags);
+		return ComboAutoSelectComplex(label, data.input, sizeof(data.input) - 1, &data.index, data.items, static_cast<int>(data.items.size()), flags);
 	}
 }

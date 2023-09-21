@@ -246,7 +246,7 @@ public:
 				cpr::Session session;
 				session.SetHeader(authHeader);
 
-				std::string valoApi = Get(cpr::Url{"https://valorant-api.com/v1/version"}).text;
+				std::string valoApi = cpr::Get(cpr::Url{"https://valorant-api.com/v1/version"}).text;
 
 				std::regex regexStr("\"riotClientBuild\":\"(.*?)\"");
 				if (std::smatch m; std::regex_search(valoApi, m, regexStr))

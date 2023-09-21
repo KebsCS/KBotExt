@@ -267,7 +267,7 @@ public:
 				Json::Value root;
 				if (reader->parse(sResultJson.c_str(), sResultJson.c_str() + static_cast<int>(sResultJson.length()), &root, &err))
 				{
-					sResultJson = writeString(wBuilder, root);
+					sResultJson = Json::writeString(wBuilder, root);
 				}
 			}
 		}
@@ -292,7 +292,7 @@ public:
 				sResultJson = result;
 			else
 			{
-				sResultJson = writeString(wBuilder, root);
+				sResultJson = Json::writeString(wBuilder, root);
 			}
 			result = "";
 		}
@@ -364,7 +364,7 @@ public:
 				sResultJson = result;
 			else
 			{
-				sResultJson = writeString(wBuilder, root);
+				sResultJson = Json::writeString(wBuilder, root);
 			}
 			result = "";
 		}
@@ -391,7 +391,7 @@ public:
 					Custom();
 					ImGui::EndTabItem();
 				}
-				if (ImGui::BeginTabItem("LCDS")) // LCDS?
+				if (ImGui::BeginTabItem("LCDS"))
 				{
 					Invoke();
 					ImGui::EndTabItem();

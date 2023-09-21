@@ -45,7 +45,7 @@ std::string Auth::GetToken(const std::string& cmdLine, const bool riotClient)
 	{
 		std::string token = "riot:" + m[1].str();
 		char* tokenArray = token.data();
-		return base64.Encode(reinterpret_cast<unsigned char*>(tokenArray), token.size());
+		return base64.Encode(reinterpret_cast<unsigned char*>(tokenArray), static_cast<unsigned>(token.size()));
 	}
 
 	return "";

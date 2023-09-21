@@ -219,7 +219,7 @@ std::string Utils::Exec(const char* cmd)
 	{
 		throw std::runtime_error("popen() failed!");
 	}
-	while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr)
+	while (fgets(buffer.data(), static_cast<int>(buffer.size()), pipe.get()) != nullptr)
 	{
 		result += buffer.data();
 	}
@@ -367,7 +367,6 @@ bool Utils::RunAsUser(const LPCWSTR lpApplicationName, const LPWSTR lpCommandLin
 }
 
 cpr::Header Utils::StringToHeader(const std::string& str)
-{
 {
 	cpr::Header header;
 	for (const auto& line : StringSplit(str, "\r\n"))
