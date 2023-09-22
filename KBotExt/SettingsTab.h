@@ -95,7 +95,7 @@ public:
 
 					char filePath[MAX_PATH + 1];
 					GetModuleFileNameA(nullptr, filePath, MAX_PATH);
-					const auto len = static_cast<DWORD>(strlen(filePath) + 1);
+					const auto len = static_cast<DWORD>(strlen(filePath) + 1); // bugprone-misplaced-widening-cast?
 
 					if (const LSTATUS regQuery = RegQueryValueExA(hkResult, "debugger", nullptr, nullptr, reinterpret_cast<LPBYTE>(buffer),
 					                                              &bufferLen); regQuery == ERROR_SUCCESS || regQuery == ERROR_FILE_NOT_FOUND)
