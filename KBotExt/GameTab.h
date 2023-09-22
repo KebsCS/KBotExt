@@ -1684,8 +1684,6 @@ public:
 		std::string roaming = pRoaming;
 		std::string filePath = roaming + "\\tempar.json";
 
-		std::string oldJWT;
-
 		std::fstream file(filePath, std::ios_base::in);
 		if (file.good())
 		{
@@ -1705,6 +1703,7 @@ public:
 			{
 				if (auto t = root[accId]; !t.empty())
 				{
+					std::string oldJWT;
 					if (auto t2 = root[accId]["time"]; !t2.empty())
 						oldtimestamp = t2.asUInt();
 					if (auto t2 = root[accId]["jwt"]; !t2.empty())
@@ -1715,6 +1714,7 @@ public:
 			}
 		}
 		file.close();
+		return {};
 	}
 
 	// true if need new jwt
@@ -1783,6 +1783,9 @@ public:
 			file.close();
 		}
 
+		/** \
+		* \deprecated Use CharReader and CharReaderBuilder.
+		*/
 		Json::Reader reader;
 		Json::Value root;
 

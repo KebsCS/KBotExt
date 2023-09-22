@@ -93,7 +93,7 @@ std::wstring Utils::StringToWstring(const std::string& str)
 		std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
 		return converter.from_bytes(str);
 	}
-	catch (std::range_error) // ThrowByValueCatchByrReference)
+	catch (std::range_error) // ThrowByValueCatchByReference
 	{
 		std::wostringstream s;
 		s << str.c_str();

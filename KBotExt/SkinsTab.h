@@ -54,13 +54,13 @@ public:
 							std::string purchase = i["purchaseDate"].asString();
 							if (purchase.find('-') == std::string::npos && purchase.find(':') == std::string::npos)
 							{
-								sscanf(purchase.c_str(), "%04d%02d%02dT%02d%02d%02d",
+								sscanf_s(purchase.c_str(), "%04d%02d%02dT%02d%02d%02d",
 								       &skin.purchaseDate.tm_year, &skin.purchaseDate.tm_mon, &skin.purchaseDate.tm_mday,
 								       &skin.purchaseDate.tm_hour, &skin.purchaseDate.tm_min, &skin.purchaseDate.tm_sec);
 							}
 							else
 							{
-								sscanf(purchase.c_str(), "%04d-%02d-%02dT%02d:%02d:%02d",
+								sscanf_s(purchase.c_str(), "%04d-%02d-%02dT%02d:%02d:%02d",
 								       &skin.purchaseDate.tm_year, &skin.purchaseDate.tm_mon, &skin.purchaseDate.tm_mday,
 								       &skin.purchaseDate.tm_hour, &skin.purchaseDate.tm_min, &skin.purchaseDate.tm_sec);
 							}
@@ -79,7 +79,7 @@ public:
 									{
 										if (skin.itemId == std::stoi(fst))
 										{
-											skin.name = snd.c_str();
+											skin.name = snd;
 											found = true;
 											break;
 										}
@@ -147,12 +147,12 @@ public:
 			for (const auto& [name, inventoryType, itemId, ownershipType, isVintage, purchaseDate, quantity, uuid] : ownedSkins)
 			{
 				char timeBuff[50];
-				strftime(timeBuff, sizeof(timeBuff), "%G-%m-%d %H:%M:%S", &purchaseDate);
+				strftime(timeBuff, sizeof(timeBuff), "%G-%m-%d %H:%M:%S", &purchaseDate); // cert-err33-c -> The value of this function should be used
 
 				std::string inputId = "skinInput";
 				inputId.append(std::to_string(itemId));
 				char input[512];
-				strcpy(input, std::format(R"(name: {}
+				strcpy_s(input, std::format(R"(name: {}
 inventoryType: {}
 itemId: {}
 ownershipType: {}

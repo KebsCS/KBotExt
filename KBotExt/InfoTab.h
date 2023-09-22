@@ -84,11 +84,11 @@ public:
 					sResultJson = result;
 				else
 				{
-					accID = std::to_string(root["accountId"].asUInt64()).c_str();
-					summID = std::to_string(root["summonerId"].asUInt64()).c_str();
-					summName = root["internalName"].asString().c_str();
+					accID = std::to_string(root["accountId"].asUInt64());
+					summID = std::to_string(root["summonerId"].asUInt64());
+					summName = root["internalName"].asString();
 
-					sResultJson = Json::writeString(wBuilder, root);
+					sResultJson = Json::writeString(wBuilder, root); // "CppRedundantQualifier"
 				}
 
 				//accID = std::to_string(root["accountId"].asUInt64()).c_str();

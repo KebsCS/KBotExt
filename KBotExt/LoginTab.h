@@ -49,7 +49,7 @@ class LoginTab
 		session.Post();
 		// refresh session
 
-		std::string loginBody = R"({"username":")" + username + R"(","password":")" + password + R"(","persistLogin":false})";
+		const std::string loginBody = R"({"username":")" + username + R"(","password":")" + password + R"(","persistLogin":false})";
 		session.SetUrl(std::format("https://127.0.0.1:{}/rso-auth/v1/session/credentials", LCU::riot.port));
 		session.SetBody(loginBody);
 		std::string result = session.Put().text;
@@ -194,6 +194,9 @@ public:
 				if (iFile.good())
 				{
 					Json::Value root;
+					/** \
+					* \deprecated Use CharReader and CharReaderBuilder.
+					*/
 					if (Json::Reader reader; reader.parse(iFile, root, false))
 					{
 						if (!root["accounts"].isArray())
@@ -367,6 +370,9 @@ public:
 			if (iFile.good())
 			{
 				Json::Value root;
+				/** \
+				* \deprecated Use CharReader and CharReaderBuilder.
+				*/
 				if (Json::Reader reader; reader.parse(iFile, root, false))
 				{
 					if (auto accArray = root["accounts"]; accArray.isArray())
@@ -399,11 +405,11 @@ public:
 
 			ImGui::NextColumn();
 
-			ImGui::TextWrapped(banCheck.c_str()); // PotentiallyInsecureFormatSecurity
+			ImGui::TextWrapped(banCheck.c_str());
 
 			ImGui::Columns(1);
 
-			ImGui::TextWrapped(result.c_str()); // PotentiallyInsecureFormatSecurity
+			ImGui::TextWrapped(result.c_str());
 
 			ImGui::EndTabItem();
 		}
