@@ -258,8 +258,7 @@ std::wstring Auth::GetProcessCommandLine(const DWORD& processId)
 			USHORT MaximumLength;
 			PWSTR Buffer;
 		} UNICODE_STRING, *PUNICODE_STRING [[maybe_unused]];
-		/*[[maybe_unused]]*/
-		using PCUNICODE_STRING = const UNICODE_STRING*;
+		/*[[maybe_unused]]*/ using PCUNICODE_STRING = const UNICODE_STRING*;
 
 		PROCESS_BASIC_INFORMATION pbi;
 		ZeroMemory(&pbi, sizeof(pbi));

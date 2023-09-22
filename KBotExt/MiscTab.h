@@ -281,9 +281,9 @@ public:
 					if (root.isArray())
 					{
 						items.clear();
-						for (Json::Value::ArrayIndex i = 0; i < root.size(); i++)
+						for (auto& i : root)
 						{
-							std::pair temp = {root[i]["name"].asString(), root[i]["id"].asInt()};
+							std::pair temp = {i["name"].asString(), i["id"].asInt()};
 							items.emplace_back(temp);
 						}
 						std::ranges::sort(items, [](std::pair<std::string, int> a, std::pair<std::string, int> b) { return a.second < b.second; });
@@ -367,7 +367,7 @@ public:
 
 								std::string disenchantUrl = std::format("https://127.0.0.1/lol-loot/v1/recipes/{0}_{1}/craft?repeat=1",
 								                                        disenchantName, disenchantCase);
-								std::string disenchantBody = std::format(R"(["{}"])", name).c_str();
+								std::string disenchantBody = std::format(R"(["{}"])", name);
 								LCU::Request("POST", disenchantUrl, disenchantBody);
 								i++;
 							}

@@ -97,14 +97,18 @@ public:
 			}
 			ImGui::SameLine();
 
+			/** \
+			* \deprecated Use strcpy_s?
+			*/
+
 			if (ImGui::Button("Store"))
 			{
 				std::string storeHeader = LCU::GetStoreHeader();
-				if (storeHeader != "")
+				if (!storeHeader.empty())
 				{
 					if (strlen(method) != 0)
 					{
-						std::strcpy(method, Utils::ToUpper(std::string(method)).c_str());
+						std::strcpy(method, Utils::ToUpper(std::string(method)).c_str()); 
 					}
 					if (strlen(urlText) == 0 || strcmp(urlText, localhostUrl.c_str()) == 0
 						|| strcmp(urlText, storeUrl.c_str()) == 0 || strcmp(urlText, ledgeUrl.c_str()) == 0)

@@ -119,7 +119,7 @@ int WINAPI wWinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/, LPWSTR
 		//Initialize Direct3D
 		if (!Direct3D11.DirectXInit(S.hwnd))
 		{
-			Direct3D11.Shutdown();
+			Direct3D11Render::Shutdown();
 			UnregisterClassW(wc.lpszClassName, wc.hInstance);
 			MessageBoxA(nullptr, "Couldn't initialize DirectX", nullptr, 0);
 			return 0;
@@ -162,13 +162,13 @@ int WINAPI wWinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/, LPWSTR
 				break;
 
 			//Start rendering
-			Direct3D11.StartFrame();
+			Direct3D11Render::StartFrame();
 
 			//Render UI
 			Direct3D11.Render();
 
 			//End rendering
-			Direct3D11.EndFrame();
+			Direct3D11Render::EndFrame();
 
 			// idle if client closed and reconnect to it
 			if (!FindWindowA("RCLIENT", "League of Legends"))
@@ -219,7 +219,7 @@ int WINAPI wWinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/, LPWSTR
 #endif
 
 		//Exit
-		Direct3D11.Shutdown();
+		Direct3D11Render::Shutdown();
 		DestroyWindow(S.hwnd);
 		UnregisterClassW(wc.lpszClassName, wc.hInstance);
 	}
@@ -240,9 +240,9 @@ LRESULT WINAPI WndProc(const HWND hWnd, const UINT msg, const WPARAM wParam, con
 	case WM_SIZE:
 		if (g_pd3dDevice != nullptr && wParam != SIZE_MINIMIZED)
 		{
-			Direct3D11.CleanupRenderTarget();
+			Direct3D11Render::CleanupRenderTarget();
 			g_pSwapChain->ResizeBuffers(0, LOWORD(lParam), HIWORD(lParam), DXGI_FORMAT_UNKNOWN, 0);
-			Direct3D11.CreateRenderTarget();
+			Direct3D11Render::CreateRenderTarget();
 
 			RECT rect;
 			if (GetWindowRect(hWnd, &rect))
