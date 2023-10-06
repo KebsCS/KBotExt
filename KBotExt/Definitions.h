@@ -24,7 +24,7 @@ struct ChampMinimal
 
 	std::string purchased;
 	bool rankedPlayEnabled;
-	std::pair<std::string, std::string>roles;
+	std::pair<std::string, std::string> roles;
 	std::string squarePortraitPath;
 	std::string stingerSfxPath;
 	std::string title;
@@ -52,9 +52,9 @@ struct ChampAll
 	ChampMastery mas;
 };
 
-inline std::vector<ChampMinimal>champsMinimal;
-inline std::vector<ChampMastery>champsMastery;
-inline std::vector<ChampAll>champsAll;
+inline std::vector<ChampMinimal> champsMinimal;
+inline std::vector<ChampMastery> champsMastery;
+inline std::vector<ChampAll> champsAll;
 
 struct Skin
 {
@@ -64,13 +64,13 @@ struct Skin
 	std::string ownershipType;
 	bool isVintage;
 	tm purchaseDate;
-	int qunatity;
+	int quantity;
 	std::string uuid;
 };
 
-inline std::vector<Skin>ownedSkins;
+inline std::vector<Skin> ownedSkins;
 
-enum QueueID : const int
+enum QueueID
 {
 	DraftPick = 400,
 	SoloDuo = 420,
@@ -97,7 +97,7 @@ struct Champ
 {
 	int key;
 	std::string name;
-	std::vector < std::pair<std::string, std::string>>skins;
+	std::vector<std::pair<std::string, std::string>> skins;
 };
 
-inline std::vector<Champ>champSkins;
+inline std::vector<Champ> champSkins;

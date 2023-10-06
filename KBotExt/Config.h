@@ -9,11 +9,14 @@
 
 struct Settings
 {
-	Settings() {};
+	Settings(): hwnd(nullptr)
+	{
+	}
+
 	HWND hwnd;
 	const std::string settingsFile = "config.JSON";
 	std::string currentDebugger; // debugger path
-	std::vector<std::string>ignoredVersions;
+	std::vector<std::string> ignoredVersions;
 
 	bool autoRename = false;
 	std::string leaguePath = "C:/Riot Games/League of Legends/";
@@ -26,12 +29,12 @@ struct Settings
 	{
 		int width = 730;
 		int height = 530;
-	}Window;
+	} Window;
 
 	struct
 	{
 		std::string playerName;
-	}infoTab;
+	} infoTab;
 
 	struct
 	{
@@ -40,20 +43,20 @@ struct Settings
 		std::string requestText;
 		std::string port;
 		std::string header;
-	}customTab;
+	} customTab;
 
 	struct
 	{
 		std::string destination;
 		std::string method;
 		std::string args;
-	}invokeTab;
+	} invokeTab;
 
 	struct
 	{
 		std::string language = "en_US";
 		std::string leagueArgs = "--locale=en_US";
-	}loginTab;
+	} loginTab;
 
 	struct
 	{
@@ -75,14 +78,14 @@ struct Settings
 		int backupId = 0;
 		bool instantMute = false;
 		bool sideNotification = false;
-	}gameTab;
+	} gameTab;
 };
+
 extern Settings S;
 
 class Config
 {
 public:
-
 	static void Save()
 	{
 		// if file doesn't exist, create new one with {} so it can be parsed
@@ -93,7 +96,6 @@ public:
 			file.close();
 		}
 
-		Json::CharReaderBuilder builder;
 		Json::Value root;
 		JSONCPP_STRING err;
 
@@ -101,7 +103,7 @@ public:
 
 		if (iFile.good())
 		{
-			if (parseFromStream(builder, iFile, &root, &err))
+			if (Json::CharReaderBuilder builder; parseFromStream(builder, iFile, &root, &err))
 			{
 				root["autoRename"] = S.autoRename;
 				root["leaguePath"] = S.leaguePath;
@@ -167,58 +169,94 @@ public:
 		if (file.good())
 		{
 			Json::Value root;
-			Json::CharReaderBuilder builder;
 			JSONCPP_STRING err;
 
-			if (parseFromStream(builder, file, &root, &err))
+			if (Json::CharReaderBuilder builder; parseFromStream(builder, file, &root, &err))
 			{
-				if (auto t = root["autoRename"]; !t.empty()) S.autoRename = t.asBool();
-				if (auto t = root["leaguePath"]; !t.empty()) S.leaguePath = t.asString();
-				if (auto t = root["debugger"]; !t.empty()) S.debugger = t.asBool();
-				if (auto t = root["window"]["width"]; !t.empty()) S.Window.width = t.asInt();
-				if (auto t = root["window"]["height"]; !t.empty()) S.Window.height = t.asInt();
-				if (auto t = root["fontScale"]; !t.empty()) S.fontScale = t.asFloat();
-				if (auto t = root["loginTab"]["language"]; !t.empty()) S.loginTab.language = t.asString();
-				if (auto t = root["loginTab"]["leagueArgs"]; !t.empty()) S.loginTab.leagueArgs = t.asString();
-				if (auto t = root["streamProof"]; !t.empty()) S.streamProof = t.asBool();
-				if (auto t = root["noAdmin"]; !t.empty()) S.noAdmin = t.asBool();
+				if (auto t = root["autoRename"]; !t.empty())
+					S.autoRename = t.asBool();
+				if (auto t = root["leaguePath"]; !t.empty())
+					S.leaguePath = t.asString();
+				if (auto t = root["debugger"]; !t.empty())
+					S.debugger = t.asBool();
+				if (auto t = root["window"]["width"]; !t.empty())
+					S.Window.width = t.asInt();
+				if (auto t = root["window"]["height"]; !t.empty())
+					S.Window.height = t.asInt();
+				if (auto t = root["fontScale"]; !t.empty())
+					S.fontScale = t.asFloat();
+				if (auto t = root["loginTab"]["language"]; !t.empty())
+					S.loginTab.language = t.asString();
+				if (auto t = root["loginTab"]["leagueArgs"]; !t.empty())
+					S.loginTab.leagueArgs = t.asString();
+				if (auto t = root["streamProof"]; !t.empty())
+					S.streamProof = t.asBool();
+				if (auto t = root["noAdmin"]; !t.empty())
+					S.noAdmin = t.asBool();
 
-				if (auto t = root["infoTab"]["playerName"]; !t.empty()) S.infoTab.playerName = t.asString();
+				if (auto t = root["infoTab"]["playerName"]; !t.empty())
+					S.infoTab.playerName = t.asString();
 
-				if (auto t = root["customTab"]["method"]; !t.empty()) S.customTab.method = t.asString();
-				if (auto t = root["customTab"]["urlText"]; !t.empty()) S.customTab.urlText = t.asString();
-				if (auto t = root["customTab"]["requestText"]; !t.empty()) S.customTab.requestText = t.asString();
-				if (auto t = root["customTab"]["port"]; !t.empty()) S.customTab.port = t.asString();
-				if (auto t = root["customTab"]["header"]; !t.empty()) S.customTab.header = t.asString();
+				if (auto t = root["customTab"]["method"]; !t.empty())
+					S.customTab.method = t.asString();
+				if (auto t = root["customTab"]["urlText"]; !t.empty())
+					S.customTab.urlText = t.asString();
+				if (auto t = root["customTab"]["requestText"]; !t.empty())
+					S.customTab.requestText = t.asString();
+				if (auto t = root["customTab"]["port"]; !t.empty())
+					S.customTab.port = t.asString();
+				if (auto t = root["customTab"]["header"]; !t.empty())
+					S.customTab.header = t.asString();
 
-				if (auto t = root["invokeTab"]["destination"]; !t.empty()) S.invokeTab.destination = t.asString();
-				if (auto t = root["invokeTab"]["method"]; !t.empty()) S.invokeTab.method = t.asString();
-				if (auto t = root["invokeTab"]["args"]; !t.empty()) S.invokeTab.args = t.asString();
+				if (auto t = root["invokeTab"]["destination"]; !t.empty())
+					S.invokeTab.destination = t.asString();
+				if (auto t = root["invokeTab"]["method"]; !t.empty())
+					S.invokeTab.method = t.asString();
+				if (auto t = root["invokeTab"]["args"]; !t.empty())
+					S.invokeTab.args = t.asString();
 
-				if (auto t = root["gameTab"]["indexFirstRole"]; !t.empty()) S.gameTab.indexFirstRole = t.asUInt();
-				if (auto t = root["gameTab"]["indexSecondRole"]; !t.empty()) S.gameTab.indexSecondRole = t.asUInt();
-				if (auto t = root["gameTab"]["indexMultiSearch"]; !t.empty()) S.gameTab.indexMultiSearch = t.asUInt();
-				if (auto t = root["gameTab"]["autoAcceptEnabled"]; !t.empty()) S.gameTab.autoAcceptEnabled = t.asBool();
-				if (auto t = root["gameTab"]["instalockEnabled"]; !t.empty()) S.gameTab.instalockEnabled = t.asBool();
-				if (auto t = root["gameTab"]["autoBanEnabled"]; !t.empty()) S.gameTab.autoBanEnabled = t.asBool();
-				if (auto t = root["gameTab"]["instalockDelay"]; !t.empty()) S.gameTab.instalockDelay = t.asInt();
-				if (auto t = root["gameTab"]["instalockId"]; !t.empty()) S.gameTab.instalockId = t.asInt();
-				if (auto t = root["gameTab"]["instantMessage"]; !t.empty()) S.gameTab.instantMessage = t.asString();
-				if (auto t = root["gameTab"]["instantMessageDelay"]; !t.empty()) S.gameTab.instantMessageDelay = t.asInt();
-				if (auto t = root["gameTab"]["instantMessageTimes"]; !t.empty()) S.gameTab.instantMessageTimes = t.asInt();
-				if (auto t = root["gameTab"]["instantMessageDelayTimes"]; !t.empty()) S.gameTab.instantMessageDelayTimes = t.asInt();
-				if (auto t = root["gameTab"]["autoBanId"]; !t.empty()) S.gameTab.autoBanId = t.asInt();
-				if (auto t = root["gameTab"]["autoBanDelay"]; !t.empty()) S.gameTab.autoBanDelay = t.asInt();
-				if (auto t = root["gameTab"]["dodgeOnBan"]; !t.empty()) S.gameTab.dodgeOnBan = t.asBool();
-				if (auto t = root["gameTab"]["backupId"]; !t.empty()) S.gameTab.backupId = t.asInt();
-				if (auto t = root["gameTab"]["instantMute"]; !t.empty()) S.gameTab.instantMute = t.asBool();
-				if (auto t = root["gameTab"]["sideNotification"]; !t.empty()) S.gameTab.sideNotification = t.asBool();
+				if (auto t = root["gameTab"]["indexFirstRole"]; !t.empty())
+					S.gameTab.indexFirstRole = t.asUInt();
+				if (auto t = root["gameTab"]["indexSecondRole"]; !t.empty())
+					S.gameTab.indexSecondRole = t.asUInt();
+				if (auto t = root["gameTab"]["indexMultiSearch"]; !t.empty())
+					S.gameTab.indexMultiSearch = t.asUInt();
+				if (auto t = root["gameTab"]["autoAcceptEnabled"]; !t.empty())
+					S.gameTab.autoAcceptEnabled = t.asBool();
+				if (auto t = root["gameTab"]["instalockEnabled"]; !t.empty())
+					S.gameTab.instalockEnabled = t.asBool();
+				if (auto t = root["gameTab"]["autoBanEnabled"]; !t.empty())
+					S.gameTab.autoBanEnabled = t.asBool();
+				if (auto t = root["gameTab"]["instalockDelay"]; !t.empty())
+					S.gameTab.instalockDelay = t.asInt();
+				if (auto t = root["gameTab"]["instalockId"]; !t.empty())
+					S.gameTab.instalockId = t.asInt();
+				if (auto t = root["gameTab"]["instantMessage"]; !t.empty())
+					S.gameTab.instantMessage = t.asString();
+				if (auto t = root["gameTab"]["instantMessageDelay"]; !t.empty())
+					S.gameTab.instantMessageDelay = t.asInt();
+				if (auto t = root["gameTab"]["instantMessageTimes"]; !t.empty())
+					S.gameTab.instantMessageTimes = t.asInt();
+				if (auto t = root["gameTab"]["instantMessageDelayTimes"]; !t.empty())
+					S.gameTab.instantMessageDelayTimes = t.asInt();
+				if (auto t = root["gameTab"]["autoBanId"]; !t.empty())
+					S.gameTab.autoBanId = t.asInt();
+				if (auto t = root["gameTab"]["autoBanDelay"]; !t.empty())
+					S.gameTab.autoBanDelay = t.asInt();
+				if (auto t = root["gameTab"]["dodgeOnBan"]; !t.empty())
+					S.gameTab.dodgeOnBan = t.asBool();
+				if (auto t = root["gameTab"]["backupId"]; !t.empty())
+					S.gameTab.backupId = t.asInt();
+				if (auto t = root["gameTab"]["instantMute"]; !t.empty())
+					S.gameTab.instantMute = t.asBool();
+				if (auto t = root["gameTab"]["sideNotification"]; !t.empty())
+					S.gameTab.sideNotification = t.asBool();
 
 				if (root["ignoredVersions"].isArray() && !root["ignoredVersions"].empty())
 				{
-					for (Json::Value::ArrayIndex i = 0; i < root["ignoredVersions"].size(); i++)
+					for (const auto& i : root["ignoredVersions"])
 					{
-						S.ignoredVersions.emplace_back(root["ignoredVersions"][i].asString());
+						S.ignoredVersions.emplace_back(i.asString());
 					}
 				}
 			}

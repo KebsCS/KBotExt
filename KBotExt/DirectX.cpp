@@ -10,7 +10,7 @@
 #include "ChampsTab.h"
 #include "SettingsTab.h"
 
-bool Direct3D11Render::DirectXInit(HWND hWnd)
+bool Direct3D11Render::DirectXInit(const HWND hWnd)
 {
 	// Setup swap chain
 	DXGI_SWAP_CHAIN_DESC sd;
@@ -29,11 +29,12 @@ bool Direct3D11Render::DirectXInit(HWND hWnd)
 	sd.Windowed = TRUE;
 	sd.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
 
-	UINT createDeviceFlags = 0;
 	//createDeviceFlags |= D3D11_CREATE_DEVICE_DEBUG;
 	D3D_FEATURE_LEVEL featureLevel;
-	const D3D_FEATURE_LEVEL featureLevelArray[2] = { D3D_FEATURE_LEVEL_11_0, D3D_FEATURE_LEVEL_10_0, };
-	if (D3D11CreateDeviceAndSwapChain(NULL, D3D_DRIVER_TYPE_HARDWARE, NULL, createDeviceFlags, featureLevelArray, 2, D3D11_SDK_VERSION, &sd, &g_pSwapChain, &g_pd3dDevice, &featureLevel, &g_pd3dDeviceContext) != S_OK)
+	constexpr D3D_FEATURE_LEVEL featureLevelArray[2] = {D3D_FEATURE_LEVEL_11_0, D3D_FEATURE_LEVEL_10_0,};
+	if (constexpr UINT createDeviceFlags = 0; D3D11CreateDeviceAndSwapChain(nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr, createDeviceFlags,
+	                                                                        featureLevelArray, 2, D3D11_SDK_VERSION, &sd, &g_pSwapChain,
+	                                                                        &g_pd3dDevice, &featureLevel, &g_pd3dDeviceContext) != S_OK)
 		return false;
 
 	if (!CreateRenderTarget())
@@ -45,7 +46,7 @@ bool Direct3D11Render::DirectXInit(HWND hWnd)
 
 	gamePatch = Misc::GetCurrentPatch();
 
-	std::thread t{ Misc::GetAllChampionSkins };
+	std::thread t{Misc::GetAllChampionSkins};
 	t.detach();
 
 	std::thread AutoAcceptThread(&GameTab::AutoAccept);
@@ -65,18 +66,18 @@ void Direct3D11Render::StartFrame()
 void Direct3D11Render::EndFrame()
 {
 	// Rendering
-	ImVec4 clear_color = ImVec4(0, 0, 0, 255.f);
+	auto clear_color = ImVec4(0, 0, 0, 255.f);
 	ImGui::EndFrame();
 	ImGui::Render();
-	g_pd3dDeviceContext->OMSetRenderTargets(1, &g_pd3dRenderTargetView, NULL);
-	g_pd3dDeviceContext->ClearRenderTargetView(g_pd3dRenderTargetView, (float*)&clear_color);
+	g_pd3dDeviceContext->OMSetRenderTargets(1, &g_pd3dRenderTargetView, nullptr);
+	g_pd3dDeviceContext->ClearRenderTargetView(g_pd3dRenderTargetView, reinterpret_cast<float*>(&clear_color));
 	ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
 
 	g_pSwapChain->Present(1, 0); // Present with vsync
 	//g_pSwapChain->Present(0, 0); // Present without vsync
 }
 
-int Direct3D11Render::Render()
+int Direct3D11Render::Render() const
 {
 	static char buf[255];
 	static std::string connectedTo = "";
@@ -101,10 +102,10 @@ int Direct3D11Render::Render()
 	ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiCond_FirstUseEver);
 	ImGui::SetNextWindowSize(ImVec2(685, 462), ImGuiCond_FirstUseEver);
 	ImGui::SetNextWindowSize(ImVec2(static_cast<float>(S.Window.width - 15), static_cast<float>(S.Window.height - 38)));
-	ImGuiWindowFlags flags = /*ImGuiWindowFlags_NoTitleBar |*/ ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoSavedSettings;
-	ImGui::Begin(buf, (bool*)0, flags);// , ImGuiWindowFlags_AlwaysAutoResize);
-	ImGuiTabBarFlags tab_bar_flags = 0;// ImGuiTabBarFlags_Reorderable;
-	if (ImGui::BeginTabBar("TabBar", tab_bar_flags))
+	constexpr ImGuiWindowFlags flags = /*ImGuiWindowFlags_NoTitleBar |*/ ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove |
+		ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoSavedSettings;
+	ImGui::Begin(buf, nullptr, flags); // , ImGuiWindowFlags_AlwaysAutoResize);
+	if (constexpr ImGuiTabBarFlags tab_bar_flags = 0; ImGui::BeginTabBar("TabBar", tab_bar_flags))
 	{
 		if (!closedClient)
 		{
@@ -141,9 +142,21 @@ int Direct3D11Render::Render()
 void Direct3D11Render::Shutdown()
 {
 	CleanupRenderTarget();
-	if (g_pSwapChain) { g_pSwapChain->Release(); g_pSwapChain = NULL; }
-	if (g_pd3dDeviceContext) { g_pd3dDeviceContext->Release(); g_pd3dDeviceContext = NULL; }
-	if (g_pd3dDevice) { g_pd3dDevice->Release(); g_pd3dDevice = NULL; }
+	if (g_pSwapChain)
+	{
+		g_pSwapChain->Release();
+		g_pSwapChain = nullptr;
+	}
+	if (g_pd3dDeviceContext)
+	{
+		g_pd3dDeviceContext->Release();
+		g_pd3dDeviceContext = nullptr;
+	}
+	if (g_pd3dDevice)
+	{
+		g_pd3dDevice->Release();
+		g_pd3dDevice = nullptr;
+	}
 }
 
 bool Direct3D11Render::CreateRenderTarget()
@@ -151,7 +164,7 @@ bool Direct3D11Render::CreateRenderTarget()
 	ID3D11Texture2D* pBackBuffer;
 	if (S_OK != g_pSwapChain->GetBuffer(0, IID_PPV_ARGS(&pBackBuffer)))
 		return false;
-	if (S_OK != g_pd3dDevice->CreateRenderTargetView(pBackBuffer, NULL, &g_pd3dRenderTargetView))
+	if (S_OK != g_pd3dDevice->CreateRenderTargetView(pBackBuffer, nullptr, &g_pd3dRenderTargetView))
 		return false;
 	pBackBuffer->Release();
 	return true;
@@ -159,10 +172,14 @@ bool Direct3D11Render::CreateRenderTarget()
 
 void Direct3D11Render::CleanupRenderTarget()
 {
-	if (g_pd3dRenderTargetView) { g_pd3dRenderTargetView->Release(); g_pd3dRenderTargetView = NULL; }
+	if (g_pd3dRenderTargetView)
+	{
+		g_pd3dRenderTargetView->Release();
+		g_pd3dRenderTargetView = nullptr;
+	}
 }
 
-void Direct3D11Render::Renderimgui(HWND hWnd)
+void Direct3D11Render::Renderimgui(const HWND hWnd)
 {
 	// Setup Dear ImGui context
 	IMGUI_CHECKVERSION();
@@ -171,16 +188,17 @@ void Direct3D11Render::Renderimgui(HWND hWnd)
 	// Setup Dear ImGui style
 	MenuInit();
 
-	// Setup Platform/Renderer backends
+	// Setup Platform/Renderer back-ends
 	ImGui_ImplWin32_Init(hWnd);
 	ImGui_ImplDX11_Init(g_pd3dDevice, g_pd3dDeviceContext);
 }
 
 void Direct3D11Render::InitializeFonts()
 {
-	ImGuiIO& io = ImGui::GetIO(); (void)io;
+	const ImGuiIO& io = ImGui::GetIO();
+	(void)io;
 
-	static const ImWchar ranges[] = { 0x1, 0x1FFFF, 0 };
+	static constexpr ImWchar ranges[] = {0x1, 0x1FFFF, 0};
 	static ImFontConfig cfg;
 	cfg.OversampleH = cfg.OversampleV = 1;
 
@@ -189,8 +207,8 @@ void Direct3D11Render::InitializeFonts()
 	cfg.FontBuilderFlags |= ImGuiFreeTypeBuilderFlags_LoadColor;
 	cfg.MergeMode = true;
 
-	typedef HRESULT(WINAPI* tSHGetFolderPathW)(HWND hwnd, int csidl, HANDLE hToken, DWORD dwFlags, LPWSTR pszPath);
-	tSHGetFolderPathW SHGetFolderPathW = (tSHGetFolderPathW)GetProcAddress(LoadLibraryW(L"shell32.dll"), "SHGetFolderPathW");
+	using tSHGetFolderPathW = HRESULT(WINAPI*)(HWND hwnd, int csidl, HANDLE hToken, DWORD dwFlags, LPWSTR pszPath);
+	const auto SHGetFolderPathW = reinterpret_cast<tSHGetFolderPathW>(GetProcAddress(LoadLibraryW(L"shell32.dll"), "SHGetFolderPathW"));
 
 	TCHAR szPath[MAX_PATH];
 	if (SUCCEEDED(SHGetFolderPathW(NULL, 0x0024/*CSIDL_WINDOWS*/, NULL, 0, szPath)))
@@ -198,22 +216,19 @@ void Direct3D11Render::InitializeFonts()
 		std::filesystem::path fontsPath(szPath);
 		fontsPath = fontsPath / "Fonts";
 
-		if (std::filesystem::is_directory(fontsPath))
+		if (is_directory(fontsPath))
 		{
-			const std::vector<std::string> fonts = {
-				"seguiemj.ttf", // emojis
-				"segoeuib.ttf", // cyrillic
-				"malgunbd.ttf", // korean
-				"YuGothB.ttc", // japanese
-				"simsun.ttc", // simplified chinese
-				"msjh.ttc", // traditional chinese
-				"seguisym.ttf", // symbols
-			};
-
-			for (const auto& f : fonts)
+			for (const std::vector<std::string> fonts = {
+				     "seguiemj.ttf", // emojis
+				     "segoeuib.ttf", // cyrillic
+				     "malgunbd.ttf", // korean
+				     "YuGothB.ttc", // japanese
+				     "simsun.ttc", // simplified chinese
+				     "msjh.ttc", // traditional chinese
+				     "seguisym.ttf", // symbols
+			     }; const auto& f : fonts)
 			{
-				const std::filesystem::path path = fontsPath / f;
-				if (std::filesystem::exists(path))
+				if (const std::filesystem::path path = fontsPath / f; exists(path))
 				{
 					io.Fonts->AddFontFromFileTTF(path.string().c_str(), 13.0f, &cfg, ranges);
 				}
@@ -224,7 +239,8 @@ void Direct3D11Render::InitializeFonts()
 
 void Direct3D11Render::MenuInit()
 {
-	ImGuiIO& io = ImGui::GetIO(); (void)io;
+	ImGuiIO& io = ImGui::GetIO();
+	(void)io;
 	io.IniFilename = nullptr;
 	io.LogFilename = nullptr;
 	io.FontGlobalScale = S.fontScale;

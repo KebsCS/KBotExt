@@ -9,16 +9,15 @@
 class MiscTab
 {
 public:
-
-	static std::string LevenshteinDistance(std::vector<std::string>vec, std::string str2)
+	static std::string LevenshteinDistance(std::vector<std::string> vec, std::string str2)
 	{
 		size_t max = 999;
 		std::string bestMatch;
 
 		for (const std::string& str1 : vec)
 		{
-			size_t str1Len = str1.length();
-			size_t str2Len = str2.length();
+			const size_t str1Len = str1.length();
+			const size_t str2Len = str2.length();
 			size_t d[50 + 1][50 + 1];
 
 			size_t i;
@@ -46,20 +45,20 @@ public:
 						cost = 1;
 					}
 					d[i][j] = (std::min)(
-						d[i - 1][j] + 1,                  // delete
-						(std::min)(d[i][j - 1] + 1,         // insert
-							d[i - 1][j - 1] + cost)           // substitution
-						);
-					if ((i > 1) &&
-						(j > 1) &&
-						(str1[i - 1] == str2[j - 2]) &&
-						(str1[i - 2] == str2[j - 1])
-						)
+						d[i - 1][j] + 1, // delete
+						(std::min)(d[i][j - 1] + 1, // insert
+						           d[i - 1][j - 1] + cost) // substitution
+					);
+					if (i > 1 &&
+						j > 1 &&
+						str1[i - 1] == str2[j - 2] &&
+						str1[i - 2] == str2[j - 1]
+					)
 					{
 						d[i][j] = (std::min)(
 							d[i][j],
-							d[i - 2][j - 2] + cost   // transposition
-							);
+							d[i - 2][j - 2] + cost // transposition
+						);
 					}
 				}
 			}
@@ -92,7 +91,7 @@ public:
 			ImGui::Text("Selected process: ");
 			ImGui::SameLine();
 
-			std::string comboProcesses = "";
+			std::string comboProcesses;
 			if (LCU::IsProcessGood())
 			{
 				comboProcesses = std::to_string(LCU::leagueProcesses[LCU::indexLeagueProcesses].first)
@@ -104,7 +103,8 @@ public:
 				for (size_t n = 0; n < LCU::leagueProcesses.size(); n++)
 				{
 					const bool is_selected = (LCU::indexLeagueProcesses == n);
-					if (ImGui::Selectable((std::to_string(LCU::leagueProcesses[n].first) + " : " + LCU::leagueProcesses[n].second).c_str(), is_selected))
+					if (ImGui::Selectable((std::to_string(LCU::leagueProcesses[n].first) + " : " + LCU::leagueProcesses[n].second).c_str(),
+					                      is_selected))
 					{
 						LCU::indexLeagueProcesses = n;
 						LCU::SetLeagueClientInfo();
@@ -118,7 +118,7 @@ public:
 
 			ImGui::Separator();
 
-			ImGui::Columns(2, 0, false);
+			ImGui::Columns(2, nullptr, false);
 
 			if (ImGui::Button("Launch another client"))
 			{
@@ -127,7 +127,8 @@ public:
 					result = "Invalid path, change it in Settings tab";
 				}
 				else
-					ShellExecuteA(NULL, NULL, std::format("{}LeagueClient.exe", S.leaguePath).c_str(), "--allow-multiple-clients", NULL, SW_SHOWNORMAL);
+					ShellExecuteA(nullptr, nullptr, std::format("{}LeagueClient.exe", S.leaguePath).c_str(), "--allow-multiple-clients", nullptr,
+					              SW_SHOWNORMAL);
 			}
 
 			if (ImGui::Button("Restart UX"))
@@ -161,11 +162,11 @@ public:
 
 			ImGui::Separator();
 
-			ImGui::Columns(2, 0, false);
+			ImGui::Columns(2, nullptr, false);
 
 			if (ImGui::Button("Accept all friend requests"))
 			{
-				if (MessageBoxA(0, "Are you sure?", "Accepting friend requests", MB_OKCANCEL) == IDOK)
+				if (MessageBoxA(nullptr, "Are you sure?", "Accepting friend requests", MB_OKCANCEL) == IDOK)
 				{
 					std::string getFriends = LCU::Request("GET", "https://127.0.0.1/lol-chat/v1/friend-requests");
 
@@ -181,9 +182,9 @@ public:
 					{
 						if (root.isArray())
 						{
-							for (Json::Value::ArrayIndex i = 0; i < root.size(); i++)
+							for (auto& i : root)
 							{
-								std::string req = "https://127.0.0.1/lol-chat/v1/friend-requests/" + root[i]["pid"].asString();
+								std::string req = "https://127.0.0.1/lol-chat/v1/friend-requests/" + i["pid"].asString();
 								LCU::Request("PUT", req, R"({"direction":"both"})");
 							}
 							result = "Accepted " + std::to_string(root.size()) + " friend requests";
@@ -196,7 +197,7 @@ public:
 
 			if (ImGui::Button("Delete all friend requests"))
 			{
-				if (MessageBoxA(0, "Are you sure?", "Deleting friend requests", MB_OKCANCEL) == IDOK)
+				if (MessageBoxA(nullptr, "Are you sure?", "Deleting friend requests", MB_OKCANCEL) == IDOK)
 				{
 					std::string getFriends = LCU::Request("GET", "https://127.0.0.1/lol-chat/v1/friend-requests");
 
@@ -212,9 +213,9 @@ public:
 					{
 						if (root.isArray())
 						{
-							for (Json::Value::ArrayIndex i = 0; i < root.size(); i++)
+							for (auto& i : root)
 							{
-								std::string req = "https://127.0.0.1/lol-chat/v1/friend-requests/" + root[i]["pid"].asString();
+								std::string req = "https://127.0.0.1/lol-chat/v1/friend-requests/" + i["pid"].asString();
 								LCU::Request("DELETE", req, "");
 							}
 							result = "Deleted " + std::to_string(root.size()) + " friend requests";
@@ -225,15 +226,15 @@ public:
 
 			ImGui::Columns(1);
 
-			static std::vector<std::pair<std::string, int>>items;
+			static std::vector<std::pair<std::string, int>> items;
 			static size_t item_current_idx = 0; // Here we store our selection data as an index.
-			const char* combo_label = "**Default";
+			auto combo_label = "**Default";
 			if (!items.empty())
 				combo_label = items[item_current_idx].first.c_str();
 
 			if (ImGui::Button("Remove all friends"))
 			{
-				if (MessageBoxA(0, "Are you sure?", "Removing friends", MB_OKCANCEL) == IDOK)
+				if (MessageBoxA(nullptr, "Are you sure?", "Removing friends", MB_OKCANCEL) == IDOK)
 				{
 					std::string getFriends = LCU::Request("GET", "https://127.0.0.1/lol-chat/v1/friends");
 
@@ -250,11 +251,11 @@ public:
 						if (root.isArray())
 						{
 							int iDeleted = 0;
-							for (Json::Value::ArrayIndex i = 0; i < root.size(); ++i)
+							for (auto& i : root)
 							{
-								if (root[i]["groupId"].asUInt() == item_current_idx)
+								if (i["groupId"].asUInt() == item_current_idx)
 								{
-									std::string req = "https://127.0.0.1/lol-chat/v1/friends/" + root[i]["pid"].asString();
+									std::string req = "https://127.0.0.1/lol-chat/v1/friends/" + i["pid"].asString();
 									LCU::Request("DELETE", req, "");
 									iDeleted++;
 								}
@@ -267,7 +268,7 @@ public:
 			ImGui::SameLine();
 			ImGui::Text(" From folder: ");
 			ImGui::SameLine();
-			ImGui::SetNextItemWidth(ImGui::CalcTextSize(std::string(20, 'W').c_str(), NULL, true).x);
+			ImGui::SetNextItemWidth(ImGui::CalcTextSize(std::string(20, 'W').c_str(), nullptr, true).x);
 			if (ImGui::BeginCombo("##comboGroups", combo_label, 0))
 			{
 				std::string getGroups = LCU::Request("GET", "https://127.0.0.1/lol-chat/v1/friend-groups");
@@ -280,12 +281,12 @@ public:
 					if (root.isArray())
 					{
 						items.clear();
-						for (Json::Value::ArrayIndex i = 0; i < root.size(); i++)
+						for (auto& i : root)
 						{
-							std::pair<std::string, int > temp = { root[i]["name"].asString(), root[i]["id"].asInt() };
+							std::pair temp = {i["name"].asString(), i["id"].asInt()};
 							items.emplace_back(temp);
 						}
-						std::sort(items.begin(), items.end(), [](std::pair<std::string, int > a, std::pair<std::string, int >b) {return a.second < b.second; });
+						std::ranges::sort(items, [](std::pair<std::string, int> a, std::pair<std::string, int> b) { return a.second < b.second; });
 					}
 				}
 
@@ -305,17 +306,16 @@ public:
 			//{
 			//	http->Request("POST", "https://127.0.0.1/telemetry/v1/events/new_player_experience", R"({"eventName":"hide_screen","plugin":"rcp-fe-lol-new-player-experience","screenName":"npe_tutorial_modules"})", auth->leagueHeader, "", "", auth->leaguePort);
 			//	http->Request("PUT", "https://127.0.0.1/lol-npe-tutorial-path/v1/settings", R"({"hasSeenTutorialPath":true,"hasSkippedTutorialPath":true,"shouldSeeNewPlayerExperience":true})", auth->leagueHeader, "", "", auth->leaguePort);
-			//	//DELETE https://127.0.0.1:63027/lol-statstones/v1/vignette-notifications HTTP/1.1
+			//	DELETE https://127.0.0.1:63027/lol-statstones/v1/vignette-notifications HTTP/1.1
 			//	// ?
 			//}
 
 			// Patched :(
-			/*if (ImGui::Button("Free Tristana + Riot Girl skin"))
-				result = http->Request("POST", "https://127.0.0.1/lol-login/v1/session/invoke?destination=inventoryService&method=giftFacebookFan&args=[]", "", auth->leagueHeader, "", "", auth->leaguePort);
+			//if (ImGui::Button("Free Tristana + Riot Girl skin"))
+			//	result = http->Request("POST", "https://127.0.0.1/lol-login/v1/session/invoke?destination=inventoryService&method=giftFacebookFan&args=[]", "", auth->leagueHeader, "", "", auth->leaguePort);
 
-			ImGui::SameLine();
-			Misc::HelpMarker("Relog after pressing the button");
-			*/
+			//ImGui::SameLine();
+			//Misc::HelpMarker("Relog after pressing the button");
 
 			ImGui::Separator();
 
@@ -328,16 +328,16 @@ public:
 			if (ImGui::Button("Submit##submitMinimapScale"))
 			{
 				result = LCU::Request("PATCH", "https://127.0.0.1/lol-game-settings/v1/game-settings",
-					std::format("{{\"HUD\":{{\"MinimapScale\":{:.2f}}}}}", minimapScale / 33.33f));
+				                      std::format(R"({{"HUD":{{"MinimapScale":{:.2f}}}}})", minimapScale / 33.33f));
 			}
 
 			ImGui::Separator();
 
-			static std::vector<std::pair<std::string, std::string>>itemsDisenchant = {
-	{"Champion shards","CHAMPION_RENTAL"}, {"Champion pernaments","CHAMPION"},
-	{"Skin shards","CHAMPION_SKIN_RENTAL"}, {"Skin pernaments", "CHAMPION_SKIN"},
-	{"Eternals","STATSTONE_SHARD"},{"Ward shards","WARD_SKIN_RENTAL"},{"Ward pernaments","WARD_SKIN",},
-	{"Emotes","EMOTE"},{"Icons","SUMMONER_ICON"},{"Companions","COMPANION"}
+			static std::vector<std::pair<std::string, std::string>> itemsDisenchant = {
+				{"Champion shards", "CHAMPION_RENTAL"}, {"Champion pernaments", "CHAMPION"},
+				{"Skin shards", "CHAMPION_SKIN_RENTAL"}, {"Skin pernaments", "CHAMPION_SKIN"},
+				{"Eternals", "STATSTONE_SHARD"}, {"Ward shards", "WARD_SKIN_RENTAL"}, {"Ward pernaments", "WARD_SKIN",},
+				{"Emotes", "EMOTE"}, {"Icons", "SUMMONER_ICON"}, {"Companions", "COMPANION"}
 			};
 			static size_t itemIndexDisenchant = 0;
 			const char* comboDisenchant = itemsDisenchant[itemIndexDisenchant].first.c_str();
@@ -352,21 +352,22 @@ public:
 
 				if (reader->parse(getLoot.c_str(), getLoot.c_str() + static_cast<int>(getLoot.length()), &root, &err))
 				{
-					if (MessageBoxA(0, "Are you sure?", "Disenchanting loot", MB_OKCANCEL) == IDOK)
+					if (MessageBoxA(nullptr, "Are you sure?", "Disenchanting loot", MB_OKCANCEL) == IDOK)
 					{
 						int i = 0;
 
 						for (const std::string& name : root.getMemberNames())
 						{
-							std::regex regexStr("^" + itemsDisenchant[itemIndexDisenchant].second + "_[\\d]+");
-
-							if (std::regex_match(name, regexStr))
+							if (std::regex regexStr("^" + itemsDisenchant[itemIndexDisenchant].second + "_[\\d]+"); std::regex_match(name, regexStr))
 							{
-								std::string disenchantCase = itemsDisenchant[itemIndexDisenchant].second == "STATSTONE_SHARD" ? "DISENCHANT" : "disenchant";
+								std::string disenchantCase = itemsDisenchant[itemIndexDisenchant].second == "STATSTONE_SHARD"
+									                             ? "DISENCHANT"
+									                             : "disenchant";
 								std::string disenchantName = root[name]["type"].asString();
 
-								std::string disenchantUrl = std::format("https://127.0.0.1/lol-loot/v1/recipes/{0}_{1}/craft?repeat=1", disenchantName, disenchantCase);
-								std::string disenchantBody = std::format(R"(["{}"])", name).c_str();
+								std::string disenchantUrl = std::format("https://127.0.0.1/lol-loot/v1/recipes/{0}_{1}/craft?repeat=1",
+								                                        disenchantName, disenchantCase);
+								std::string disenchantBody = std::format(R"(["{}"])", name);
 								LCU::Request("POST", disenchantUrl, disenchantBody);
 								i++;
 							}
@@ -397,14 +398,14 @@ public:
 
 			// Getting closest champion name with Levenshtein distance algorithm and getting it's id
 			ImGui::Text("Champion name to ID");
-			static std::vector<std::string>champNames;
+			static std::vector<std::string> champNames;
 			if (!champSkins.empty() && champNames.empty())
 			{
-				for (const auto& champ : champSkins)
+				for (const auto& [key, name, skins] : champSkins)
 				{
-					champNames.emplace_back(champ.name);
+					champNames.emplace_back(name);
 					//std::cout << "('" << champ.name << "', " << champ.key << "), " << std::endl;
-					std::cout << champ.name << std::endl;
+					std::cout << name << std::endl;
 				}
 			}
 
@@ -425,11 +426,11 @@ public:
 				lastSize = strlen(bufChampionName);
 				closestChampion = LevenshteinDistance(champNames, bufChampionName);
 
-				for (const auto& champ : champSkins)
+				for (const auto& [key, name, skins] : champSkins)
 				{
-					if (closestChampion == champ.name)
+					if (closestChampion == name)
 					{
-						closestId = std::to_string(champ.key);
+						closestId = std::to_string(key);
 						break;
 					}
 				}
@@ -474,9 +475,8 @@ public:
 				{
 					if (root.isArray())
 					{
-						for (Json::Value::ArrayIndex i = 0; i < root.size(); i++)
+						for (auto grant : root)
 						{
-							auto grant = root[i];
 							for (Json::Value& reward : grant["rewardGroup"]["rewards"])
 							{
 								Json::Value body;
@@ -484,7 +484,8 @@ public:
 								body["selections"] = {};
 								body["selections"].append(reward["id"].asString());
 
-								result += LCU::Request("POST", std::format("/lol-rewards/v1/grants/{}/select", grant["info"]["id"].asString()), body.toStyledString());
+								result += LCU::Request("POST", std::format("/lol-rewards/v1/grants/{}/select", grant["info"]["id"].asString()),
+								                       body.toStyledString());
 							}
 						}
 					}
@@ -515,7 +516,7 @@ public:
 
 			if (!sResultJson.empty())
 			{
-				cResultJson = &sResultJson[0];
+				cResultJson = sResultJson.data();
 				ImGui::InputTextMultiline("##miscResult", cResultJson, sResultJson.size() + 1, ImVec2(600, 185));
 			}
 

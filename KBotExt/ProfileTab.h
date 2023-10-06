@@ -13,18 +13,18 @@ public:
 		{
 			static char statusText[1024 * 16];
 			ImGui::Text("Status:");
-			const ImVec2 label_size = ImGui::CalcTextSize("W", NULL, true);
+			const ImVec2 label_size = ImGui::CalcTextSize("W", nullptr, true);
 
-			ImGui::InputTextMultiline("##inputStatus", (statusText), IM_ARRAYSIZE(statusText), ImVec2(S.Window.width - 230.f,
-				(label_size.y + ImGui::GetStyle().FramePadding.y) * 6.f), ImGuiInputTextFlags_AllowTabInput);
+			ImGui::InputTextMultiline("##inputStatus", statusText, IM_ARRAYSIZE(statusText), ImVec2(S.Window.width - 230.f,
+				                          (label_size.y + ImGui::GetStyle().FramePadding.y) * 6.f), ImGuiInputTextFlags_AllowTabInput);
 			if (ImGui::Button("Submit status"))
 			{
-				std::string body = "{\"statusMessage\":\"" + std::string(statusText) + "\"}";
+				std::string body = R"({"statusMessage":")" + std::string(statusText) + "\"}";
 
 				size_t nPos = 0;
 				while (nPos != std::string::npos)
 				{
-					nPos = body.find("\n", nPos);
+					nPos = body.find('\n', nPos);
 					if (nPos != std::string::npos)
 					{
 						body.erase(body.begin() + nPos);
@@ -33,15 +33,18 @@ public:
 				}
 				std::string result = LCU::Request("PUT", "https://127.0.0.1/lol-chat/v1/me", body);
 				if (result.find("errorCode") != std::string::npos)
-					MessageBoxA(0, result.c_str(), 0, 0);
+					MessageBoxA(nullptr, result.c_str(), nullptr, 0);
 			}
 
 			ImGui::SameLine();
 			static int availability = 0;
 			static int lastAvailability = 0;
-			ImGui::RadioButton("Online", &availability, 0); ImGui::SameLine();
-			ImGui::RadioButton("Mobile", &availability, 1); ImGui::SameLine();
-			ImGui::RadioButton("Away", &availability, 2); ImGui::SameLine();
+			ImGui::RadioButton("Online", &availability, 0);
+			ImGui::SameLine();
+			ImGui::RadioButton("Mobile", &availability, 1);
+			ImGui::SameLine();
+			ImGui::RadioButton("Away", &availability, 2);
+			ImGui::SameLine();
 			ImGui::RadioButton("Offline", &availability, 3);
 
 			if (availability != lastAvailability)
@@ -62,6 +65,7 @@ public:
 				case 3:
 					body += "offline";
 					break;
+				default: ;
 				}
 				body += "\"}";
 				LCU::Request("PUT", "https://127.0.0.1/lol-chat/v1/me", body);
@@ -71,33 +75,51 @@ public:
 
 			ImGui::Text("Rank:");
 			static int rank = 0;
-			ImGui::RadioButton("Iron", &rank, 0); ImGui::SameLine();
-			ImGui::RadioButton("Bronze", &rank, 1); ImGui::SameLine();
-			ImGui::RadioButton("Silver", &rank, 2); ImGui::SameLine();
-			ImGui::RadioButton("Gold", &rank, 3); ImGui::SameLine();
-			ImGui::RadioButton("Platinum", &rank, 4); ImGui::SameLine();
-			ImGui::RadioButton("Diamond", &rank, 5); ImGui::SameLine();
-			ImGui::RadioButton("Master", &rank, 6); ImGui::SameLine();
-			ImGui::RadioButton("GrandMaster", &rank, 7); ImGui::SameLine();
+			ImGui::RadioButton("Iron", &rank, 0);
+			ImGui::SameLine();
+			ImGui::RadioButton("Bronze", &rank, 1);
+			ImGui::SameLine();
+			ImGui::RadioButton("Silver", &rank, 2);
+			ImGui::SameLine();
+			ImGui::RadioButton("Gold", &rank, 3);
+			ImGui::SameLine();
+			ImGui::RadioButton("Platinum", &rank, 4);
+			ImGui::SameLine();
+			ImGui::RadioButton("Diamond", &rank, 5);
+			ImGui::SameLine();
+			ImGui::RadioButton("Master", &rank, 6);
+			ImGui::SameLine();
+			ImGui::RadioButton("GrandMaster", &rank, 7);
+			ImGui::SameLine();
 			ImGui::RadioButton("Challenger", &rank, 8);
 
 			static int tier = 0;
-			ImGui::RadioButton("I", &tier, 0); ImGui::SameLine();
-			ImGui::RadioButton("II", &tier, 1); ImGui::SameLine();
-			ImGui::RadioButton("III", &tier, 2); ImGui::SameLine();
-			ImGui::RadioButton("IV", &tier, 3); ImGui::SameLine();
+			ImGui::RadioButton("I", &tier, 0);
+			ImGui::SameLine();
+			ImGui::RadioButton("II", &tier, 1);
+			ImGui::SameLine();
+			ImGui::RadioButton("III", &tier, 2);
+			ImGui::SameLine();
+			ImGui::RadioButton("IV", &tier, 3);
+			ImGui::SameLine();
 			ImGui::RadioButton("None", &tier, 4);
 
 			static int queue = 0;
-			ImGui::RadioButton("Solo/Duo", &queue, 0); ImGui::SameLine();
-			ImGui::RadioButton("Flex 5v5", &queue, 1); ImGui::SameLine();
-			ImGui::RadioButton("Flex 3v3", &queue, 2); ImGui::SameLine();
-			ImGui::RadioButton("TFT", &queue, 3); ImGui::SameLine();
-			ImGui::RadioButton("Hyper Roll", &queue, 4); ImGui::SameLine();
-			ImGui::RadioButton("Double Up", &queue, 5); ImGui::SameLine();
+			ImGui::RadioButton("Solo/Duo", &queue, 0);
+			ImGui::SameLine();
+			ImGui::RadioButton("Flex 5v5", &queue, 1);
+			ImGui::SameLine();
+			ImGui::RadioButton("Flex 3v3", &queue, 2);
+			ImGui::SameLine();
+			ImGui::RadioButton("TFT", &queue, 3);
+			ImGui::SameLine();
+			ImGui::RadioButton("Hyper Roll", &queue, 4);
+			ImGui::SameLine();
+			ImGui::RadioButton("Double Up", &queue, 5);
+			ImGui::SameLine();
 			ImGui::RadioButton("()", &queue, 6);
 
-			ImGui::Columns(2, 0, false);
+			ImGui::Columns(2, nullptr, false);
 
 			if (ImGui::Button("Submit##submitRank"))
 			{
@@ -125,6 +147,7 @@ public:
 				case 6:
 					body += "";
 					break;
+				default: ;
 				}
 
 				body += R"(","rankedLeagueTier":")";
@@ -158,6 +181,7 @@ public:
 				case 8:
 					body += "CHALLENGER";
 					break;
+				default: ;
 				}
 
 				body += R"(","rankedLeagueDivision":")";
@@ -179,6 +203,7 @@ public:
 				case 4:
 					body += "";
 					break;
+				default: ;
 				}
 
 				body += R"("}})";
@@ -189,7 +214,8 @@ public:
 			ImGui::SameLine();
 			if (ImGui::Button("Empty##emptyRank"))
 			{
-				LCU::Request("PUT", "https://127.0.0.1/lol-chat/v1/me", R"({"lol":{"rankedLeagueQueue":"","rankedLeagueTier":"","rankedLeagueDivision":""}})");
+				LCU::Request("PUT", "https://127.0.0.1/lol-chat/v1/me",
+				             R"({"lol":{"rankedLeagueQueue":"","rankedLeagueTier":"","rankedLeagueDivision":""}})");
 			}
 			ImGui::SameLine();
 			ImGui::HelpMarker("Only in the friend's list, not on profile");
@@ -283,7 +309,7 @@ public:
 						{
 							if (sendChangeBadges == -2)
 							{
-								if (root["challengeIds"].isArray() && root["challengeIds"].size() >= 1)
+								if (root["challengeIds"].isArray() && !root["challengeIds"].empty())
 								{
 									jsonArray.append(root["challengeIds"][0]);
 								}
@@ -307,10 +333,11 @@ public:
 			ImGui::SameLine();
 			if (ImGui::Button("Submit##submitMasteryLvl"))
 			{
-				std::string result = LCU::Request("PUT", "https://127.0.0.1/lol-chat/v1/me", "{\"lol\":{\"masteryScore\":\"" + std::to_string(masteryLvl) + "\"}}");
+				std::string result = LCU::Request("PUT", "https://127.0.0.1/lol-chat/v1/me",
+				                                  R"({"lol":{"masteryScore":")" + std::to_string(masteryLvl) + "\"}}");
 				if (result.find("errorCode") != std::string::npos)
 				{
-					MessageBoxA(0, result.c_str(), 0, 0);
+					MessageBoxA(nullptr, result.c_str(), nullptr, 0);
 				}
 			}
 			ImGui::SameLine();
@@ -328,7 +355,7 @@ public:
 				std::string result = LCU::Request("PUT", "https://127.0.0.1/lol-summoner/v1/current-summoner/icon", body);
 				if (result.find("errorCode") != std::string::npos)
 				{
-					MessageBoxA(0, result.c_str(), 0, 0);
+					MessageBoxA(nullptr, result.c_str(), nullptr, 0);
 				}
 			}
 			ImGui::SameLine();
@@ -338,7 +365,7 @@ public:
 				std::string result = LCU::Request("PUT", "https://127.0.0.1/lol-chat/v1/me/", body);
 				if (result.find("errorCode") != std::string::npos)
 				{
-					MessageBoxA(0, result.c_str(), 0, 0);
+					MessageBoxA(nullptr, result.c_str(), nullptr, 0);
 				}
 			}
 
@@ -361,16 +388,17 @@ public:
 				}
 				else
 				{
-					for (const auto& c : champSkins)
+					for (const auto& [key, name, skins] : champSkins)
 					{
-						if (ImGui::TreeNode(c.name.c_str()))
+						if (ImGui::TreeNode(name.c_str()))
 						{
-							for (const auto& s : c.skins)
+							for (const auto& [fst, snd] : skins)
 							{
-								if (ImGui::Button(s.second.c_str()))
+								if (ImGui::Button(snd.c_str()))
 								{
-									std::string body = R"({"key":"backgroundSkinId","value":)" + s.first + "}";
-									std::string result = LCU::Request("POST", "https://127.0.0.1/lol-summoner/v1/current-summoner/summoner-profile/", body);
+									std::string body = R"({"key":"backgroundSkinId","value":)" + fst + "}";
+									std::string result = LCU::Request("POST", "https://127.0.0.1/lol-summoner/v1/current-summoner/summoner-profile/",
+									                                  body);
 								}
 							}
 							ImGui::TreePop();
@@ -413,14 +441,14 @@ public:
 			{
 				if (result.size() != 1)
 					result += ",";
-				result += "\"title\":\"" + titleId + "\"";
+				result += R"("title":")" + titleId + "\"";
 			}
 
-			if (bannerId != "")
+			if (!bannerId.empty())
 			{
 				if (result.size() != 1)
 					result += ",";
-				result += "\"bannerAccent\":\"" + bannerId + "\"";
+				result += R"("bannerAccent":")" + bannerId + "\"";
 			}
 			result += "}";
 
