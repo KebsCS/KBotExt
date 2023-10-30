@@ -26,7 +26,7 @@ public:
 	static std::vector<std::string> StringSplit(std::string str, const std::string& separator, int max = -1);
 
 	static std::string RandomString(size_t size);
-	static std::wstring RandomWString(size_t size, std::pair<unsigned, unsigned> range = {0, 0});
+	static std::wstring RandomWString(size_t size, std::pair<unsigned, unsigned> range = { 0, 0 });
 
 	static void CopyToClipboard(const std::string& text);
 

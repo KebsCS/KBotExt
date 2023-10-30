@@ -10,20 +10,20 @@ public:
 	static void Render()
 	{
 		using tRegCreateKeyExA = LSTATUS(WINAPI*)(HKEY hKey, LPCSTR lpSubKey, DWORD Reserved, LPSTR lpClass,
-		                                          DWORD dwOptions, REGSAM samDesired, LPSECURITY_ATTRIBUTES lpSecurityAttributes, PHKEY phkResult,
-		                                          LPDWORD lpdwDisposition);
+			DWORD dwOptions, REGSAM samDesired, LPSECURITY_ATTRIBUTES lpSecurityAttributes, PHKEY phkResult,
+			LPDWORD lpdwDisposition);
 		static auto RegCreateKeyExA = reinterpret_cast<tRegCreateKeyExA>(GetProcAddress(LoadLibraryW(L"advapi32.dll"), "RegCreateKeyExA"));
 
 		using tRegOpenKeyExA = LSTATUS(WINAPI*)(HKEY hKey, LPCSTR lpSubKey, DWORD ulOptions,
-		                                        REGSAM samDesired, PHKEY phkResult);
+			REGSAM samDesired, PHKEY phkResult);
 		static auto RegOpenKeyExA = reinterpret_cast<tRegOpenKeyExA>(GetProcAddress(LoadLibraryW(L"advapi32.dll"), "RegOpenKeyExA"));
 
 		using tRegQueryValueExA = LSTATUS(WINAPI*)(HKEY hKey, LPCSTR lpValueName,
-		                                           LPDWORD lpReserved, LPDWORD lpType, LPBYTE lpData, LPDWORD lpcbDatan);
+			LPDWORD lpReserved, LPDWORD lpType, LPBYTE lpData, LPDWORD lpcbDatan);
 		static auto RegQueryValueExA = reinterpret_cast<tRegQueryValueExA>(GetProcAddress(LoadLibraryW(L"advapi32.dll"), "RegQueryValueExA"));
 
 		using tRegSetValueExA = LSTATUS(WINAPI*)(HKEY hKey, LPCSTR lpValueName, DWORD Reserved,
-		                                         DWORD dwType, const BYTE* lpData, DWORD cbData);
+			DWORD dwType, const BYTE* lpData, DWORD cbData);
 		static auto RegSetValueExA = reinterpret_cast<tRegSetValueExA>(GetProcAddress(LoadLibraryW(L"advapi32.dll"), "RegSetValueExA"));
 
 		using tRegDeleteValueA = LSTATUS(WINAPI*)(HKEY hKey, LPCSTR lpValueName);
@@ -86,9 +86,9 @@ public:
 			{
 				HKEY hkResult;
 				if (const LSTATUS regCreate = RegCreateKeyExA(HKEY_LOCAL_MACHINE,
-				                                              R"(Software\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\LeagueClientUx.exe)",
-				                                              0, nullptr, 0, KEY_SET_VALUE | KEY_QUERY_VALUE | KEY_CREATE_SUB_KEY, nullptr, &hkResult,
-				                                              nullptr); regCreate == ERROR_SUCCESS)
+					R"(Software\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\LeagueClientUx.exe)",
+					0, nullptr, 0, KEY_SET_VALUE | KEY_QUERY_VALUE | KEY_CREATE_SUB_KEY, nullptr, &hkResult,
+					nullptr); regCreate == ERROR_SUCCESS)
 				{
 					char* buffer[MAX_PATH];
 					DWORD bufferLen = sizeof(buffer);
@@ -98,15 +98,15 @@ public:
 					const auto len = static_cast<DWORD>(strlen(filePath) + 1); // bugprone-misplaced-widening-cast?
 
 					if (const LSTATUS regQuery = RegQueryValueExA(hkResult, "debugger", nullptr, nullptr, reinterpret_cast<LPBYTE>(buffer),
-					                                              &bufferLen); regQuery == ERROR_SUCCESS || regQuery == ERROR_FILE_NOT_FOUND)
+						&bufferLen); regQuery == ERROR_SUCCESS || regQuery == ERROR_FILE_NOT_FOUND)
 					{
 						if (S.debugger)
 						{
 							auto messageBoxStatus = IDYES;
 							if (S.autoRename || S.noAdmin)
 								messageBoxStatus = MessageBoxA(nullptr, "Having \"Auto-rename\" or \"Launch client without admin\" "
-								                               "enabled with \"debugger IFEO\" will prevent League client from starting\n\n"
-								                               "Do you wish to continue?", "Warning", MB_YESNO | MB_SETFOREGROUND);
+									"enabled with \"debugger IFEO\" will prevent League client from starting\n\n"
+									"Do you wish to continue?", "Warning", MB_YESNO | MB_SETFOREGROUND);
 
 							if (messageBoxStatus == IDYES)
 							{
@@ -185,7 +185,7 @@ public:
 
 			ImGui::Separator();
 			ImGui::Text("Program's version: %s | Latest version: %s",
-			            Misc::programVersion.c_str(), Misc::latestVersion.c_str());
+				Misc::programVersion.c_str(), Misc::latestVersion.c_str());
 			ImGui::Text("GitHub repository:");
 			ImGui::TextURL("Click me!", "https://github.com/KebsCS/KBotExt", 1, 0);
 

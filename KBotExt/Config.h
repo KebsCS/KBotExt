@@ -9,7 +9,7 @@
 
 struct Settings
 {
-	Settings(): hwnd(nullptr)
+	Settings() : hwnd(nullptr)
 	{
 	}
 

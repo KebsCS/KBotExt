@@ -55,14 +55,14 @@ public:
 							if (purchase.find('-') == std::string::npos && purchase.find(':') == std::string::npos)
 							{
 								sscanf_s(purchase.c_str(), "%04d%02d%02dT%02d%02d%02d",
-								       &skin.purchaseDate.tm_year, &skin.purchaseDate.tm_mon, &skin.purchaseDate.tm_mday,
-								       &skin.purchaseDate.tm_hour, &skin.purchaseDate.tm_min, &skin.purchaseDate.tm_sec);
+									&skin.purchaseDate.tm_year, &skin.purchaseDate.tm_mon, &skin.purchaseDate.tm_mday,
+									&skin.purchaseDate.tm_hour, &skin.purchaseDate.tm_min, &skin.purchaseDate.tm_sec);
 							}
 							else
 							{
 								sscanf_s(purchase.c_str(), "%04d-%02d-%02dT%02d:%02d:%02d",
-								       &skin.purchaseDate.tm_year, &skin.purchaseDate.tm_mon, &skin.purchaseDate.tm_mday,
-								       &skin.purchaseDate.tm_hour, &skin.purchaseDate.tm_min, &skin.purchaseDate.tm_sec);
+									&skin.purchaseDate.tm_year, &skin.purchaseDate.tm_mon, &skin.purchaseDate.tm_mday,
+									&skin.purchaseDate.tm_hour, &skin.purchaseDate.tm_min, &skin.purchaseDate.tm_sec);
 							}
 							skin.purchaseDate.tm_year -= 1901;
 							skin.purchaseDate.tm_mon -= 1;
@@ -100,25 +100,25 @@ public:
 				iLastSort = iSort;
 				switch (iSort)
 				{
-				// alphabetically
+					// alphabetically
 				case 0:
 					std::ranges::sort(ownedSkins, [](const Skin& lhs, const Skin& rhs) {
 						return lhs.name < rhs.name;
-					});
+						});
 					break;
-				// purchase date
+					// purchase date
 				case 1:
 					std::ranges::sort(ownedSkins, [](Skin lhs, Skin rhs) {
 						return mktime(&lhs.purchaseDate) < mktime(&rhs.purchaseDate);
-					});
+						});
 					break;
-				// id
+					// id
 				case 2:
 					std::ranges::sort(ownedSkins, [](const Skin& lhs, const Skin& rhs) {
 						return lhs.itemId < rhs.itemId;
-					});
+						});
 					break;
-				default: ;
+				default:;
 				}
 			}
 
@@ -139,7 +139,7 @@ public:
 
 			const ImVec2 label_size = ImGui::CalcTextSize("W", nullptr, true);
 			ImGui::InputTextMultiline("##separatorSkinsTab", allNamesSeparator, IM_ARRAYSIZE(allNamesSeparator),
-			                          ImVec2(0, label_size.y + ImGui::GetStyle().FramePadding.y * 2.0f), ImGuiInputTextFlags_AllowTabInput);
+				ImVec2(0, label_size.y + ImGui::GetStyle().FramePadding.y * 2.0f), ImGuiInputTextFlags_AllowTabInput);
 
 			ImGui::Separator();
 			ImGui::Text("Skins owned: %d", ownedSkins.size());

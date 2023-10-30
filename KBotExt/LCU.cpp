@@ -167,7 +167,7 @@ void LCU::GetLeagueProcesses()
 		if (foundIndex == -1)
 		{
 			currentIndex = leagueProcesses.size();
-			std::pair<DWORD, std::string> temp = {proc, ""};
+			std::pair<DWORD, std::string> temp = { proc, "" };
 			leagueProcesses.emplace_back(temp);
 		}
 
@@ -217,7 +217,7 @@ void LCU::GetLeagueProcesses()
 				}
 				std::this_thread::sleep_for(std::chrono::milliseconds(300));
 			}
-		});
+			});
 		t.detach();
 	}
 }
@@ -276,15 +276,15 @@ std::string LCU::GetStoreHeader()
 static void FixCachingProblem()
 {
 	using tRegOpenKeyExA = LSTATUS(WINAPI*)(HKEY hKey, LPCSTR lpSubKey, DWORD ulOptions,
-	                                        REGSAM samDesired, PHKEY phkResult);
+		REGSAM samDesired, PHKEY phkResult);
 	static auto RegOpenKeyExA = reinterpret_cast<tRegOpenKeyExA>(GetProcAddress(LoadLibraryW(L"advapi32.dll"), "RegOpenKeyExA"));
 
 	using tRegQueryValueExA = LSTATUS(WINAPI*)(HKEY hKey, LPCSTR lpValueName,
-	                                           LPDWORD lpReserved, LPDWORD lpType, LPBYTE lpData, LPDWORD lpcbDatan);
+		LPDWORD lpReserved, LPDWORD lpType, LPBYTE lpData, LPDWORD lpcbDatan);
 	static auto RegQueryValueExA = reinterpret_cast<tRegQueryValueExA>(GetProcAddress(LoadLibraryW(L"advapi32.dll"), "RegQueryValueExA"));
 
 	using tRegSetValueExA = LSTATUS(WINAPI*)(HKEY hKey, LPCSTR lpValueName, DWORD Reserved,
-	                                         DWORD dwType, const BYTE* lpData, DWORD cbData);
+		DWORD dwType, const BYTE* lpData, DWORD cbData);
 	static auto RegSetValueExA = reinterpret_cast<tRegSetValueExA>(GetProcAddress(LoadLibraryW(L"advapi32.dll"), "RegSetValueExA"));
 
 	using tRegCloseKey = LSTATUS(WINAPI*)(HKEY hKe);
@@ -293,13 +293,13 @@ static void FixCachingProblem()
 	bool bChanged = false;
 	HKEY hkResult;
 	if (RegOpenKeyExA(HKEY_LOCAL_MACHINE, R"(Software\Policies\Microsoft\Windows\CurrentVersion\Internet Settings)", 0, KEY_READ | KEY_WRITE,
-	                  &hkResult) == ERROR_SUCCESS)
+		&hkResult) == ERROR_SUCCESS)
 	{
 		DWORD value;
 		DWORD newValue = 0;
 		DWORD dwSize = sizeof(value);
 		if (const LSTATUS regQuery = RegQueryValueExA(hkResult, "DisableCachingOfSSLPages", nullptr, nullptr, reinterpret_cast<LPBYTE>(&value),
-		                                              &dwSize); regQuery == ERROR_SUCCESS)
+			&dwSize); regQuery == ERROR_SUCCESS)
 		{
 			if (value == 0x1)
 			{
@@ -318,8 +318,8 @@ static void FixCachingProblem()
 	if (bChanged == true)
 	{
 		MessageBoxA(nullptr, "Restart the program\n\nIf this pop-up window keeps showing up: Open \"Internet Options\", "
-		            "Go to \"Advanced\" tab and disable \"Do not save encrypted pages to disk\". Press \"Apply\" and \"OK\"",
-		            "Updated faulty options", MB_OK);
+			"Go to \"Advanced\" tab and disable \"Do not save encrypted pages to disk\". Press \"Apply\" and \"OK\"",
+			"Updated faulty options", MB_OK);
 		exit(EXIT_SUCCESS); // ConcurrencyMtUnsafe)
 	}
 }

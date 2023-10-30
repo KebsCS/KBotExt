@@ -48,7 +48,7 @@ int WINAPI wWinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/, LPWSTR
 		PROCESS_INFORMATION processInformation = {};
 
 		if (!CreateProcessA(applicationName.c_str(), const_cast<char*>(cmdLine.c_str()), nullptr, nullptr, false, 2U, nullptr, nullptr, &startupInfo,
-		                    &processInformation))
+			&processInformation))
 			return 0;
 
 		std::cout << "App: " << applicationName << std::endl;
@@ -87,7 +87,7 @@ int WINAPI wWinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/, LPWSTR
 		//srand(static_cast<unsigned>(time(nullptr)));
 
 		Config::Load();
-		std::wstring sClassName = Utils::RandomWString(Utils::RandomInt(5, 10), {0x2e80, 0xfffff});
+		std::wstring sClassName = Utils::RandomWString(Utils::RandomInt(5, 10), { 0x2e80, 0xfffff });
 		LPCWSTR lpszOverlayClassName = sClassName.c_str();
 		//Register window class information
 		WNDCLASSEXW wc = {
@@ -102,7 +102,7 @@ int WINAPI wWinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/, LPWSTR
 
 		// Create application window
 		S.hwnd = ::CreateWindowW(sClassName.c_str(), lpszOverlayClassName, WS_OVERLAPPED | WS_SYSMENU | WS_MINIMIZEBOX | WS_SIZEBOX, 100, 100,
-		                         S.Window.width, S.Window.height, NULL, NULL, wc.hInstance, NULL);
+			S.Window.width, S.Window.height, NULL, NULL, wc.hInstance, NULL);
 
 		if (S.hwnd == nullptr)
 		{
@@ -260,7 +260,7 @@ LRESULT WINAPI WndProc(const HWND hWnd, const UINT msg, const WPARAM wParam, con
 	case WM_DESTROY:
 		PostQuitMessage(0);
 		return 0;
-	default: ;
+	default:;
 	}
 	return DefWindowProcW(hWnd, msg, wParam, lParam);
 }

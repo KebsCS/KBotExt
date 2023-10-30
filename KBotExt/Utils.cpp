@@ -23,7 +23,7 @@ int Utils::RandomInt(const int min, const int max)
 std::string Utils::ToLower(std::string str)
 {
 	std::ranges::transform(str, str.begin(),
-	                       [](const unsigned char c) { return static_cast<char>(std::tolower(c)); });
+		[](const unsigned char c) { return static_cast<char>(std::tolower(c)); });
 	return str;
 }
 
@@ -36,7 +36,7 @@ std::wstring Utils::ToLower(std::wstring wstr)
 std::string Utils::ToUpper(std::string str)
 {
 	std::ranges::transform(str, str.begin(),
-	                       [](const unsigned char c) { return static_cast<char>(std::toupper(c)); });
+		[](const unsigned char c) { return static_cast<char>(std::toupper(c)); });
 	return str;
 }
 
@@ -266,7 +266,7 @@ bool Utils::RunAsUser(const LPCWSTR lpApplicationName, const LPWSTR lpCommandLin
 	static auto LookupPrivilegeValueW = reinterpret_cast<tLookupPrivilegeValueW>(GetProcAddress(
 		LoadLibraryW(L"advapi32.dll"), "LookupPrivilegeValueW"));
 
-	TOKEN_PRIVILEGES tkp = {0};
+	TOKEN_PRIVILEGES tkp = { 0 };
 	tkp.PrivilegeCount = 1;
 	if (!LookupPrivilegeValueW(nullptr, SE_INCREASE_QUOTA_NAME, &tkp.Privileges[0].Luid))
 	{
@@ -275,8 +275,8 @@ bool Utils::RunAsUser(const LPCWSTR lpApplicationName, const LPWSTR lpCommandLin
 	}
 
 	using tAdjustTokenPrivileges = BOOL(WINAPI*)(HANDLE TokenHandle, BOOL DisableAllPrivileges,
-	                                             PTOKEN_PRIVILEGES NewState, DWORD BufferLength, PTOKEN_PRIVILEGES PreviousState,
-	                                             PDWORD ReturnLength);
+		PTOKEN_PRIVILEGES NewState, DWORD BufferLength, PTOKEN_PRIVILEGES PreviousState,
+		PDWORD ReturnLength);
 	static auto AdjustTokenPrivileges = reinterpret_cast<tAdjustTokenPrivileges>(GetProcAddress(
 		LoadLibraryW(L"advapi32.dll"), "AdjustTokenPrivileges"));
 
@@ -323,7 +323,7 @@ bool Utils::RunAsUser(const LPCWSTR lpApplicationName, const LPWSTR lpCommandLin
 	}
 
 	using tDuplicateTokenEx = BOOL(WINAPI*)(HANDLE hExistingToken, DWORD dwDesiredAccess, LPSECURITY_ATTRIBUTES pTokenAttributes,
-	                                        SECURITY_IMPERSONATION_LEVEL ImpersonationLevel, TOKEN_TYPE TokenType, PHANDLE phNewToken);
+		SECURITY_IMPERSONATION_LEVEL ImpersonationLevel, TOKEN_TYPE TokenType, PHANDLE phNewToken);
 	static auto DuplicateTokenEx = reinterpret_cast<tDuplicateTokenEx>(GetProcAddress(LoadLibraryW(L"advapi32.dll"), "DuplicateTokenEx"));
 
 	HANDLE hPrimaryToken = nullptr;
@@ -337,13 +337,13 @@ bool Utils::RunAsUser(const LPCWSTR lpApplicationName, const LPWSTR lpCommandLin
 	}
 
 	using tCreateProcessWithTokenW = BOOL(WINAPI*)(HANDLE hToken, DWORD dwLogonFlags, LPCWSTR lpApplicationName,
-	                                               LPWSTR lpCommandLine, DWORD dwCreationFlags, LPVOID lpEnvironment, LPCWSTR lpCurrentDirectory,
-	                                               LPSTARTUPINFOW lpStartupInfo, LPPROCESS_INFORMATION lpProcessInformation);
+		LPWSTR lpCommandLine, DWORD dwCreationFlags, LPVOID lpEnvironment, LPCWSTR lpCurrentDirectory,
+		LPSTARTUPINFOW lpStartupInfo, LPPROCESS_INFORMATION lpProcessInformation);
 	static auto CreateProcessWithTokenW = reinterpret_cast<tCreateProcessWithTokenW>(GetProcAddress(
 		LoadLibraryW(L"advapi32.dll"), "CreateProcessWithTokenW"));
 
-	PROCESS_INFORMATION pi = {nullptr};
-	STARTUPINFOW si = {0};
+	PROCESS_INFORMATION pi = { nullptr };
+	STARTUPINFOW si = { 0 };
 	si.cb = sizeof(si);
 	si.wShowWindow = SW_SHOWNORMAL;
 	si.dwFlags = STARTF_USESHOWWINDOW;
@@ -373,7 +373,7 @@ cpr::Header Utils::StringToHeader(const std::string& str)
 	{
 		if (const auto index = line.find(": ", 0); index != std::string::npos)
 		{
-			header.insert({line.substr(0, index), line.substr(index + 2)});
+			header.insert({ line.substr(0, index), line.substr(index + 2) });
 		}
 	}
 	return header;

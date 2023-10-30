@@ -110,8 +110,7 @@ DWORD Auth::GetProcessId(const std::wstring& processName)
 					CloseHandle(snapshot);
 					return entry.th32ProcessID;
 				}
-			}
-			while (Process32NextW(snapshot, &entry));
+			} while (Process32NextW(snapshot, &entry));
 		}
 	}
 	CloseHandle(snapshot);
@@ -134,8 +133,7 @@ std::vector<DWORD> Auth::GetAllProcessIds(const std::wstring& processName)
 				{
 					pids.emplace_back(entry.th32ProcessID);
 				}
-			}
-			while (Process32NextW(snapshot, &entry));
+			} while (Process32NextW(snapshot, &entry));
 		}
 	}
 	CloseHandle(snapshot);
@@ -145,13 +143,13 @@ std::vector<DWORD> Auth::GetAllProcessIds(const std::wstring& processName)
 std::wstring Auth::GetProcessCommandLine(const DWORD& processId)
 {
 	using tNtQueryInformationProcess = NTSTATUS(__stdcall*)
-	(
-		HANDLE ProcessHandle,
-		ULONG ProcessInformationClass,
-		PVOID ProcessInformation,
-		ULONG ProcessInformationLength,
-		PULONG ReturnLength
-	);
+		(
+			HANDLE ProcessHandle,
+			ULONG ProcessInformationClass,
+			PVOID ProcessInformation,
+			ULONG ProcessInformationLength,
+			PULONG ReturnLength
+			);
 
 	std::wstring result;
 	const HANDLE processHandle = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, 0, processId);
@@ -202,7 +200,7 @@ std::wstring Auth::GetProcessCommandLine(const DWORD& processId)
 		ZeroMemory(&pbi, sizeof(pbi));
 
 		if (const auto NtQueryInformationProcess =
-				reinterpret_cast<tNtQueryInformationProcess>(GetProcAddress(GetModuleHandleA("ntdll.dll"), "NtWow64QueryInformationProcess64"));
+			reinterpret_cast<tNtQueryInformationProcess>(GetProcAddress(GetModuleHandleA("ntdll.dll"), "NtWow64QueryInformationProcess64"));
 			NtQueryInformationProcess(processHandle, 0, &pbi, sizeof(pbi), nullptr) != 0)
 		{
 			MessageBoxA(nullptr, "NtQueryInformationProcess failed", nullptr, 0);
@@ -257,14 +255,14 @@ std::wstring Auth::GetProcessCommandLine(const DWORD& processId)
 			USHORT Length;
 			USHORT MaximumLength;
 			PWSTR Buffer;
-		} UNICODE_STRING, *PUNICODE_STRING [[maybe_unused]];
+		} UNICODE_STRING, * PUNICODE_STRING [[maybe_unused]];
 		/*[[maybe_unused]]*/ using PCUNICODE_STRING = const UNICODE_STRING*;
 
 		PROCESS_BASIC_INFORMATION pbi;
 		ZeroMemory(&pbi, sizeof(pbi));
 
 		if (const auto NtQueryInformationProcess =
-				reinterpret_cast<tNtQueryInformationProcess>(GetProcAddress(GetModuleHandleA("ntdll.dll"), "NtQueryInformationProcess"));
+			reinterpret_cast<tNtQueryInformationProcess>(GetProcAddress(GetModuleHandleA("ntdll.dll"), "NtQueryInformationProcess"));
 			NtQueryInformationProcess(processHandle, 0, &pbi, sizeof(pbi), nullptr) != 0)
 		{
 			MessageBoxA(nullptr, "NtQueryInformationProcess failed", nullptr, 0);
@@ -310,7 +308,7 @@ std::wstring Auth::GetProcessPath(const DWORD& processId)
 		if (WCHAR result[MAX_PATH]; GetModuleFileNameExW(processHandle, nullptr, result, MAX_PATH))
 		{
 			CloseHandle(processHandle);
-			return {result};
+			return { result };
 		}
 		CloseHandle(processHandle);
 	}
@@ -332,8 +330,8 @@ std::string Auth::GetFileVersion(const std::wstring& file)
 				const DWORD dwFileVersionMS = lpFfi->dwFileVersionMS;
 				const DWORD dwFileVersionLS = lpFfi->dwFileVersionLS;
 				std::string result = std::format("{}.{}.{}.{}",
-				                                 HIWORD(dwFileVersionMS), LOWORD(dwFileVersionMS),
-				                                 HIWORD(dwFileVersionLS), LOWORD(dwFileVersionLS));
+					HIWORD(dwFileVersionMS), LOWORD(dwFileVersionMS),
+					HIWORD(dwFileVersionLS), LOWORD(dwFileVersionLS));
 				return result;
 			}
 		}

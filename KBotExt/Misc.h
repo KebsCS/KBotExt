@@ -68,12 +68,12 @@ public:
 		}
 
 		ShellExecuteA(nullptr, "open", std::format("{}LeagueClient.exe", S.leaguePath).c_str(),
-		              std::format("--system-yaml-override=\"{}LoL Companion/system.yaml\"", S.leaguePath).c_str(), nullptr, SW_SHOWNORMAL);
+			std::format("--system-yaml-override=\"{}LoL Companion/system.yaml\"", S.leaguePath).c_str(), nullptr, SW_SHOWNORMAL);
 	}
 
 	static void CheckVersion()
 	{
-		const std::string getLatest = cpr::Get(cpr::Url{"https://api.github.com/repos/KebsCS/KBotExt/releases/latest"}).text;
+		const std::string getLatest = cpr::Get(cpr::Url{ "https://api.github.com/repos/KebsCS/KBotExt/releases/latest" }).text;
 
 		const Json::CharReaderBuilder builder;
 		const std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
@@ -101,7 +101,7 @@ public:
 				&& std::ranges::find(S.ignoredVersions, latestTag) == S.ignoredVersions.end())
 			{
 				if (const auto status = MessageBoxA(nullptr, "Open download website?\nCancel to ignore this version forever",
-				                                    "New minor update available", MB_YESNOCANCEL | MB_SETFOREGROUND); status == IDYES)
+					"New minor update available", MB_YESNOCANCEL | MB_SETFOREGROUND); status == IDYES)
 				{
 					ShellExecuteW(nullptr, nullptr, L"https://github.com/KebsCS/KBotExt/releases/latest", nullptr, nullptr, SW_SHOW);
 				}
@@ -116,7 +116,7 @@ public:
 
 	static std::string GetCurrentPatch()
 	{
-		const std::string result = cpr::Get(cpr::Url{"http://ddragon.leagueoflegends.com/api/versions.json"}).text;
+		const std::string result = cpr::Get(cpr::Url{ "http://ddragon.leagueoflegends.com/api/versions.json" }).text;
 		const Json::CharReaderBuilder builder;
 		const std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
 		JSONCPP_STRING err;
@@ -130,7 +130,7 @@ public:
 
 	static void GetAllChampionSkins()
 	{
-		std::string getSkins = cpr::Get(cpr::Url{"https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/skins.json"}).text;
+		std::string getSkins = cpr::Get(cpr::Url{ "https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/skins.json" }).text;
 		Json::CharReaderBuilder builder;
 		const std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
 		JSONCPP_STRING err;
@@ -167,7 +167,7 @@ public:
 			{
 				if (currentSkin["questSkinInfo"]) // K/DA ALL OUT Seraphine
 				{
-					for (const Json::Value skinTiers = currentSkin["questSkinInfo"]["tiers"]; const auto& skinTier : skinTiers)
+					for (const Json::Value skinTiers = currentSkin["questSkinInfo"]["tiers"]; const auto & skinTier : skinTiers)
 					{
 						skin.first = skinTier["id"].asString();
 						skin.second = skinTier["name"].asString();
@@ -194,16 +194,16 @@ public:
 	static void TaskKillLeague()
 	{
 		for (const std::vector<std::wstring> leagueProcs = {
-			     L"RiotClientCrashHandler.exe",
-			     L"RiotClientServices.exe",
-			     L"RiotClientUx.exe",
-			     L"RiotClientUxRender.exe",
+				 L"RiotClientCrashHandler.exe",
+				 L"RiotClientServices.exe",
+				 L"RiotClientUx.exe",
+				 L"RiotClientUxRender.exe",
 
-			     L"LeagueCrashHandler.exe",
-			     L"LeagueClient.exe",
-			     L"LeagueClientUx.exe",
-			     L"LeagueClientUxRender.exe"
-		     }; const auto& proc : leagueProcs)
+				 L"LeagueCrashHandler.exe",
+				 L"LeagueClient.exe",
+				 L"LeagueClientUx.exe",
+				 L"LeagueClientUxRender.exe"
+			}; const auto & proc : leagueProcs)
 		{
 			TerminateProcessByName(proc);
 		}
@@ -253,20 +253,20 @@ public:
 		const auto localAppData = std::filesystem::path(pLocal);
 
 		for (const std::vector leagueFiles = {
-			     leaguePath / "Logs",
-			     leaguePath / "Config",
-			     leaguePath / "debug.log",
-			     riotClientPath / "UX" / "natives_blob.bin",
-			     riotClientPath / "UX" / "snapshot_blob.bin",
-			     riotClientPath / "UX" / "v8_context_snapshot.bin",
-			     riotClientPath / "UX" / "icudtl.dat",
-			     localAppData / "Riot Games"
-		     }; const auto& file : leagueFiles)
+				 leaguePath / "Logs",
+				 leaguePath / "Config",
+				 leaguePath / "debug.log",
+				 riotClientPath / "UX" / "natives_blob.bin",
+				 riotClientPath / "UX" / "snapshot_blob.bin",
+				 riotClientPath / "UX" / "v8_context_snapshot.bin",
+				 riotClientPath / "UX" / "icudtl.dat",
+				 localAppData / "Riot Games"
+			}; const auto & file : leagueFiles)
 		{
 			if (exists(file))
 			{
 				SetFileAttributesA(file.string().c_str(),
-				                   GetFileAttributesA(file.string().c_str()) & ~FILE_ATTRIBUTE_READONLY & ~FILE_ATTRIBUTE_HIDDEN);
+					GetFileAttributesA(file.string().c_str()) & ~FILE_ATTRIBUTE_READONLY & ~FILE_ATTRIBUTE_HIDDEN);
 				remove_all(file, errorCode);
 				result += file.string() + " - " + errorCode.message() + "\n";
 			}
@@ -302,8 +302,7 @@ public:
 						CloseHandle(process);
 						result = terminate;
 					}
-				}
-				while (Process32NextW(snapshot, &entry));
+				} while (Process32NextW(snapshot, &entry));
 			}
 		}
 		CloseHandle(snapshot);
@@ -423,7 +422,7 @@ namespace ImGui
 	};
 
 	inline bool ComboAutoSelectComplex(const char* label, char* input, const int inputlen, int* current_item,
-	                                   std::vector<std::string> data, const int items_count, const ImGuiComboFlags flags)
+		std::vector<std::string> data, const int items_count, const ImGuiComboFlags flags)
 	{
 		// Always consume the SetNextWindowSizeConstraint() call in our early return paths
 		const ImGuiContext& g = *GImGui;
@@ -452,9 +451,9 @@ namespace ImGui
 		const float expected_w = CalcItemWidth();
 		const float w = flags & ImGuiComboFlags_NoPreview ? arrow_size : expected_w;
 		const ImRect frame_bb(window->DC.CursorPos,
-		                      ImVec2(window->DC.CursorPos.x + w, window->DC.CursorPos.y + label_size.y + style.FramePadding.y * 2.0f));
+			ImVec2(window->DC.CursorPos.x + w, window->DC.CursorPos.y + label_size.y + style.FramePadding.y * 2.0f));
 		const ImRect total_bb(frame_bb.Min, ImVec2((label_size.x > 0.0f ? style.ItemInnerSpacing.x + label_size.x : 0.0f) + frame_bb.Max.x,
-		                                           frame_bb.Max.y));
+			frame_bb.Max.y));
 		const float value_x2 = ImMax(frame_bb.Min.x, frame_bb.Max.x - arrow_size);
 		ItemSize(total_bb, style.FramePadding.y);
 		if (!ItemAdd(total_bb, popupId, &frame_bb))
@@ -469,17 +468,17 @@ namespace ImGui
 			RenderNavHighlight(frame_bb, popupId);
 			if (!(flags & ImGuiComboFlags_NoPreview))
 				window->DrawList->AddRectFilled(frame_bb.Min, ImVec2(value_x2, frame_bb.Max.y), frame_col, style.FrameRounding,
-				                                (flags & ImGuiComboFlags_NoArrowButton) ? ImDrawFlags_RoundCornersAll : ImDrawFlags_RoundCornersLeft);
+					(flags & ImGuiComboFlags_NoArrowButton) ? ImDrawFlags_RoundCornersAll : ImDrawFlags_RoundCornersLeft);
 		}
 		if (!(flags & ImGuiComboFlags_NoArrowButton))
 		{
 			const ImU32 bg_col = GetColorU32((popupIsAlreadyOpened || hovered) ? ImGuiCol_ButtonHovered : ImGuiCol_Button);
 			const ImU32 text_col = GetColorU32(ImGuiCol_Text);
 			window->DrawList->AddRectFilled(ImVec2(value_x2, frame_bb.Min.y), frame_bb.Max, bg_col, style.FrameRounding,
-			                                (w <= arrow_size) ? ImDrawFlags_RoundCornersAll : ImDrawFlags_RoundCornersRight);
+				(w <= arrow_size) ? ImDrawFlags_RoundCornersAll : ImDrawFlags_RoundCornersRight);
 			if (value_x2 + arrow_size - style.FramePadding.x <= frame_bb.Max.x)
 				RenderArrow(window->DrawList, ImVec2(value_x2 + style.FramePadding.y, frame_bb.Min.y + style.FramePadding.y), text_col, ImGuiDir_Down,
-				            1.0f);
+					1.0f);
 		}
 
 		if (!popupIsAlreadyOpened)
@@ -541,7 +540,7 @@ namespace ImGui
 					popup_window->AutoPosLastDirection = ImGuiDir_Left;
 				const ImRect r_outer = GetPopupAllowedExtentRect(popup_window);
 				ImVec2 pos = FindBestWindowPosForPopupEx(frame_bb.GetBL(), size_expected, &popup_window->AutoPosLastDirection, r_outer, frame_bb,
-				                                         ImGuiPopupPositionPolicy_ComboBox);
+					ImGuiPopupPositionPolicy_ComboBox);
 
 				pos.y -= label_size.y + style.FramePadding.y * 2.0f;
 
@@ -563,7 +562,7 @@ namespace ImGui
 		}
 
 		const bool done = InputTextEx("##inputText", nullptr, input, inputlen, ImVec2(0, 0),
-		                              ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue, nullptr, nullptr);
+			ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue, nullptr, nullptr);
 		PopItemWidth();
 
 		if (!ret)

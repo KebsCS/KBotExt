@@ -49,16 +49,16 @@ public:
 		ImGui::Text("Method:");
 		const ImVec2 label_size = ImGui::CalcTextSize("W", nullptr, true);
 		ImGui::InputTextEx("##inputMethod", nullptr, method, IM_ARRAYSIZE(method),
-		                   ImVec2(S.Window.width - 130.f, label_size.y + ImGui::GetStyle().FramePadding.y * 2.0f), 0, nullptr, nullptr);
+			ImVec2(S.Window.width - 130.f, label_size.y + ImGui::GetStyle().FramePadding.y * 2.0f), 0, nullptr, nullptr);
 
 		ImGui::Text("URL:");
 		ImGui::InputTextMultiline("##inputUrl", urlText, IM_ARRAYSIZE(urlText),
-		                          ImVec2(S.Window.width - 130.f, label_size.y + ImGui::GetStyle().FramePadding.y * 2.0f));
+			ImVec2(S.Window.width - 130.f, label_size.y + ImGui::GetStyle().FramePadding.y * 2.0f));
 
 		ImGui::Text("Body:");
 		ImGui::InputTextMultiline("##inputBody", (requestText), IM_ARRAYSIZE(requestText), ImVec2(S.Window.width - 130.f,
-		                                                                                          (label_size.y + ImGui::GetStyle().FramePadding.y) *
-		                                                                                          6.f), ImGuiInputTextFlags_AllowTabInput);
+			(label_size.y + ImGui::GetStyle().FramePadding.y) *
+			6.f), ImGuiInputTextFlags_AllowTabInput);
 
 		S.customTab.method = method;
 		S.customTab.urlText = urlText;
@@ -108,7 +108,7 @@ public:
 				{
 					if (strlen(method) != 0)
 					{
-						std::strcpy(method, Utils::ToUpper(std::string(method)).c_str()); 
+						std::strcpy(method, Utils::ToUpper(std::string(method)).c_str());
 					}
 					if (strlen(urlText) == 0 || strcmp(urlText, localhostUrl.c_str()) == 0
 						|| strcmp(urlText, storeUrl.c_str()) == 0 || strcmp(urlText, ledgeUrl.c_str()) == 0)
@@ -165,7 +165,7 @@ public:
 
 			ImGui::Text("Header:");
 			ImGui::InputTextMultiline("##inputHeader", (inputHeader), IM_ARRAYSIZE(inputHeader), ImVec2(S.Window.width - 130.f,
-				                          (label_size.y + ImGui::GetStyle().FramePadding.y) * 6.f), ImGuiInputTextFlags_AllowTabInput);
+				(label_size.y + ImGui::GetStyle().FramePadding.y) * 6.f), ImGuiInputTextFlags_AllowTabInput);
 
 			S.customTab.port = inputPort;
 			S.customTab.header = inputHeader;
@@ -305,7 +305,7 @@ public:
 		{
 			cResultJson = sResultJson.data();
 			ImGui::InputTextMultiline("##customResult", cResultJson, sResultJson.size() + 1, ImVec2(S.Window.width - 130.f,
-				                          (label_size.y + ImGui::GetStyle().FramePadding.y) * 19.f));
+				(label_size.y + ImGui::GetStyle().FramePadding.y) * 19.f));
 		}
 	}
 
@@ -342,7 +342,7 @@ public:
 		if (ImGui::Button("Submit##submitInvoke"))
 		{
 			const std::string req = std::format("https://127.0.0.1/lol-login/v1/session/invoke?destination={0}&method={1}&args=[{2}]",
-			                                    destination, method, args);
+				destination, method, args);
 			result = LCU::Request("POST", req, "");
 		}
 

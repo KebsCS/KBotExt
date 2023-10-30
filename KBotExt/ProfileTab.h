@@ -16,7 +16,7 @@ public:
 			const ImVec2 label_size = ImGui::CalcTextSize("W", nullptr, true);
 
 			ImGui::InputTextMultiline("##inputStatus", statusText, IM_ARRAYSIZE(statusText), ImVec2(S.Window.width - 230.f,
-				                          (label_size.y + ImGui::GetStyle().FramePadding.y) * 6.f), ImGuiInputTextFlags_AllowTabInput);
+				(label_size.y + ImGui::GetStyle().FramePadding.y) * 6.f), ImGuiInputTextFlags_AllowTabInput);
 			if (ImGui::Button("Submit status"))
 			{
 				std::string body = R"({"statusMessage":")" + std::string(statusText) + "\"}";
@@ -65,7 +65,7 @@ public:
 				case 3:
 					body += "offline";
 					break;
-				default: ;
+				default:;
 				}
 				body += "\"}";
 				LCU::Request("PUT", "https://127.0.0.1/lol-chat/v1/me", body);
@@ -85,13 +85,15 @@ public:
 			ImGui::SameLine();
 			ImGui::RadioButton("Platinum", &rank, 4);
 			ImGui::SameLine();
-			ImGui::RadioButton("Diamond", &rank, 5);
+			ImGui::RadioButton("Emerald", &rank, 5);
 			ImGui::SameLine();
-			ImGui::RadioButton("Master", &rank, 6);
+			ImGui::RadioButton("Diamond", &rank, 6);
 			ImGui::SameLine();
-			ImGui::RadioButton("GrandMaster", &rank, 7);
+			ImGui::RadioButton("Master", &rank, 7);
 			ImGui::SameLine();
-			ImGui::RadioButton("Challenger", &rank, 8);
+			ImGui::RadioButton("GM", &rank, 8);
+			ImGui::SameLine();
+			ImGui::RadioButton("Challenger", &rank, 9);
 
 			static int tier = 0;
 			ImGui::RadioButton("I", &tier, 0);
@@ -117,7 +119,9 @@ public:
 			ImGui::SameLine();
 			ImGui::RadioButton("Double Up", &queue, 5);
 			ImGui::SameLine();
-			ImGui::RadioButton("()", &queue, 6);
+			ImGui::RadioButton("Arena", &queue, 6);
+			ImGui::SameLine();
+			ImGui::RadioButton("()", &queue, 7);
 
 			ImGui::Columns(2, nullptr, false);
 
@@ -145,9 +149,12 @@ public:
 					body += "RANKED_TFT_DOUBLE_UP";
 					break;
 				case 6:
+					body += "CHERRY";
+					break;
+				case 7:
 					body += "";
 					break;
-				default: ;
+				default:;
 				}
 
 				body += R"(","rankedLeagueTier":")";
@@ -170,18 +177,21 @@ public:
 					body += "PLATINUM";
 					break;
 				case 5:
-					body += "DIAMOND";
+					body += "EMERALD";
 					break;
 				case 6:
-					body += "MASTER";
+					body += "DIAMOND";
 					break;
 				case 7:
-					body += "GRANDMASTER";
+					body += "MASTER";
 					break;
 				case 8:
+					body += "GRANDMASTER";
+					break;
+				case 9:
 					body += "CHALLENGER";
 					break;
-				default: ;
+				default:;
 				}
 
 				body += R"(","rankedLeagueDivision":")";
@@ -203,7 +213,7 @@ public:
 				case 4:
 					body += "";
 					break;
-				default: ;
+				default:;
 				}
 
 				body += R"("}})";
@@ -215,7 +225,7 @@ public:
 			if (ImGui::Button("Empty##emptyRank"))
 			{
 				LCU::Request("PUT", "https://127.0.0.1/lol-chat/v1/me",
-				             R"({"lol":{"rankedLeagueQueue":"","rankedLeagueTier":"","rankedLeagueDivision":""}})");
+					R"({"lol":{"rankedLeagueQueue":"","rankedLeagueTier":"","rankedLeagueDivision":""}})");
 			}
 			ImGui::SameLine();
 			ImGui::HelpMarker("Only in the friend's list, not on profile");
@@ -327,6 +337,71 @@ public:
 			}
 
 			ImGui::Separator();
+
+			ImGui::Text("Challenge Points Text: ");
+
+			ImGui::SameLine();
+			static char bufChallengePoints[100];
+			static size_t lastSize = 0;
+
+			ImGui::SetNextItemWidth(static_cast<float>(S.Window.width / 3));
+			ImGui::InputText("##inputChallengePoints", bufChallengePoints, IM_ARRAYSIZE(bufChallengePoints));
+
+			if (lastSize != strlen(bufChallengePoints))
+			{
+				lastSize = strlen(bufChallengePoints);
+				LCU::Request("PUT", "https://127.0.0.1/lol-chat/v1/me",
+					R"({"lol":{"challengePoints":")" + std::string(bufChallengePoints) + R"("}})");
+			}
+
+			ImGui::SameLine();
+
+			if (ImGui::Button("Set Challenges Rank"))
+			{
+				std::string body = R"({"lol":{"challengeCrystalLevel":")";
+				switch (rank)
+				{
+				case 0:
+					body += "IRON";
+					break;
+				case 1:
+					body += "BRONZE";
+					break;
+				case 2:
+					body += "SILVER";
+					break;
+				case 3:
+					body += "GOLD";
+					break;
+				case 4:
+					body += "PLATINUM";
+					break;
+				case 5:
+					body += "EMERALD";
+					break;
+				case 6:
+					body += "DIAMOND";
+					break;
+				case 7:
+					body += "MASTER";
+					break;
+				case 8:
+					body += "GRANDMASTER";
+					break;
+				case 9:
+					body += "CHALLENGER";
+					break;
+				default:;
+				}
+
+				LCU::Request("PUT", "https://127.0.0.1/lol-chat/v1/me", body + R"("}})");
+			}
+
+			ImGui::SameLine();
+
+			ImGui::HelpMarker("Select the rank using radio buttons above, then press this button.");
+
+			ImGui::Separator();
 			static int masteryLvl;
 			ImGui::Text("Mastery:");
 			ImGui::InputInt("##inputMasteryLvl:", &masteryLvl, 1, 100);
@@ -334,7 +409,7 @@ public:
 			if (ImGui::Button("Submit##submitMasteryLvl"))
 			{
 				std::string result = LCU::Request("PUT", "https://127.0.0.1/lol-chat/v1/me",
-				                                  R"({"lol":{"masteryScore":")" + std::to_string(masteryLvl) + "\"}}");
+					R"({"lol":{"masteryScore":")" + std::to_string(masteryLvl) + "\"}}");
 				if (result.find("errorCode") != std::string::npos)
 				{
 					MessageBoxA(nullptr, result.c_str(), nullptr, 0);
@@ -398,7 +473,7 @@ public:
 								{
 									std::string body = R"({"key":"backgroundSkinId","value":)" + fst + "}";
 									std::string result = LCU::Request("POST", "https://127.0.0.1/lol-summoner/v1/current-summoner/summoner-profile/",
-									                                  body);
+										body);
 								}
 							}
 							ImGui::TreePop();

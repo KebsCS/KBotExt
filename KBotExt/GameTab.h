@@ -43,20 +43,20 @@ public:
 								std::string name = root[i]["name"].asString();
 								name += " " + std::to_string(id);
 								//std::cout << id << " " << name << std::endl;
-								std::pair<long, std::string> temp = {id, name};
+								std::pair<long, std::string> temp = { id, name };
 								gamemodes.emplace_back(temp);
 							}
 
 							std::ranges::sort(gamemodes, [](auto& left, auto& right) {
 								return left.first < right.first;
-							});
+								});
 						}
 					}
 				}
 			}
 
-			static std::vector<std::string> firstPosition = {"UNSELECTED", "TOP", "JUNGLE", "MIDDLE", "BOTTOM", "UTILITY", "FILL"};
-			static std::vector<std::string> secondPosition = {"UNSELECTED", "TOP", "JUNGLE", "MIDDLE", "BOTTOM", "UTILITY", "FILL"};
+			static std::vector<std::string> firstPosition = { "UNSELECTED", "TOP", "JUNGLE", "MIDDLE", "BOTTOM", "UTILITY", "FILL" };
+			static std::vector<std::string> secondPosition = { "UNSELECTED", "TOP", "JUNGLE", "MIDDLE", "BOTTOM", "UTILITY", "FILL" };
 
 			static int gameID = 0;
 
@@ -155,11 +155,11 @@ public:
 
 			if (ImGui::Button("Custom Blind"))
 				custom =
-					R"({"customGameLobby":{"configuration":{"gameMode":"CLASSIC","gameMutator":"","gameServerRegion":"","mapId":11,"mutators":{"id":1},"spectatorPolicy":"AllAllowed","teamSize":5},"lobbyName":"KBot","lobbyPassword":null},"isCustom":true})";
+				R"({"customGameLobby":{"configuration":{"gameMode":"CLASSIC","gameMutator":"","gameServerRegion":"","mapId":11,"mutators":{"id":1},"spectatorPolicy":"AllAllowed","teamSize":5},"lobbyName":"KBot","lobbyPassword":null},"isCustom":true})";
 
 			if (ImGui::Button("Custom ARAM"))
 				custom =
-					R"({"customGameLobby":{"configuration":{"gameMode":"ARAM","gameMutator":"","gameServerRegion":"","mapId":12,"mutators":{"id":1},"spectatorPolicy":"AllAllowed","teamSize":5},"lobbyName":"KBot","lobbyPassword":null},"isCustom":true})";
+				R"({"customGameLobby":{"configuration":{"gameMode":"ARAM","gameMutator":"","gameServerRegion":"","mapId":12,"mutators":{"id":1},"spectatorPolicy":"AllAllowed","teamSize":5},"lobbyName":"KBot","lobbyPassword":null},"isCustom":true})";
 
 			//"id" 1- blind 2- draft -4 all random 6- tournament draft
 
@@ -210,12 +210,12 @@ public:
 						{
 							for (auto& i : root)
 							{
-								std::pair temp = {i["id"].asInt(), i["name"].asString()};
+								std::pair temp = { i["id"].asInt(), i["name"].asString() };
 								botChamps.emplace_back(temp);
 							}
 							std::ranges::sort(botChamps, [](std::pair<int, std::string> a, std::pair<int, std::string> b) {
 								return a.second < b.second;
-							});
+								});
 						}
 					}
 				}
@@ -231,7 +231,7 @@ public:
 				}
 				ImGui::EndCombo();
 			}
-			std::vector<std::string> difficulties = {"NONE", "EASY", "MEDIUM", "HARD", "UBER", "TUTORIAL", "INTRO"};
+			std::vector<std::string> difficulties = { "NONE", "EASY", "MEDIUM", "HARD", "UBER", "TUTORIAL", "INTRO" };
 			static size_t indexDifficulty = 0; // Here we store our selection data as an index.
 			const char* labelDifficulty = difficulties[indexDifficulty].c_str();
 
@@ -297,8 +297,8 @@ public:
 				{
 					result = LCU::Request("POST", "https://127.0.0.1/lol-lobby/v2/lobby", body);
 					LCU::Request("PUT", "/lol-lobby/v1/lobby/members/localMember/position-preferences",
-					             R"({"firstPreference":")" + firstPosition[S.gameTab.indexFirstRole]
-					             + R"(","secondPreference":")" + secondPosition[S.gameTab.indexSecondRole] + "\"}");
+						R"({"firstPreference":")" + firstPosition[S.gameTab.indexFirstRole]
+						+ R"(","secondPreference":")" + secondPosition[S.gameTab.indexSecondRole] + "\"}");
 				}
 				else
 				{
@@ -365,8 +365,8 @@ public:
 			if (ImGui::Button("Pick roles"))
 			{
 				result = LCU::Request("PUT", "/lol-lobby/v1/lobby/members/localMember/position-preferences",
-				                      R"({"firstPreference":")" + firstPosition[S.gameTab.indexFirstRole]
-				                      + R"(","secondPreference":")" + secondPosition[S.gameTab.indexSecondRole] + "\"}");
+					R"({"firstPreference":")" + firstPosition[S.gameTab.indexFirstRole]
+					+ R"(","secondPreference":")" + secondPosition[S.gameTab.indexSecondRole] + "\"}");
 			}
 			ImGui::SameLine();
 			ImGui::HelpMarker("If you are already in a lobby you can use this button to pick the roles, or start a new lobby with the buttons above");
@@ -467,41 +467,20 @@ public:
 
 			ImGui::NextColumn();
 
-			if (ImGui::Button("Refund last purchase"))
-			{
-				if (MessageBoxA(nullptr, "Are you sure?", "Refunding last purchase", MB_OKCANCEL) == IDOK)
-				{
-					Json::CharReaderBuilder builder;
-					const std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
-					JSONCPP_STRING err;
-					Json::Value rootPurchaseHistory;
+			ImGui::Text("Nexus Blitz Force");
 
-					cpr::Header storeHeader = Utils::StringToHeader(LCU::GetStoreHeader());
-
-					std::string storeUrl = LCU::Request("GET", "/lol-store/v1/getStoreUrl");
-					std::erase(storeUrl, '"');
-
-					std::string purchaseHistory = cpr::Get(cpr::Url{storeUrl + "/storefront/v3/history/purchase"}, cpr::Header{storeHeader}).text;
-					if (reader->parse(purchaseHistory.c_str(), purchaseHistory.c_str() + static_cast<int>(purchaseHistory.length()),
-					                  &rootPurchaseHistory, &err))
-					{
-						std::string accountId = rootPurchaseHistory["player"]["accountId"].asString();
-						std::string transactionId = rootPurchaseHistory["transactions"][0]["transactionId"].asString();
-						result = cpr::Post(cpr::Url{storeUrl + "/storefront/v3/refund"}, cpr::Header{storeHeader},
-						              cpr::Body{
-							              "{\"accountId\":" + accountId + R"(,"transactionId":")" + transactionId +
-							              R"(","inventoryType":"CHAMPION","language":"en_US"})"
-						              }).text;
-					}
-					else
-					{
-						result = purchaseHistory;
-					}
-				}
-			}
 			ImGui::SameLine();
-			ImGui::HelpMarker(
-				"Buy a champion, pick it during a game and click this button before the game ends, no refund token will be used to refund it");
+
+			if (ImGui::Button("Jungle"))
+			{
+				LCU::Request("PATCH", "/lol-champ-select/v1/session/my-selection", "{\"spell1Id\":4,\"spell2Id\":11}");
+			}
+
+			ImGui::SameLine();
+			if (ImGui::Button("Lane"))
+			{
+				LCU::Request("PATCH", "/lol-champ-select/v1/session/my-selection", "{\"spell1Id\":4,\"spell2Id\":7}");
+			}
 
 			ImGui::Columns(1);
 
@@ -946,7 +925,7 @@ public:
 									std::to_string(idToBuy)
 									+ R"(,"ipCost":null,"rpCost":)" + std::to_string(priceToBuy) + R"(,"quantity":1}]})";
 								std::string purchaseUrl = getStoreUrl + "/storefront/v3/purchase?language=en_US";
-								std::string purchase = cpr::Post(cpr::Url{purchaseUrl}, cpr::Body{purchaseBody}, cpr::Header{storeHeader}).text;
+								std::string purchase = cpr::Post(cpr::Url{ purchaseUrl }, cpr::Body{ purchaseBody }, cpr::Header{ storeHeader }).text;
 								boosted = "Bought " + ChampIdToName(idToBuy) + " - dont play this champion, or you wont be able to refund RP";
 							}
 
@@ -993,7 +972,7 @@ public:
 				}
 
 				std::string historyUrl = getStoreUrl + "/storefront/v3/history/purchase?language=en_US";
-				std::string getHistory = cpr::Get(cpr::Url{historyUrl}, cpr::Header{storeHeader}).text;
+				std::string getHistory = cpr::Get(cpr::Url{ historyUrl }, cpr::Header{ storeHeader }).text;
 				if (reader->parse(getHistory.c_str(), getHistory.c_str() + static_cast<int>(getHistory.length()), &root, &err))
 				{
 					if (root["transactions"].isArray())
@@ -1011,8 +990,8 @@ public:
 											std::string refundUrl = getStoreUrl + "/storefront/v3/refund";
 											std::string refundBody = R"({"accountId":)" + accountId + R"(,"transactionId":")" + transaction[
 												"transactionId"].asString() + R"(","inventoryType":"CHAMPION","language":"en_US"})";
-											Post(cpr::Url{refundUrl}, cpr::Body{refundBody}, cpr::Header{storeHeader});
-											boosted = "Refunded";
+												Post(cpr::Url{ refundUrl }, cpr::Body{ refundBody }, cpr::Header{ storeHeader });
+												boosted = "Refunded";
 										}
 									}
 								}
@@ -1116,7 +1095,7 @@ public:
 						size_t nameStart = loadScreenPath.find("ASSETS/Characters/") + strlen("ASSETS/Characters/");
 						std::string champName = loadScreenPath.substr(nameStart, loadScreenPath.find('/', nameStart) - nameStart);
 
-						std::pair champ = {i["id"].asInt(), champName};
+						std::pair champ = { i["id"].asInt(), champName };
 						temp.emplace_back(champ);
 					}
 				}
@@ -1145,8 +1124,8 @@ public:
 			JSONCPP_STRING err;
 
 			LCU::SetCurrentClientRiotInfo();
-			std::string getChat = cpr::Get(cpr::Url{std::format("https://127.0.0.1:{}/chat/v5/participants/champ-select", LCU::riot.port)},
-			                          cpr::Header{Utils::StringToHeader(LCU::riot.header)}, cpr::VerifySsl{false}).text;
+			std::string getChat = cpr::Get(cpr::Url{ std::format("https://127.0.0.1:{}/chat/v5/participants/champ-select", LCU::riot.port) },
+				cpr::Header{ Utils::StringToHeader(LCU::riot.header) }, cpr::VerifySsl{ false }).text;
 			if (!reader->parse(getChat.c_str(), getChat.c_str() + static_cast<int>(getChat.length()), &root, &err))
 			{
 				continue;
@@ -1182,10 +1161,10 @@ public:
 									continue;
 
 								LCU::Request("POST", "/lol-champ-select/v1/toggle-player-muted",
-								             std::format(R"({{"summonerId":{0},"puuid":"{1}","obfuscatedSummonerId":{2},"obfuscatedPuuid":"{3}"}})",
-								                         player["summonerId"].asString(), player["puuid"].asString(),
-								                         player["obfuscatedSummonerId"].asString(),
-								                         player["obfuscatedPuuid"].asString()));
+									std::format(R"({{"summonerId":{0},"puuid":"{1}","obfuscatedSummonerId":{2},"obfuscatedPuuid":"{3}"}})",
+										player["summonerId"].asString(), player["puuid"].asString(),
+										player["obfuscatedSummonerId"].asString(),
+										player["obfuscatedPuuid"].asString()));
 
 								/*	LCU::Request("POST", "/telemetry/v1/events/general_metrics_number",
 										R"({"eventName":"champ_select_toggle_player_muted_clicked","value":"0","spec":"high","isLowSpecModeOn":"false"})");
@@ -1206,7 +1185,7 @@ public:
 								else
 									notification += "Red Side";
 								LCU::Request("POST", std::format("/lol-chat/v1/conversations/{}/messages", cid),
-								             R"({"body":")" + notification + R"(","type":"celebration"})");
+									R"({"body":")" + notification + R"(","type":"celebration"})");
 							}
 						}
 					}
@@ -1320,7 +1299,7 @@ public:
 				else // in champ select
 				{
 					if (!reader->parse(getChampSelect.c_str(), getChampSelect.c_str() + static_cast<int>(getChampSelect.length()), &rootChampSelect,
-					                   &err))
+						&err))
 					{
 						continue;
 					}
@@ -1374,8 +1353,8 @@ public:
 													currentPick = useBackupId;
 
 												session.SetUrl(std::format("https://127.0.0.1:{}/lol-champ-select/v1/session/actions/{}",
-												                           LCU::league.port,
-												                           action["id"].asString()));
+													LCU::league.port,
+													action["id"].asString()));
 												session.SetBody(R"({"completed":true,"championId":)" + std::to_string(currentPick) + "}");
 												session.Patch();
 											}
@@ -1392,8 +1371,8 @@ public:
 											std::this_thread::sleep_for(std::chrono::milliseconds(S.gameTab.autoBanDelay));
 
 											session.SetUrl(std::format("https://127.0.0.1:{}/lol-champ-select/v1/session/actions/{}",
-											                           LCU::league.port,
-											                           action["id"].asString()));
+												LCU::league.port,
+												action["id"].asString()));
 											session.SetBody(R"({"completed":true,"championId":)" + std::to_string(S.gameTab.autoBanId) + "}");
 											session.Patch();
 										}
@@ -1494,10 +1473,10 @@ public:
 
 						LCU::SetCurrentClientRiotInfo();
 						std::string participants = cpr::Get(
-							cpr::Url{std::format("https://127.0.0.1:{}/chat/v5/participants/champ-select", LCU::riot.port)},
-							cpr::Header{Utils::StringToHeader(LCU::riot.header)}, cpr::VerifySsl{false}).text;
+							cpr::Url{ std::format("https://127.0.0.1:{}/chat/v5/participants/champ-select", LCU::riot.port) },
+							cpr::Header{ Utils::StringToHeader(LCU::riot.header) }, cpr::VerifySsl{ false }).text;
 						if (reader->parse(participants.c_str(), participants.c_str() + static_cast<int>(participants.length()), &rootPartcipants,
-						                  &err))
+							&err))
 						{
 							auto participantsArr = rootPartcipants["participants"];
 							if (participantsArr.isArray())
@@ -1515,7 +1494,7 @@ public:
 					{
 						std::string getAuthorization = LCU::Request("GET", "/lol-rso-auth/v1/authorization");
 						if (reader->parse(getAuthorization.c_str(), getAuthorization.c_str() + static_cast<int>(getAuthorization.length()),
-						                  &rootRegion, &err))
+							&rootRegion, &err))
 						{
 							region = Utils::StringToWstring(rootRegion["currentPlatformId"].asString());
 						}
@@ -1608,7 +1587,7 @@ public:
 		}
 		std::string currentPageId = rootCurrentPage["id"].asString();
 
-		std::stringstream ssOpgg(cpr::Get(cpr::Url{"https://www.op.gg/champions/" + Utils::ToLower(currentChampionName)}).text);
+		std::stringstream ssOpgg(cpr::Get(cpr::Url{ "https://www.op.gg/champions/" + Utils::ToLower(currentChampionName) }).text);
 		std::vector<std::string> runes;
 		std::string primaryPerk, secondaryPerk;
 

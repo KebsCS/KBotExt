@@ -31,10 +31,10 @@ bool Direct3D11Render::DirectXInit(const HWND hWnd)
 
 	//createDeviceFlags |= D3D11_CREATE_DEVICE_DEBUG;
 	D3D_FEATURE_LEVEL featureLevel;
-	constexpr D3D_FEATURE_LEVEL featureLevelArray[2] = {D3D_FEATURE_LEVEL_11_0, D3D_FEATURE_LEVEL_10_0,};
+	constexpr D3D_FEATURE_LEVEL featureLevelArray[2] = { D3D_FEATURE_LEVEL_11_0, D3D_FEATURE_LEVEL_10_0, };
 	if (constexpr UINT createDeviceFlags = 0; D3D11CreateDeviceAndSwapChain(nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr, createDeviceFlags,
-	                                                                        featureLevelArray, 2, D3D11_SDK_VERSION, &sd, &g_pSwapChain,
-	                                                                        &g_pd3dDevice, &featureLevel, &g_pd3dDeviceContext) != S_OK)
+		featureLevelArray, 2, D3D11_SDK_VERSION, &sd, &g_pSwapChain,
+		&g_pd3dDevice, &featureLevel, &g_pd3dDeviceContext) != S_OK)
 		return false;
 
 	if (!CreateRenderTarget())
@@ -46,7 +46,7 @@ bool Direct3D11Render::DirectXInit(const HWND hWnd)
 
 	gamePatch = Misc::GetCurrentPatch();
 
-	std::thread t{Misc::GetAllChampionSkins};
+	std::thread t{ Misc::GetAllChampionSkins };
 	t.detach();
 
 	std::thread AutoAcceptThread(&GameTab::AutoAccept);
@@ -198,7 +198,7 @@ void Direct3D11Render::InitializeFonts()
 	const ImGuiIO& io = ImGui::GetIO();
 	(void)io;
 
-	static constexpr ImWchar ranges[] = {0x1, 0x1FFFF, 0};
+	static constexpr ImWchar ranges[] = { 0x1, 0x1FFFF, 0 };
 	static ImFontConfig cfg;
 	cfg.OversampleH = cfg.OversampleV = 1;
 
@@ -219,14 +219,14 @@ void Direct3D11Render::InitializeFonts()
 		if (is_directory(fontsPath))
 		{
 			for (const std::vector<std::string> fonts = {
-				     "seguiemj.ttf", // emojis
-				     "segoeuib.ttf", // cyrillic
-				     "malgunbd.ttf", // korean
-				     "YuGothB.ttc", // japanese
-				     "simsun.ttc", // simplified chinese
-				     "msjh.ttc", // traditional chinese
-				     "seguisym.ttf", // symbols
-			     }; const auto& f : fonts)
+					 "seguiemj.ttf", // emojis
+					 "segoeuib.ttf", // cyrillic
+					 "malgunbd.ttf", // korean
+					 "YuGothB.ttc", // japanese
+					 "simsun.ttc", // simplified chinese
+					 "msjh.ttc", // traditional chinese
+					 "seguisym.ttf", // symbols
+				}; const auto & f : fonts)
 			{
 				if (const std::filesystem::path path = fontsPath / f; exists(path))
 				{

@@ -34,7 +34,10 @@ public:
 
 			if (ImGui::Button("Submit##playerName") || ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Enter), false))
 			{
-				result = LCU::Request("GET", "https://127.0.0.1/lol-summoner/v1/summoners?name=" + std::string(playerName));
+				std::string tempName = std::string(playerName);
+				tempName.erase(std::remove_if(tempName.begin(), tempName.end(),
+					[](unsigned char x) { return std::isspace(x); }), tempName.end());
+				result = LCU::Request("GET", "https://127.0.0.1/lol-summoner/v1/summoners?name=" + tempName);
 				bPressed = true;
 			}
 

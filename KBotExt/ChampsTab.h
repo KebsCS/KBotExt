@@ -48,8 +48,8 @@ public:
 					std::string summId = root["summonerId"].asString();
 
 					std::string getChampions = LCU::Request("GET",
-					                                        std::format("https://127.0.0.1/lol-champions/v1/inventories/{}/champions-minimal",
-					                                                    summId));
+						std::format("https://127.0.0.1/lol-champions/v1/inventories/{}/champions-minimal",
+							summId));
 
 					if (reader->parse(getChampions.c_str(), getChampions.c_str() + static_cast<int>(getChampions.length()), &root, &err))
 					{
@@ -89,8 +89,8 @@ public:
 					}
 
 					std::string getCollections = LCU::Request("GET",
-					                                          std::format("https://127.0.0.1/lol-collections/v1/inventories/{}/champion-mastery",
-					                                                      summId));
+						std::format("https://127.0.0.1/lol-collections/v1/inventories/{}/champion-mastery",
+							summId));
 
 					if (reader->parse(getCollections.c_str(), getCollections.c_str() + static_cast<int>(getCollections.length()), &root, &err))
 					{
@@ -143,31 +143,31 @@ public:
 				iLastSort = iSort;
 				switch (iSort)
 				{
-				// alphabetically
+					// alphabetically
 				case 0:
 					std::ranges::sort(champsAll, [](const ChampAll& lhs, const ChampAll& rhs) {
 						return lhs.min.name < rhs.min.name;
-					});
+						});
 					break;
-				// purchase date
+					// purchase date
 				case 1:
 					std::ranges::sort(champsAll, [](const ChampAll& lhs, const ChampAll& rhs) {
 						return std::stoll(lhs.min.purchased) < std::stoll(rhs.min.purchased);
-					});
+						});
 					break;
-				// mastery points
+					// mastery points
 				case 2:
 					std::ranges::sort(champsAll, [](const ChampAll& lhs, const ChampAll& rhs) {
 						return lhs.mas.championPoints > rhs.mas.championPoints;
-					});
+						});
 					break;
-				// id
+					// id
 				case 3:
 					std::ranges::sort(champsAll, [](const ChampAll& lhs, const ChampAll& rhs) {
 						return lhs.min.id < rhs.min.id;
-					});
+						});
 					break;
-				default: ;
+				default:;
 				}
 			}
 
@@ -188,7 +188,7 @@ public:
 
 			const ImVec2 label_size = ImGui::CalcTextSize("W", nullptr, true);
 			ImGui::InputTextMultiline("##separatorChampsTab", allNamesSeparator, IM_ARRAYSIZE(allNamesSeparator),
-			                          ImVec2(0, label_size.y + ImGui::GetStyle().FramePadding.y * 2.0f), ImGuiInputTextFlags_AllowTabInput);
+				ImVec2(0, label_size.y + ImGui::GetStyle().FramePadding.y * 2.0f), ImGuiInputTextFlags_AllowTabInput);
 
 			ImGui::Separator();
 			ImGui::Text("Champions owned: %d", iChampsOwned);
@@ -231,14 +231,14 @@ highestGrade: {}
 lastPlayTime: {}
 playerId: {}
 tokensEarned: {})", mas.championLevel, mas.championPoints, mas.championPointsSinceLastLevel,
-					                    mas.championPointsUntilNextLevel, mas.chestGranted, mas.formattedChampionPoints, mas.formattedMasteryGoal,
-					                    mas.highestGrade, buffer, mas.playerId, mas.tokensEarned);
+mas.championPointsUntilNextLevel, mas.chestGranted, mas.formattedChampionPoints, mas.formattedMasteryGoal,
+mas.highestGrade, buffer, mas.playerId, mas.tokensEarned);
 				}
 
 				strcpy(input, text.c_str());
 				ImGui::PushID(inputId.c_str());
 				ImGui::InputTextMultiline("", input, IM_ARRAYSIZE(input), ImVec2(ImGui::GetWindowSize().x, textHeight),
-				                          ImGuiInputTextFlags_ReadOnly);
+					ImGuiInputTextFlags_ReadOnly);
 				ImGui::PopID();
 			}
 

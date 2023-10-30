@@ -47,18 +47,18 @@ public:
 					d[i][j] = (std::min)(
 						d[i - 1][j] + 1, // delete
 						(std::min)(d[i][j - 1] + 1, // insert
-						           d[i - 1][j - 1] + cost) // substitution
-					);
+							d[i - 1][j - 1] + cost) // substitution
+						);
 					if (i > 1 &&
 						j > 1 &&
 						str1[i - 1] == str2[j - 2] &&
 						str1[i - 2] == str2[j - 1]
-					)
+						)
 					{
 						d[i][j] = (std::min)(
 							d[i][j],
 							d[i - 2][j - 2] + cost // transposition
-						);
+							);
 					}
 				}
 			}
@@ -104,7 +104,7 @@ public:
 				{
 					const bool is_selected = (LCU::indexLeagueProcesses == n);
 					if (ImGui::Selectable((std::to_string(LCU::leagueProcesses[n].first) + " : " + LCU::leagueProcesses[n].second).c_str(),
-					                      is_selected))
+						is_selected))
 					{
 						LCU::indexLeagueProcesses = n;
 						LCU::SetLeagueClientInfo();
@@ -128,7 +128,7 @@ public:
 				}
 				else
 					ShellExecuteA(nullptr, nullptr, std::format("{}LeagueClient.exe", S.leaguePath).c_str(), "--allow-multiple-clients", nullptr,
-					              SW_SHOWNORMAL);
+						SW_SHOWNORMAL);
 			}
 
 			if (ImGui::Button("Restart UX"))
@@ -283,7 +283,7 @@ public:
 						items.clear();
 						for (auto& i : root)
 						{
-							std::pair temp = {i["name"].asString(), i["id"].asInt()};
+							std::pair temp = { i["name"].asString(), i["id"].asInt() };
 							items.emplace_back(temp);
 						}
 						std::ranges::sort(items, [](std::pair<std::string, int> a, std::pair<std::string, int> b) { return a.second < b.second; });
@@ -328,7 +328,7 @@ public:
 			if (ImGui::Button("Submit##submitMinimapScale"))
 			{
 				result = LCU::Request("PATCH", "https://127.0.0.1/lol-game-settings/v1/game-settings",
-				                      std::format(R"({{"HUD":{{"MinimapScale":{:.2f}}}}})", minimapScale / 33.33f));
+					std::format(R"({{"HUD":{{"MinimapScale":{:.2f}}}}})", minimapScale / 33.33f));
 			}
 
 			ImGui::Separator();
@@ -341,6 +341,8 @@ public:
 			};
 			static size_t itemIndexDisenchant = 0;
 			const char* comboDisenchant = itemsDisenchant[itemIndexDisenchant].first.c_str();
+
+			ImGui::Columns(2, nullptr, false);
 
 			if (ImGui::Button("Disenchant all: "))
 			{
@@ -361,12 +363,12 @@ public:
 							if (std::regex regexStr("^" + itemsDisenchant[itemIndexDisenchant].second + "_[\\d]+"); std::regex_match(name, regexStr))
 							{
 								std::string disenchantCase = itemsDisenchant[itemIndexDisenchant].second == "STATSTONE_SHARD"
-									                             ? "DISENCHANT"
-									                             : "disenchant";
+									? "DISENCHANT"
+									: "disenchant";
 								std::string disenchantName = root[name]["type"].asString();
 
 								std::string disenchantUrl = std::format("https://127.0.0.1/lol-loot/v1/recipes/{0}_{1}/craft?repeat=1",
-								                                        disenchantName, disenchantCase);
+									disenchantName, disenchantCase);
 								std::string disenchantBody = std::format(R"(["{}"])", name);
 								LCU::Request("POST", disenchantUrl, disenchantBody);
 								i++;
@@ -381,7 +383,7 @@ public:
 
 			ImGui::SameLine();
 
-			ImGui::SetNextItemWidth(static_cast<float>(S.Window.width / 3));
+			ImGui::SetNextItemWidth(static_cast<float>(S.Window.width / 3.5));
 			if (ImGui::BeginCombo("##comboDisenchant", comboDisenchant, 0))
 			{
 				for (size_t n = 0; n < itemsDisenchant.size(); n++)
@@ -395,6 +397,45 @@ public:
 				}
 				ImGui::EndCombo();
 			}
+
+			ImGui::NextColumn();
+
+			if (ImGui::Button("Refund last purchase"))
+			{
+				if (MessageBoxA(nullptr, "Are you sure?", "Refunding last purchase", MB_OKCANCEL) == IDOK)
+				{
+					Json::CharReaderBuilder builder;
+					const std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
+					JSONCPP_STRING err;
+					Json::Value rootPurchaseHistory;
+
+					cpr::Header storeHeader = Utils::StringToHeader(LCU::GetStoreHeader());
+
+					std::string storeUrl = LCU::Request("GET", "/lol-store/v1/getStoreUrl");
+					std::erase(storeUrl, '"');
+
+					std::string purchaseHistory = cpr::Get(cpr::Url{ storeUrl + "/storefront/v3/history/purchase" }, cpr::Header{ storeHeader }).text;
+					if (reader->parse(purchaseHistory.c_str(), purchaseHistory.c_str() + static_cast<int>(purchaseHistory.length()),
+						&rootPurchaseHistory, &err))
+					{
+						std::string accountId = rootPurchaseHistory["player"]["accountId"].asString();
+						std::string transactionId = rootPurchaseHistory["transactions"][0]["transactionId"].asString();
+						result = cpr::Post(cpr::Url{ storeUrl + "/storefront/v3/refund" }, cpr::Header{ storeHeader },
+							cpr::Body{
+								"{\"accountId\":" + accountId + R"(,"transactionId":")" + transactionId +
+								R"(","inventoryType":"CHAMPION","language":"en_US"})"
+							}).text;
+					}
+					else
+					{
+						result = purchaseHistory;
+					}
+				}
+			}
+			ImGui::SameLine();
+			ImGui::HelpMarker("Can refund anything, even loot");
+
+			ImGui::Columns(1);
 
 			// Getting closest champion name with Levenshtein distance algorithm and getting it's id
 			ImGui::Text("Champion name to ID");
@@ -485,7 +526,7 @@ public:
 								body["selections"].append(reward["id"].asString());
 
 								result += LCU::Request("POST", std::format("/lol-rewards/v1/grants/{}/select", grant["info"]["id"].asString()),
-								                       body.toStyledString());
+									body.toStyledString());
 							}
 						}
 					}
