@@ -127,8 +127,7 @@ public:
 					result = "Invalid path, change it in Settings tab";
 				}
 				else
-					ShellExecuteA(nullptr, nullptr, std::format("{}LeagueClient.exe", S.leaguePath).c_str(), "--allow-multiple-clients", nullptr,
-						SW_SHOWNORMAL);
+					Utils::OpenUrl(std::format("{}LeagueClient.exe", S.leaguePath).c_str(), "--allow-multiple-clients", SW_SHOWNORMAL);
 			}
 
 			if (ImGui::Button("Restart UX"))

@@ -31,7 +31,7 @@ public:
 			if (Utils::RunAsUser(Utils::StringToWstring(path).c_str(), Utils::StringToWstring(args).data()))
 				return true;
 		}
-		ShellExecuteA(nullptr, "open", path.c_str(), args.c_str(), nullptr, SW_SHOWNORMAL);
+		Utils::OpenUrl(path.c_str(), args.c_str(), SW_SHOWNORMAL);
 		return false;
 	}
 
@@ -67,8 +67,8 @@ public:
 			std::this_thread::sleep_for(std::chrono::milliseconds(4500));
 		}
 
-		ShellExecuteA(nullptr, "open", std::format("{}LeagueClient.exe", S.leaguePath).c_str(),
-			std::format("--system-yaml-override=\"{}LoL Companion/system.yaml\"", S.leaguePath).c_str(), nullptr, SW_SHOWNORMAL);
+		Utils::OpenUrl(std::format("{}LeagueClient.exe", S.leaguePath).c_str(),
+			std::format("--system-yaml-override=\"{}LoL Companion/system.yaml\"", S.leaguePath).c_str(), SW_SHOWNORMAL);
 	}
 
 	static void CheckVersion()
@@ -93,7 +93,7 @@ public:
 				{
 					if (MessageBoxA(nullptr, "Open download website?", "New major version available", MB_YESNO | MB_SETFOREGROUND) == IDYES)
 					{
-						ShellExecuteW(nullptr, nullptr, L"https://github.com/KebsCS/KBotExt/releases/latest", nullptr, nullptr, SW_SHOW);
+						Utils::OpenUrl(L"https://github.com/KebsCS/KBotExt/releases/latest", nullptr, SW_SHOW);
 					}
 				}
 			}
@@ -103,7 +103,7 @@ public:
 				if (const auto status = MessageBoxA(nullptr, "Open download website?\nCancel to ignore this version forever",
 					"New minor update available", MB_YESNOCANCEL | MB_SETFOREGROUND); status == IDYES)
 				{
-					ShellExecuteW(nullptr, nullptr, L"https://github.com/KebsCS/KBotExt/releases/latest", nullptr, nullptr, SW_SHOW);
+					Utils::OpenUrl(L"https://github.com/KebsCS/KBotExt/releases/latest", nullptr, SW_SHOW);
 				}
 				else if (status == IDCANCEL)
 				{
@@ -285,24 +285,31 @@ public:
 	// returns true on success
 	static bool TerminateProcessByName(const std::wstring& processName)
 	{
-		const HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, NULL);
+		static HMODULE kernel32 = GetModuleHandleA("kernel32");
+		static auto pOpenProcess = (decltype(&OpenProcess))GetProcAddress(kernel32, "OpenProcess");
+		static auto pCreateToolhelp32Snapshot = (decltype(&CreateToolhelp32Snapshot))GetProcAddress(kernel32, "CreateToolhelp32Snapshot");
+		static auto pProcess32FirstW = (decltype(&Process32FirstW))GetProcAddress(kernel32, "Process32FirstW");
+		static auto pProcess32NextW = (decltype(&Process32NextW))GetProcAddress(kernel32, "Process32NextW");
+		static auto pTerminateProcess = (decltype(&TerminateProcess))GetProcAddress(kernel32, "TerminateProcess");
+
+		const HANDLE snapshot = pCreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, NULL);
 		bool result = false;
 		if (snapshot != INVALID_HANDLE_VALUE)
 		{
 			PROCESSENTRY32W entry;
 			entry.dwSize = sizeof(PROCESSENTRY32W);
-			if (Process32FirstW(snapshot, &entry))
+			if (pProcess32FirstW(snapshot, &entry))
 			{
 				do
 				{
 					if (std::wstring(entry.szExeFile) == processName)
 					{
-						const HANDLE process = OpenProcess(PROCESS_TERMINATE, false, entry.th32ProcessID);
-						const bool terminate = TerminateProcess(process, 0);
+						const HANDLE process = pOpenProcess(PROCESS_TERMINATE, false, entry.th32ProcessID);
+						const bool terminate = pTerminateProcess(process, 0);
 						CloseHandle(process);
 						result = terminate;
 					}
-				} while (Process32NextW(snapshot, &entry));
+				} while (pProcess32NextW(snapshot, &entry));
 			}
 		}
 		CloseHandle(snapshot);
@@ -388,7 +395,7 @@ namespace ImGui
 		{
 			if (IsMouseClicked(0))
 			{
-				ShellExecuteA(nullptr, "open", url, nullptr, nullptr, SW_SHOWNORMAL);
+				Utils::OpenUrl(url, nullptr, SW_SHOWNORMAL);
 			}
 			AddUnderLine(GetStyle().Colors[ImGuiCol_ButtonHovered]);
 			SetTooltip("  Open in browser\n%s", url);

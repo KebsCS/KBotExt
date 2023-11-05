@@ -1533,8 +1533,7 @@ public:
 						{
 							url = L"https://porofessor.gg/pregame/" + region + L"/" + summNames;
 						}
-
-						ShellExecuteW(nullptr, nullptr, url.c_str(), nullptr, nullptr, SW_SHOW);
+						Utils::OpenUrl(url.c_str(), nullptr, SW_SHOW);
 						return Utils::WstringToString(url);
 					}
 					return "Failed to get region";

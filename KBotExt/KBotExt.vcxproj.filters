@@ -1,9 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="json">
-      <UniqueIdentifier>{54db2d2d-b22b-4c3c-b6bd-8802952723b6}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Tabs">
       <UniqueIdentifier>{7d0b8c55-703b-4c67-b79b-56f9c8dbbf02}</UniqueIdentifier>
     </Filter>
@@ -53,15 +50,6 @@
     </ClCompile>
     <ClCompile Include="imgui\imgui_widgets.cpp">
       <Filter>imgui</Filter>
-    </ClCompile>
-    <ClCompile Include="json\json_reader.cpp">
-      <Filter>json</Filter>
-    </ClCompile>
-    <ClCompile Include="json\json_value.cpp">
-      <Filter>json</Filter>
-    </ClCompile>
-    <ClCompile Include="json\json_writer.cpp">
-      <Filter>json</Filter>
     </ClCompile>
     <ClCompile Include="LCU.cpp">
       <Filter>League</Filter>
@@ -122,39 +110,6 @@
     <ClInclude Include="imgui\imstb_textedit.h">
       <Filter>imgui</Filter>
     </ClInclude>
-    <ClInclude Include="json\allocator.h">
-      <Filter>json</Filter>
-    </ClInclude>
-    <ClInclude Include="json\assertions.h">
-      <Filter>json</Filter>
-    </ClInclude>
-    <ClInclude Include="json\config.h">
-      <Filter>json</Filter>
-    </ClInclude>
-    <ClInclude Include="json\forwards.h">
-      <Filter>json</Filter>
-    </ClInclude>
-    <ClInclude Include="json\json.h">
-      <Filter>json</Filter>
-    </ClInclude>
-    <ClInclude Include="json\json_features.h">
-      <Filter>json</Filter>
-    </ClInclude>
-    <ClInclude Include="json\json_tool.h">
-      <Filter>json</Filter>
-    </ClInclude>
-    <ClInclude Include="json\reader.h">
-      <Filter>json</Filter>
-    </ClInclude>
-    <ClInclude Include="json\value.h">
-      <Filter>json</Filter>
-    </ClInclude>
-    <ClInclude Include="json\version.h">
-      <Filter>json</Filter>
-    </ClInclude>
-    <ClInclude Include="json\writer.h">
-      <Filter>json</Filter>
-    </ClInclude>
     <ClInclude Include="Misc.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -185,10 +140,5 @@
     <ClInclude Include="imgui\imgui_freetype.h">
       <Filter>imgui</Filter>
     </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="json\json_valueiterator.inl">
-      <Filter>json</Filter>
-    </None>
   </ItemGroup>
 </Project>

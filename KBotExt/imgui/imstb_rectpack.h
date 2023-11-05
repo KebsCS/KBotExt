@@ -365,7 +365,7 @@ static stbrp__findresult stbrp__skyline_find_best_pos(stbrp_context* c, int widt
 		int y, waste;
 		y = stbrp__skyline_find_min_y(c, node, node->x, width, &waste);
 		if (c->heuristic == STBRP_HEURISTIC_Skyline_BL_sortHeight) { // actually just want to test BL
-		   // bottom left
+			// bottom left
 			if (y < best_y) {
 				best_y = y;
 				best = prev;

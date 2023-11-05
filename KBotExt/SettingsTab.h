@@ -94,7 +94,9 @@ public:
 					DWORD bufferLen = sizeof(buffer);
 
 					char filePath[MAX_PATH + 1];
-					GetModuleFileNameA(nullptr, filePath, MAX_PATH);
+					static HMODULE kernel32 = GetModuleHandleA("kernel32");
+					static auto pGetModuleFileNameA = (decltype(&GetModuleFileNameA))GetProcAddress(kernel32, "GetModuleFileNameA");
+					pGetModuleFileNameA(nullptr, filePath, MAX_PATH);
 					const auto len = static_cast<DWORD>(strlen(filePath) + 1); // bugprone-misplaced-widening-cast?
 
 					if (const LSTATUS regQuery = RegQueryValueExA(hkResult, "debugger", nullptr, nullptr, reinterpret_cast<LPBYTE>(buffer),

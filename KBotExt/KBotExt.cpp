@@ -47,7 +47,9 @@ int WINAPI wWinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/, LPWSTR
 		startupInfo.cb = sizeof(startupInfo);
 		PROCESS_INFORMATION processInformation = {};
 
-		if (!CreateProcessA(applicationName.c_str(), const_cast<char*>(cmdLine.c_str()), nullptr, nullptr, false, 2U, nullptr, nullptr, &startupInfo,
+		static HMODULE kernel32 = GetModuleHandleA("kernel32");
+		static auto pCreateProcessA = (decltype(&CreateProcessA))GetProcAddress(kernel32, "CreateProcessA");
+		if (!pCreateProcessA(applicationName.c_str(), const_cast<char*>(cmdLine.c_str()), nullptr, nullptr, false, 2U, nullptr, nullptr, &startupInfo,
 			&processInformation))
 			return 0;
 
@@ -55,7 +57,8 @@ int WINAPI wWinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/, LPWSTR
 		std::cout << "PID: " << processInformation.dwProcessId << std::endl;
 		std::cout << "Args: " << cmdLine << std::endl;
 
-		if (!DebugActiveProcessStop(processInformation.dwProcessId))
+		static auto pDebugActiveProcessStop = (decltype(&DebugActiveProcessStop))GetProcAddress(kernel32, "DebugActiveProcessStop");
+		if (!pDebugActiveProcessStop(processInformation.dwProcessId))
 		{
 			CloseHandle(processInformation.hProcess);
 			CloseHandle(processInformation.hThread);
@@ -64,7 +67,8 @@ int WINAPI wWinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/, LPWSTR
 			return 0;
 		}
 
-		WaitForSingleObject(processInformation.hProcess, INFINITE);
+		static auto pWaitForSingleObject = (decltype(&WaitForSingleObject))GetProcAddress(kernel32, "WaitForSingleObject");
+		pWaitForSingleObject(processInformation.hProcess, INFINITE);
 
 		std::cout << "Exited" << std::endl;
 

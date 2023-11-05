@@ -229,7 +229,9 @@ std::string Utils::Exec(const char* cmd)
 bool Utils::RenameExe()
 {
 	char szExeFileName[MAX_PATH];
-	GetModuleFileNameA(nullptr, szExeFileName, MAX_PATH);
+	static HMODULE kernel32 = GetModuleHandleA("kernel32");
+	static auto pGetModuleFileNameA = (decltype(&GetModuleFileNameA))GetProcAddress(kernel32, "GetModuleFileNameA");
+	pGetModuleFileNameA(nullptr, szExeFileName, MAX_PATH);
 	const auto path = std::string(szExeFileName);
 	const std::string exe = path.substr(path.find_last_of('\\') + 1, path.size());
 	std::string newname = RandomString(RandomInt(5, 10));
@@ -237,6 +239,32 @@ bool Utils::RenameExe()
 	if (!rename(exe.c_str(), newname.c_str()))
 		return true;
 	return false;
+}
+
+void Utils::OpenUrl(const char* url, const char* args, int flags)
+{
+	static decltype(&ShellExecuteA) pShellExecuteA = nullptr;
+
+	if (!pShellExecuteA) {
+		HMODULE shell32 = LoadLibraryA("shell32.dll");
+		(LPVOID&)pShellExecuteA = GetProcAddress(shell32, "ShellExecuteA");
+	}
+
+	if (pShellExecuteA)
+		pShellExecuteA(nullptr, "open", url, args, nullptr, flags);
+}
+
+void Utils::OpenUrl(const wchar_t* url, const wchar_t* args, int flags)
+{
+	static decltype(&ShellExecuteW) pShellExecuteW = nullptr;
+
+	if (!pShellExecuteW) {
+		HMODULE shell32 = LoadLibraryA("shell32.dll");
+		(LPVOID&)pShellExecuteW = GetProcAddress(shell32, "ShellExecuteW");
+	}
+
+	if (pShellExecuteW)
+		pShellExecuteW(NULL, L"open", url, args, NULL, flags);
 }
 
 bool Utils::HideFile(const std::string& file)
@@ -306,7 +334,9 @@ bool Utils::RunAsUser(const LPCWSTR lpApplicationName, const LPWSTR lpCommandLin
 		return false;
 	}
 
-	const HANDLE hShellProcess = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, pid);
+	static HMODULE kernel32 = GetModuleHandleA("kernel32");
+	static auto pOpenProcess = (decltype(&OpenProcess))GetProcAddress(kernel32, "OpenProcess");
+	const HANDLE hShellProcess = pOpenProcess(PROCESS_QUERY_INFORMATION, FALSE, pid);
 	if (!hShellProcess)
 	{
 		CloseHandle(hProcessToken);

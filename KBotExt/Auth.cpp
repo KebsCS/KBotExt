@@ -96,12 +96,17 @@ std::string Auth::MakeRiotHeader(const ClientInfo& info)
 
 DWORD Auth::GetProcessId(const std::wstring& processName)
 {
-	const HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, NULL);
+	static HMODULE kernel32 = GetModuleHandleA("kernel32");
+	static auto pCreateToolhelp32Snapshot = (decltype(&CreateToolhelp32Snapshot))GetProcAddress(kernel32, "CreateToolhelp32Snapshot");
+	static auto pProcess32FirstW = (decltype(&Process32FirstW))GetProcAddress(kernel32, "Process32FirstW");
+	static auto pProcess32NextW = (decltype(&Process32NextW))GetProcAddress(kernel32, "Process32NextW");
+
+	const HANDLE snapshot = pCreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, NULL);
 	if (snapshot != INVALID_HANDLE_VALUE)
 	{
 		PROCESSENTRY32W entry;
 		entry.dwSize = sizeof(PROCESSENTRY32W);
-		if (Process32FirstW(snapshot, &entry))
+		if (pProcess32FirstW(snapshot, &entry))
 		{
 			do
 			{
@@ -110,7 +115,7 @@ DWORD Auth::GetProcessId(const std::wstring& processName)
 					CloseHandle(snapshot);
 					return entry.th32ProcessID;
 				}
-			} while (Process32NextW(snapshot, &entry));
+			} while (pProcess32NextW(snapshot, &entry));
 		}
 	}
 	CloseHandle(snapshot);
@@ -119,13 +124,18 @@ DWORD Auth::GetProcessId(const std::wstring& processName)
 
 std::vector<DWORD> Auth::GetAllProcessIds(const std::wstring& processName)
 {
+	static HMODULE kernel32 = GetModuleHandleA("kernel32");
+	static auto pCreateToolhelp32Snapshot = (decltype(&CreateToolhelp32Snapshot))GetProcAddress(kernel32, "CreateToolhelp32Snapshot");
+	static auto pProcess32FirstW = (decltype(&Process32FirstW))GetProcAddress(kernel32, "Process32FirstW");
+	static auto pProcess32NextW = (decltype(&Process32NextW))GetProcAddress(kernel32, "Process32NextW");
+
 	std::vector<DWORD> pids;
-	const HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, NULL);
+	const HANDLE snapshot = pCreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, NULL);
 	if (snapshot != INVALID_HANDLE_VALUE)
 	{
 		PROCESSENTRY32W entry;
 		entry.dwSize = sizeof(PROCESSENTRY32W);
-		if (Process32FirstW(snapshot, &entry))
+		if (pProcess32FirstW(snapshot, &entry))
 		{
 			do
 			{
@@ -133,7 +143,7 @@ std::vector<DWORD> Auth::GetAllProcessIds(const std::wstring& processName)
 				{
 					pids.emplace_back(entry.th32ProcessID);
 				}
-			} while (Process32NextW(snapshot, &entry));
+			} while (pProcess32NextW(snapshot, &entry));
 		}
 	}
 	CloseHandle(snapshot);
@@ -151,14 +161,20 @@ std::wstring Auth::GetProcessCommandLine(const DWORD& processId)
 			PULONG ReturnLength
 			);
 
+	static HMODULE kernel32 = GetModuleHandleA("kernel32");
+
+	static auto pOpenProcess = (decltype(&OpenProcess))GetProcAddress(kernel32, "OpenProcess");
 	std::wstring result;
-	const HANDLE processHandle = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, 0, processId);
+	const HANDLE processHandle = pOpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, 0, processId);
 
+	static auto pGetNativeSystemInfo = (decltype(&GetNativeSystemInfo))GetProcAddress(kernel32, "GetNativeSystemInfo");
 	SYSTEM_INFO si;
-	GetNativeSystemInfo(&si);
+	pGetNativeSystemInfo(&si);
 
+	static auto pIsWow64Process = (decltype(&IsWow64Process))GetProcAddress(kernel32, "IsWow64Process");
+	static auto pGetCurrentProcess = (decltype(&GetCurrentProcess))GetProcAddress(kernel32, "GetCurrentProcess");
 	BOOL wow;
-	IsWow64Process(GetCurrentProcess(), &wow);
+	pIsWow64Process(pGetCurrentProcess(), &wow);
 
 	const DWORD ProcessParametersOffset = si.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_AMD64 ? 0x20 : 0x10;
 	const DWORD CommandLineOffset = si.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_AMD64 ? 0x70 : 0x40;
@@ -270,14 +286,15 @@ std::wstring Auth::GetProcessCommandLine(const DWORD& processId)
 			return {};
 		}
 
-		if (!ReadProcessMemory(processHandle, pbi.PebBaseAddress, peb, pebSize, nullptr))
+		static auto pReadProcessMemory = (decltype(&ReadProcessMemory))GetProcAddress(kernel32, "ReadProcessMemory");
+		if (!pReadProcessMemory(processHandle, pbi.PebBaseAddress, peb, pebSize, nullptr))
 		{
 			MessageBoxA(nullptr, "PEB ReadProcessMemory failed", nullptr, 0);
 			CloseHandle(processHandle);
 			return {};
 		}
 
-		if (const PBYTE* parameters = static_cast<PBYTE*>(*reinterpret_cast<LPVOID*>(peb + ProcessParametersOffset)); !ReadProcessMemory(
+		if (const PBYTE* parameters = static_cast<PBYTE*>(*reinterpret_cast<LPVOID*>(peb + ProcessParametersOffset)); !pReadProcessMemory(
 			processHandle, parameters, processParameters, processParametersSize, nullptr))
 		{
 			MessageBoxA(nullptr, "processParameters ReadProcessMemory failed", nullptr, 0);
@@ -287,7 +304,7 @@ std::wstring Auth::GetProcessCommandLine(const DWORD& processId)
 
 		const UNICODE_STRING* pCommandLine = reinterpret_cast<UNICODE_STRING*>(processParameters + CommandLineOffset);
 		const auto commandLineCopy = static_cast<PWSTR>(malloc(pCommandLine->MaximumLength));
-		if (!ReadProcessMemory(processHandle, pCommandLine->Buffer, commandLineCopy, pCommandLine->MaximumLength, nullptr))
+		if (!pReadProcessMemory(processHandle, pCommandLine->Buffer, commandLineCopy, pCommandLine->MaximumLength, nullptr))
 		{
 			MessageBoxA(nullptr, "pCommandLine ReadProcessMemory failed", nullptr, 0);
 			CloseHandle(processHandle);
@@ -303,9 +320,13 @@ std::wstring Auth::GetProcessCommandLine(const DWORD& processId)
 
 std::wstring Auth::GetProcessPath(const DWORD& processId)
 {
-	if (const HANDLE processHandle = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, 0, processId))
+	static HMODULE kernel32 = GetModuleHandleA("kernel32");
+	static auto pOpenProcess = (decltype(&OpenProcess))GetProcAddress(kernel32, "OpenProcess");
+
+	if (const HANDLE processHandle = pOpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, 0, processId))
 	{
-		if (WCHAR result[MAX_PATH]; GetModuleFileNameExW(processHandle, nullptr, result, MAX_PATH))
+		static auto pK32GetModuleFileNameExW = (decltype(&K32GetModuleFileNameExW))GetProcAddress(kernel32, "K32GetModuleFileNameExW");
+		if (WCHAR result[MAX_PATH]; pK32GetModuleFileNameExW(processHandle, nullptr, result, MAX_PATH))
 		{
 			CloseHandle(processHandle);
 			return { result };

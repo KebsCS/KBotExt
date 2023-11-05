@@ -98,9 +98,9 @@ public:
 			// find saved lang from cfg file
 			auto findLang = std::ranges::find_if(langs, [](std::pair<std::string, std::string> k) {
 				return k.second == S.loginTab.language;
-			});
+				});
 
-			static std::pair selectedLang = {findLang[0].first, findLang[0].second};
+			static std::pair selectedLang = { findLang[0].first, findLang[0].second };
 
 			if (ImGui::Button("Launch client"))
 			{
@@ -122,7 +122,7 @@ public:
 				{
 					if (ImGui::Selectable(fst.c_str(), fst == selectedLang.first))
 					{
-						selectedLang = {fst, snd};
+						selectedLang = { fst, snd };
 						S.loginTab.language = snd;
 						Config::Save();
 
@@ -249,12 +249,12 @@ public:
 				cpr::Session session;
 				session.SetHeader(authHeader);
 
-				std::string valoApi = cpr::Get(cpr::Url{"https://valorant-api.com/v1/version"}).text;
+				std::string valoApi = cpr::Get(cpr::Url{ "https://valorant-api.com/v1/version" }).text;
 
 				std::regex regexStr("\"riotClientBuild\":\"(.*?)\"");
 				if (std::smatch m; std::regex_search(valoApi, m, regexStr))
 				{
-					session.UpdateHeader(cpr::Header{{"User-Agent", "RiotClient/" + m[1].str() + " rso-auth (Windows;10;;Home, x64)"}});
+					session.UpdateHeader(cpr::Header{ {"User-Agent", "RiotClient/" + m[1].str() + " rso-auth (Windows;10;;Home, x64)"} });
 				}
 
 				session.SetBody(authData.toStyledString());
@@ -284,7 +284,7 @@ public:
 					size_t startIndex = uri.find("#access_token=") + strlen("#access_token=");
 					size_t endIndex = uri.find("&scope");
 					std::string bearer = uri.substr(startIndex, endIndex - startIndex);
-					session.UpdateHeader(cpr::Header{{"Authorization", "Bearer " + bearer}});
+					session.UpdateHeader(cpr::Header{ {"Authorization", "Bearer " + bearer} });
 
 					session.SetUrl("https://auth.riotgames.com/userinfo");
 					r = session.Get().text;

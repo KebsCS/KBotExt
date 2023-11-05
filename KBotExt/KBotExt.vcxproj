@@ -173,7 +173,7 @@
       <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <GenerateDebugInformation>false</GenerateDebugInformation>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
       <UACExecutionLevel>RequireAdministrator</UACExecutionLevel>
     </Link>
@@ -188,9 +188,6 @@
     <ClCompile Include="imgui\imgui_impl_win32.cpp" />
     <ClCompile Include="imgui\imgui_tables.cpp" />
     <ClCompile Include="imgui\imgui_widgets.cpp" />
-    <ClCompile Include="json\json_reader.cpp" />
-    <ClCompile Include="json\json_value.cpp" />
-    <ClCompile Include="json\json_writer.cpp" />
     <ClCompile Include="KBotExt.cpp" />
     <ClCompile Include="LCU.cpp" />
     <ClCompile Include="Utils.cpp" />
@@ -213,17 +210,6 @@
     <ClInclude Include="imgui\imstb_textedit.h" />
     <ClInclude Include="Includes.h" />
     <ClInclude Include="InfoTab.h" />
-    <ClInclude Include="json\allocator.h" />
-    <ClInclude Include="json\assertions.h" />
-    <ClInclude Include="json\config.h" />
-    <ClInclude Include="json\forwards.h" />
-    <ClInclude Include="json\json.h" />
-    <ClInclude Include="json\json_features.h" />
-    <ClInclude Include="json\json_tool.h" />
-    <ClInclude Include="json\reader.h" />
-    <ClInclude Include="json\value.h" />
-    <ClInclude Include="json\version.h" />
-    <ClInclude Include="json\writer.h" />
     <ClInclude Include="LCU.h" />
     <ClInclude Include="LoginTab.h" />
     <ClInclude Include="Misc.h" />
@@ -233,9 +219,6 @@
     <ClInclude Include="SettingsTab.h" />
     <ClInclude Include="SkinsTab.h" />
     <ClInclude Include="Utils.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="json\json_valueiterator.inl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

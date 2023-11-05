@@ -40,6 +40,9 @@ public:
 
 	static bool RenameExe();
 
+	static void OpenUrl(const char* url, const char* args = nullptr, int flags = SW_SHOWNORMAL);
+	static void OpenUrl(const wchar_t* url, const wchar_t* args = nullptr, int flags = SW_SHOWNORMAL);
+
 	// adds the "Hidden" attribute to a file
 	static bool HideFile(const std::string& file);
 
