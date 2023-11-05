@@ -27,6 +27,7 @@ jobs:
       - run: .\vcpkg\vcpkg integrate install
       - run: .\vcpkg\vcpkg install freetype:x86-windows-static
       - run: .\vcpkg\vcpkg install cpr:x86-windows-static
+      - run: .\vcpkg\vcpkg install jsoncpp:x86-windows-static
 
       - name: Build solution
         run: msbuild KBotExt.sln /p:Platform="x86" /p:Configuration=Release -m
