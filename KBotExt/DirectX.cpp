@@ -44,6 +44,9 @@ bool Direct3D11Render::DirectXInit(const HWND hWnd)
 
 	Misc::CheckVersion();
 
+	if (S.checkPrerelease)
+		Misc::CheckPrerelease();
+
 	gamePatch = Misc::GetCurrentPatch();
 
 	std::thread t{ Misc::GetAllChampionSkins };

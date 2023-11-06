@@ -24,6 +24,7 @@ struct Settings
 	bool streamProof = false;
 	bool debugger = false;
 	bool noAdmin = false;
+	bool checkPrerelease = false;
 
 	struct
 	{
@@ -115,6 +116,7 @@ public:
 				root["loginTab"]["leagueArgs"] = S.loginTab.leagueArgs;
 				root["streamProof"] = S.streamProof;
 				root["noAdmin"] = S.noAdmin;
+				root["checkPrerelease"] = S.checkPrerelease;
 
 				root["infoTab"]["playerName"] = S.infoTab.playerName;
 
@@ -193,6 +195,8 @@ public:
 					S.streamProof = t.asBool();
 				if (auto t = root["noAdmin"]; !t.empty())
 					S.noAdmin = t.asBool();
+				if (auto t = root["checkPrerelease"]; !t.empty())
+					S.checkPrerelease = t.asBool();
 
 				if (auto t = root["infoTab"]["playerName"]; !t.empty())
 					S.infoTab.playerName = t.asString();

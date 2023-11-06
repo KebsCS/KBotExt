@@ -80,6 +80,8 @@ public:
 			ImGui::SameLine();
 			ImGui::HelpMarker("Hides the program in recordings and screenshots");
 
+			ImGui::Checkbox("Notify about prereleases", &S.checkPrerelease);
+
 			ImGui::Checkbox("Launch client without admin", &S.noAdmin);
 
 			if (ImGui::Checkbox("Register debugger IFEO", &S.debugger))
@@ -155,11 +157,51 @@ public:
 			ImGui::InputText("##leaguePath", bufLeaguePath, MAX_PATH);
 			S.leaguePath = bufLeaguePath;
 
-			/*	if (ImGui::Button("Save Settings"))
+			ImGui::SameLine();
+
+			if (ImGui::Button("Try to auto detect path"))
+			{
+				using tSHGetFolderPathW = HRESULT(WINAPI*)(HWND hwnd, int csidl, HANDLE hToken, DWORD dwFlags, LPWSTR pszPath);
+				const auto SHGetFolderPathW = reinterpret_cast<tSHGetFolderPathW>(GetProcAddress(LoadLibraryW(L"shell32.dll"), "SHGetFolderPathW"));
+
+				TCHAR szPath[MAX_PATH];
+				if (SUCCEEDED(SHGetFolderPathW(NULL, 0x23/*CSIDL_COMMON_APPDATA*/, NULL, 0, szPath)))
 				{
-					CSettings::Save();
-					result = "Saved";
-				}*/
+					std::filesystem::path programData(szPath);
+					auto productSettingPath = programData / "Riot Games\\Metadata\\league_of_legends.live\\league_of_legends.live.product_settings.yaml";
+					if (std::filesystem::exists(productSettingPath))
+					{
+						std::ifstream fileStream(productSettingPath);
+						if (fileStream.is_open())
+						{
+							std::string line;
+							while (std::getline(fileStream, line))
+							{
+								if (line.contains("product_install_full_path: "))
+								{
+									if (std::size_t pos = line.find(":"); pos != std::string::npos)
+									{
+										std::string value = line.substr(pos + 2);
+										value.erase(std::remove(value.begin(), value.end(), '\"'), value.end());
+										size_t found;
+										while ((found = value.find("\\\\")) != std::string::npos)
+										{
+											value.replace(found, 2, "/");
+										}
+										if (value.back() != '/')
+											value += '/';
+										S.leaguePath = value;
+										std::fill(bufLeaguePath, bufLeaguePath + MAX_PATH, 0);
+										std::ranges::copy(S.leaguePath, bufLeaguePath);
+									}
+								}
+							}
+
+							fileStream.close();
+						}
+					}
+				}
+			}
 
 			ImGui::Separator();
 

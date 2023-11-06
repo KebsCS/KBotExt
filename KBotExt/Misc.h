@@ -114,6 +114,45 @@ public:
 		}
 	}
 
+	static void CheckPrerelease()
+	{
+		const std::string getPrerelease = cpr::Get(cpr::Url{ "https://api.github.com/repos/KebsCS/KBotExt/releases/tags/prerelease" }).text;
+
+		const Json::CharReaderBuilder builder;
+		const std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
+		JSONCPP_STRING err;
+		Json::Value root;
+		if (reader->parse(getPrerelease.c_str(), getPrerelease.c_str() + static_cast<int>(getPrerelease.length()), &root, &err))
+		{
+			if (root.isMember("assets") && root["assets"].isArray() && !root["assets"].empty())
+			{
+				std::string updatedAt = root["assets"][0]["updated_at"].asString();
+				std::tm dateTm;
+				std::istringstream dateStream(updatedAt);
+				dateStream >> std::get_time(&dateTm, "%Y-%m-%dT%H:%M:%SZ");
+				std::time_t githubUpdatedTime = std::mktime(&dateTm);
+
+				char szExeFileName[MAX_PATH];
+				static HMODULE kernel32 = GetModuleHandleA("kernel32");
+				static auto pGetModuleFileNameA = (decltype(&GetModuleFileNameA))GetProcAddress(kernel32, "GetModuleFileNameA");
+				pGetModuleFileNameA(nullptr, szExeFileName, MAX_PATH);
+				const auto path = std::string(szExeFileName);
+
+				const std::filesystem::file_time_type lastWriteTime = std::filesystem::last_write_time(path);
+				const auto systemTime = std::chrono::clock_cast<std::chrono::system_clock>(lastWriteTime);
+				const std::time_t localUpdatedTime = std::chrono::system_clock::to_time_t(systemTime);
+
+				if (githubUpdatedTime > localUpdatedTime)
+				{
+					if (MessageBoxA(nullptr, "Open download website?", "New prerelease available", MB_YESNO | MB_SETFOREGROUND) == IDYES)
+					{
+						Utils::OpenUrl(L"https://github.com/KebsCS/KBotExt/releases/tag/prerelease", nullptr, SW_SHOW);
+					}
+				}
+			}
+		}
+	}
+
 	static std::string GetCurrentPatch()
 	{
 		const std::string result = cpr::Get(cpr::Url{ "http://ddragon.leagueoflegends.com/api/versions.json" }).text;
