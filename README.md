@@ -46,16 +46,19 @@
 
 ## Development
 
-- **Installing [vcpkg](https://github.com/microsoft/vcpkg#quick-start-windows) and [freetype](https://github.com/ocornut/imgui/tree/master/misc/freetype)**
-  1. Open Windows Command Prompt (**CMD**)
-  2. Run `git clone https://github.com/microsoft/vcpkg.git`
-  3. `cd vcpkg`
-  4. `bootstrap-vcpkg.bat`
-  5. `vcpkg integrate install`
-  6. `vcpkg install freetype:x86-windows-static` or `vcpkg install freetype:x64-windows-static`
+- **Installing required libraries**
+  1. Install [GIT for windows](https://git-scm.com/download/win)
+  2. Open Windows Command Prompt (**CMD**)
+  3. Run `git clone https://github.com/microsoft/vcpkg.git`
+  4. `cd vcpkg`
+  5. `bootstrap-vcpkg.bat`
+  6. `vcpkg integrate install`
+  7. `vcpkg install freetype:x64-windows-static`
+  8. `vcpkg install cpr:x64-windows-static`
+  9. `vcpkg install jsoncpp:x64-windows-static`
 - **Building the project**
   1. Clone the repository
   2. Open **KBotExt.sln** in Visual Studio (Recommended Visual Studio 2022)
-  3. Set the solution platform to the freetype version you have installed
+  3. Set the solution platform to x64 Release
   4. Build the project
   5. Feel free to make a pull request with your changes :-)
