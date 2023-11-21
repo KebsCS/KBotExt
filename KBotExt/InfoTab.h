@@ -19,6 +19,8 @@ public:
 			static std::string accID;
 			static std::string summID;
 			static std::string summName;
+			static std::string gameName;
+			static std::string tagLine;
 
 			static char playerName[50];
 			if (once)
@@ -37,7 +39,35 @@ public:
 				std::string tempName = std::string(playerName);
 				tempName.erase(std::remove_if(tempName.begin(), tempName.end(),
 					[](unsigned char x) { return std::isspace(x); }), tempName.end());
+
+				size_t found;
+				while ((found = tempName.find("#")) != std::string::npos)
+				{
+					tempName.replace(found, 1, "%23");
+				}
+
 				result = LCU::Request("GET", "https://127.0.0.1/lol-summoner/v1/summoners?name=" + tempName);
+
+				// 2nd method
+				/*auto riotId = Utils::StringSplit(tempName, "#");
+				if (riotId.size() > 1)
+				{
+					result = LCU::Request("GET", "https://127.0.0.1/lol-summoner/v1/alias/lookup?gameName=" + riotId[0] + "&tagLine=" + riotId[1]);
+
+					Json::CharReaderBuilder builder;
+					const std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
+					JSONCPP_STRING err;
+					Json::Value root;
+					if (reader->parse(result.c_str(), result.c_str() + static_cast<int>(result.length()), &root, &err))
+					{
+						std::string puuid = root["puuid"].asString();
+						if (puuid != "")
+						{
+							result = LCU::Request("GET", "https://127.0.0.1/lol-summoner/v1/summoners-by-puuid-cached/" + puuid);
+						}
+					}
+				}*/
+
 				bPressed = true;
 			}
 
@@ -90,6 +120,8 @@ public:
 					accID = std::to_string(root["accountId"].asUInt64());
 					summID = std::to_string(root["summonerId"].asUInt64());
 					summName = root["internalName"].asString();
+					gameName = root["gameName"].asString();
+					tagLine = root["tagLine"].asString();
 
 					sResultJson = Json::writeString(wBuilder, root); // "CppRedundantQualifier"
 				}
@@ -134,8 +166,8 @@ public:
 			ImGui::SameLine();
 			if (ImGui::Button("Invite to friends##infoTab"))
 			{
-				std::string invite = R"({"name":")" + summName + R"("})";
-				LCU::Request("POST", "https://127.0.0.1/lol-chat/v1/friend-requests", invite);
+				std::string invite = R"({"gameName":")" + gameName + R"(","tagLine":")" + tagLine + R"("})";
+				LCU::Request("POST", "https://127.0.0.1/lol-chat/v2/friend-requests", invite);
 			}
 			ImGui::SameLine();
 			if (ImGui::Button("Add to block list##infoTab"))

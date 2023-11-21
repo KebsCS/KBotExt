@@ -210,7 +210,7 @@ void LCU::GetLeagueProcesses()
 
 						if (reader->parse(currentSummoner.c_str(), currentSummoner.c_str() + static_cast<int>(currentSummoner.length()), &root, &err))
 						{
-							leagueProcesses[currentIndex].second = std::string(root["displayName"].asString().substr(0, 25));
+							leagueProcesses[currentIndex].second = std::string(root["gameName"].asString().substr(0, 25)) + "#" + std::string(root["tagLine"].asString());
 							break;
 						}
 					}

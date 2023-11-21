@@ -77,6 +77,7 @@ enum QueueID
 	BlindPick = 430,
 	Flex = 440,
 	ARAM = 450,
+	Quickplay = 490,
 	Clash = 700,
 	IntroBots = 830,
 	BeginnerBots = 840,

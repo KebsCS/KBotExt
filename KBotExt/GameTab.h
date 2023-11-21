@@ -62,8 +62,8 @@ public:
 
 			ImGui::Columns(4, nullptr, false);
 
-			if (ImGui::Button("Blind pick"))
-				gameID = BlindPick;
+			if (ImGui::Button("Quickplay"))
+				gameID = Quickplay;
 
 			if (ImGui::Button("Draft pick"))
 				gameID = DraftPick;
@@ -293,9 +293,10 @@ public:
 					body = custom;
 					custom = "";
 				}
-				if (gameID == DraftPick || gameID == SoloDuo || gameID == Flex)
+				if (gameID == DraftPick || gameID == SoloDuo || gameID == Flex || gameID == Quickplay)
 				{
 					result = LCU::Request("POST", "https://127.0.0.1/lol-lobby/v2/lobby", body);
+
 					LCU::Request("PUT", "/lol-lobby/v1/lobby/members/localMember/position-preferences",
 						R"({"firstPreference":")" + firstPosition[S.gameTab.indexFirstRole]
 						+ R"(","secondPreference":")" + secondPosition[S.gameTab.indexSecondRole] + "\"}");
@@ -304,18 +305,6 @@ public:
 				{
 					result = LCU::Request("POST", "https://127.0.0.1/lol-lobby/v2/lobby", body);
 				}
-
-				//for (int i = 0; i < 10001; i++)
-				//{
-				//	std::string res =
-				//		R"({"customGameLobby":{"configuration":{"gameMode":"CLASSIC","gameMutator":"","gameServerRegion":"","mapId":11,"mutators":{"id":)"
-				//		+ std::to_string(i) +
-				//		R"(},"spectatorPolicy":"AllAllowed","teamSize":5},"lobbyName":"KBot","lobbyPassword":null},"isCustom":true})";
-				//	if (std::string xdd = http.Request("POST", "https://127.0.0.1/lol-lobby/v2/lobby", res, auth->leagueHeader, "", "", clientPort);
-				//		xdd.find("errorCode") == std::string::npos)
-				//		std::cout << i << std::endl;
-				//	std::this_thread::sleep_for(std::chrono::milliseconds(10));
-				//}
 
 				gameID = 0;
 			}
@@ -1461,7 +1450,7 @@ public:
 							std::string summoner = LCU::Request("GET", "https://127.0.0.1/lol-summoner/v1/summoners/" + summId);
 							if (reader->parse(summoner.c_str(), summoner.c_str() + static_cast<int>(summoner.length()), &rootSummoner, &err))
 							{
-								summNames += Utils::StringToWstring(rootSummoner["internalName"].asString()) + L",";
+								summNames += Utils::StringToWstring(rootSummoner["gameName"].asString()) + L"%23" + Utils::StringToWstring(rootSummoner["tagLine"].asString()) + L",";
 							}
 						}
 					}
@@ -1483,7 +1472,7 @@ public:
 							{
 								for (auto& i : participantsArr)
 								{
-									summNames += Utils::StringToWstring(i["name"].asString()) + L",";
+									summNames += Utils::StringToWstring(i["game_name"].asString()) + L"%23" + Utils::StringToWstring(i["game_tag"].asString()) + L",";
 								}
 							}
 						}
