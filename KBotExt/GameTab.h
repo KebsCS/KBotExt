@@ -1113,7 +1113,7 @@ public:
 			JSONCPP_STRING err;
 
 			LCU::SetCurrentClientRiotInfo();
-			std::string getChat = cpr::Get(cpr::Url{ std::format("https://127.0.0.1:{}/chat/v5/participants/champ-select", LCU::riot.port) },
+			std::string getChat = cpr::Get(cpr::Url{ std::format("https://127.0.0.1:{}/chat/v5/participants", LCU::riot.port) },
 				cpr::Header{ Utils::StringToHeader(LCU::riot.header) }, cpr::VerifySsl{ false }).text;
 			if (!reader->parse(getChat.c_str(), getChat.c_str() + static_cast<int>(getChat.length()), &root, &err))
 			{
@@ -1130,7 +1130,19 @@ public:
 				continue;
 			}
 
-			const std::string cid = participantsArr[0]["cid"].asString();
+			std::string cid = "";
+			for (auto& i : participantsArr)
+			{
+				if (i["cid"].asString().contains("champ-select"))
+				{
+					cid = i["cid"].asString();
+					break;
+				}
+			}
+			if (cid == "")
+			{
+				continue;
+			}
 
 			if (instantMute || sideNotification)
 			{
@@ -1462,7 +1474,7 @@ public:
 
 						LCU::SetCurrentClientRiotInfo();
 						std::string participants = cpr::Get(
-							cpr::Url{ std::format("https://127.0.0.1:{}/chat/v5/participants/champ-select", LCU::riot.port) },
+							cpr::Url{ std::format("https://127.0.0.1:{}/chat/v5/participants", LCU::riot.port) },
 							cpr::Header{ Utils::StringToHeader(LCU::riot.header) }, cpr::VerifySsl{ false }).text;
 						if (reader->parse(participants.c_str(), participants.c_str() + static_cast<int>(participants.length()), &rootPartcipants,
 							&err))
@@ -1472,6 +1484,8 @@ public:
 							{
 								for (auto& i : participantsArr)
 								{
+									if (!i["cid"].asString().contains("champ-select"))
+										continue;
 									summNames += Utils::StringToWstring(i["game_name"].asString()) + L"%23" + Utils::StringToWstring(i["game_tag"].asString()) + L",";
 								}
 							}
