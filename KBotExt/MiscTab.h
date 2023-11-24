@@ -478,8 +478,8 @@ public:
 			ImGui::SameLine();
 			ImGui::TextWrapped("%s ID: %s", closestChampion.c_str(), closestId.c_str());
 
-			if (ImGui::Button("Check email of the account"))
-				result = LCU::Request("GET", "https://127.0.0.1/lol-email-verification/v1/email");
+			/*if (ImGui::Button("Check email of the account"))
+				result = LCU::Request("GET", "https://127.0.0.1/lol-email-verification/v1/email");*/
 
 			ImGui::Separator();
 

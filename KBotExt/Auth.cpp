@@ -215,11 +215,11 @@ std::wstring Auth::GetProcessCommandLine(const DWORD& processId)
 		PROCESS_BASIC_INFORMATION_WOW64 pbi;
 		ZeroMemory(&pbi, sizeof(pbi));
 
-		if (const auto NtQueryInformationProcess =
+		const auto NtQueryInformationProcess =
 			reinterpret_cast<tNtQueryInformationProcess>(GetProcAddress(GetModuleHandleA("ntdll.dll"), "NtWow64QueryInformationProcess64"));
-			NtQueryInformationProcess(processHandle, 0, &pbi, sizeof(pbi), nullptr) != 0)
+		if (auto status = NtQueryInformationProcess(processHandle, 0, &pbi, sizeof(pbi), nullptr); status != 0)
 		{
-			MessageBoxA(nullptr, "NtQueryInformationProcess failed", nullptr, 0);
+			MessageBoxA(nullptr, std::format("NtWow64QueryInformationProcess64 failed, error code: {}", status).c_str(), nullptr, 0);
 			CloseHandle(processHandle);
 			return {};
 		}
@@ -227,26 +227,28 @@ std::wstring Auth::GetProcessCommandLine(const DWORD& processId)
 		const auto NtWow64ReadVirtualMemory64 =
 			reinterpret_cast<tNtWow64ReadVirtualMemory64>(GetProcAddress(GetModuleHandleA("ntdll.dll"), "NtWow64ReadVirtualMemory64"));
 
-		if (NtWow64ReadVirtualMemory64(processHandle, pbi.PebBaseAddress, peb, pebSize, nullptr) != 0)
+		if (auto status = NtWow64ReadVirtualMemory64(processHandle, pbi.PebBaseAddress, peb, pebSize, nullptr); status != 0)
 		{
-			MessageBoxA(nullptr, "PEB NtWow64ReadVirtualMemory64 failed", nullptr, 0);
+			MessageBoxA(nullptr, std::format("PEB NtWow64ReadVirtualMemory64 failed, error code: {}", status).c_str(), nullptr, 0);
 			CloseHandle(processHandle);
 			return {};
 		}
 
-		if (const auto parameters = *reinterpret_cast<PVOID64*>(peb + ProcessParametersOffset); NtWow64ReadVirtualMemory64(
-			processHandle, parameters, processParameters, processParametersSize, nullptr) != 0)
+		const auto parameters = *reinterpret_cast<PVOID64*>(peb + ProcessParametersOffset);
+		if (auto status = NtWow64ReadVirtualMemory64(
+			processHandle, parameters, processParameters, processParametersSize, nullptr); status != 0)
 		{
-			MessageBoxA(nullptr, "processParameters NtWow64ReadVirtualMemory64 failed", nullptr, 0);
+			MessageBoxA(nullptr, std::format("processParameters NtWow64ReadVirtualMemory64 failed, error code: {}", status).c_str(), nullptr, 0);
 			CloseHandle(processHandle);
 			return {};
 		}
 
 		const UNICODE_STRING_WOW64* pCommandLine = reinterpret_cast<UNICODE_STRING_WOW64*>(processParameters + CommandLineOffset);
 		const auto commandLineCopy = static_cast<PWSTR>(malloc(pCommandLine->MaximumLength));
-		if (NtWow64ReadVirtualMemory64(processHandle, pCommandLine->Buffer, commandLineCopy, pCommandLine->MaximumLength, nullptr) != 0)
+		if (auto status = NtWow64ReadVirtualMemory64(processHandle, pCommandLine->Buffer, commandLineCopy, pCommandLine->MaximumLength, nullptr);
+			status != 0)
 		{
-			MessageBoxA(nullptr, "pCommandLine NtWow64ReadVirtualMemory64 failed", nullptr, 0);
+			MessageBoxA(nullptr, std::format("pCommandLine NtWow64ReadVirtualMemory64 failed, error code: {}", status).c_str(), nullptr, 0);
 			CloseHandle(processHandle);
 			return {};
 		}
@@ -277,11 +279,11 @@ std::wstring Auth::GetProcessCommandLine(const DWORD& processId)
 		PROCESS_BASIC_INFORMATION pbi;
 		ZeroMemory(&pbi, sizeof(pbi));
 
-		if (const auto NtQueryInformationProcess =
+		const auto NtQueryInformationProcess =
 			reinterpret_cast<tNtQueryInformationProcess>(GetProcAddress(GetModuleHandleA("ntdll.dll"), "NtQueryInformationProcess"));
-			NtQueryInformationProcess(processHandle, 0, &pbi, sizeof(pbi), nullptr) != 0)
+		if (auto status = NtQueryInformationProcess(processHandle, 0, &pbi, sizeof(pbi), nullptr); status != 0)
 		{
-			MessageBoxA(nullptr, "NtQueryInformationProcess failed", nullptr, 0);
+			MessageBoxA(nullptr, std::format("NtQueryInformationProcess failed, error code: {}", status).c_str(), nullptr, 0);
 			CloseHandle(processHandle);
 			return {};
 		}
@@ -289,7 +291,7 @@ std::wstring Auth::GetProcessCommandLine(const DWORD& processId)
 		static auto pReadProcessMemory = (decltype(&ReadProcessMemory))GetProcAddress(kernel32, "ReadProcessMemory");
 		if (!pReadProcessMemory(processHandle, pbi.PebBaseAddress, peb, pebSize, nullptr))
 		{
-			MessageBoxA(nullptr, "PEB ReadProcessMemory failed", nullptr, 0);
+			MessageBoxA(nullptr, std::format("PEB ReadProcessMemory failed, error code: {}", GetLastError()).c_str(), nullptr, 0);
 			CloseHandle(processHandle);
 			return {};
 		}
@@ -297,7 +299,7 @@ std::wstring Auth::GetProcessCommandLine(const DWORD& processId)
 		if (const PBYTE* parameters = static_cast<PBYTE*>(*reinterpret_cast<LPVOID*>(peb + ProcessParametersOffset)); !pReadProcessMemory(
 			processHandle, parameters, processParameters, processParametersSize, nullptr))
 		{
-			MessageBoxA(nullptr, "processParameters ReadProcessMemory failed", nullptr, 0);
+			MessageBoxA(nullptr, std::format("processParameters ReadProcessMemory failed, error code: {}", GetLastError()).c_str(), nullptr, 0);
 			CloseHandle(processHandle);
 			return {};
 		}
@@ -306,7 +308,7 @@ std::wstring Auth::GetProcessCommandLine(const DWORD& processId)
 		const auto commandLineCopy = static_cast<PWSTR>(malloc(pCommandLine->MaximumLength));
 		if (!pReadProcessMemory(processHandle, pCommandLine->Buffer, commandLineCopy, pCommandLine->MaximumLength, nullptr))
 		{
-			MessageBoxA(nullptr, "pCommandLine ReadProcessMemory failed", nullptr, 0);
+			MessageBoxA(nullptr, std::format("pCommandLine ReadProcessMemory failed, error code: {}", GetLastError()).c_str(), nullptr, 0);
 			CloseHandle(processHandle);
 			return {};
 		}
