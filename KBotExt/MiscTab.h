@@ -225,11 +225,9 @@ public:
 
 			ImGui::Columns(1);
 
-			static std::vector<std::pair<std::string, int>> items;
+			static std::vector<std::pair<std::string, int>> items = { {"**Default", 0} };
 			static size_t item_current_idx = 0; // Here we store our selection data as an index.
-			auto combo_label = "**Default";
-			if (!items.empty())
-				combo_label = items[item_current_idx].first.c_str();
+			auto combo_label = items[item_current_idx].first.c_str();
 
 			if (ImGui::Button("Remove all friends"))
 			{
@@ -252,7 +250,7 @@ public:
 							int iDeleted = 0;
 							for (auto& i : root)
 							{
-								if (i["groupId"].asUInt() == item_current_idx)
+								if (i["groupId"].asUInt() == items[item_current_idx].second)
 								{
 									std::string req = "https://127.0.0.1/lol-chat/v1/friends/" + i["pid"].asString();
 									LCU::Request("DELETE", req, "");

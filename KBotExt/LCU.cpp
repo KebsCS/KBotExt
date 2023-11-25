@@ -27,9 +27,6 @@ std::string LCU::Request(const std::string& method, const std::string& endpoint,
 		sURL.insert(strlen("https://127.0.0.1"), ":" + std::to_string(league.port));
 	}
 
-	/*wrap::Response r = wrap::HttpsRequest(wrap::Method{ method }, wrap::Url{ sURL }, wrap::Body{ body }, wrap::Header{ league.header }, wrap::Port{ league.port },
-		wrap::Timeout{1000});*/
-
 	cpr::Response r = {};
 
 	session.SetUrl(sURL);

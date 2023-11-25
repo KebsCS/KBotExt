@@ -1364,7 +1364,7 @@ void ImGuiIO::ClearEventsQueue()
 	IM_ASSERT(Ctx != NULL);
 	ImGuiContext& g = *Ctx;
 	g.InputEventsQueue.clear();
-	}
+}
 
 // Clear current keyboard/mouse/gamepad state + current frame text input buffer. Equivalent to releasing all keys/buttons.
 void ImGuiIO::ClearInputKeys()
@@ -1412,7 +1412,7 @@ static ImGuiInputEvent* FindLatestInputEvent(ImGuiContext* ctx, ImGuiInputEventT
 		if (type == ImGuiInputEventType_MouseButton && e->MouseButton.Button != arg)
 			continue;
 		return e;
-}
+	}
 	return NULL;
 }
 
@@ -1934,7 +1934,7 @@ void ImFormatStringToTempBufferV(const char** out_buf, const char** out_buf_end,
 		*out_buf = g.TempBuffer.Data;
 		if (out_buf_end) { *out_buf_end = g.TempBuffer.Data + buf_len; }
 	}
-	}
+}
 
 // CRC32 needs a 1KB lookup table (not cache friendly)
 // Although the code to generate the table is simple and shorter than the table itself, using a const table allows us to easily:
@@ -2504,7 +2504,7 @@ ImGuiTextFilter::ImGuiTextFilter(const char* default_filter) //-V1077
 	{
 		ImStrncpy(InputBuf, default_filter, IM_ARRAYSIZE(InputBuf));
 		Build();
-}
+	}
 }
 
 bool ImGuiTextFilter::Draw(const char* label, float width)
@@ -4460,7 +4460,7 @@ void ImGui::UpdateHoveredWindowAndCaptureFlags()
 		if (io.MouseDown[i])
 			if (mouse_earliest_down == -1 || io.MouseClickedTime[i] < io.MouseClickedTime[mouse_earliest_down])
 				mouse_earliest_down = i;
-}
+	}
 	const bool mouse_avail = (mouse_earliest_down == -1) || io.MouseDownOwned[mouse_earliest_down];
 	const bool mouse_avail_unless_popup_close = (mouse_earliest_down == -1) || io.MouseDownOwnedUnlessPopupClose[mouse_earliest_down];
 

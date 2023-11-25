@@ -431,7 +431,12 @@ public:
 			ImGui::Checkbox("Auto accept", &S.gameTab.autoAcceptEnabled);
 
 			ImGui::NextColumn();
-			if (ImGui::Button("Invite everyone to lobby"))
+
+			static std::vector<std::pair<std::string, int>> itemsInvite = { {"**Default", 0} };
+			static size_t itemIdxInvite = 0;
+			auto labelInvite = itemsInvite[itemIdxInvite].first.c_str();
+
+			if (ImGui::Button("Invite to lobby"))
 			{
 				std::string getFriends = LCU::Request("GET", "https://127.0.0.1/lol-chat/v1/friends");
 
@@ -443,15 +448,55 @@ public:
 				{
 					if (root.isArray())
 					{
+						unsigned invitedCount = 0;
 						for (auto& i : root)
 						{
+							if (i["groupId"].asUInt() != itemsInvite[itemIdxInvite].second)
+								continue;
+
 							std::string friendSummId = i["summonerId"].asString();
 							std::string inviteBody = "[{\"toSummonerId\":" + friendSummId + "}]";
 							LCU::Request("POST", "https://127.0.0.1/lol-lobby/v2/lobby/invitations", inviteBody);
+							invitedCount++;
 						}
-						result = "Invited friends to lobby";
+						result = "Invited " + std::to_string(invitedCount) + " friends to lobby";
 					}
 				}
+			}
+
+			ImGui::SameLine();
+			ImGui::SetNextItemWidth(ImGui::CalcTextSize(std::string(15, 'W').c_str(), nullptr, true).x);
+			if (ImGui::BeginCombo("##comboInvite", labelInvite, 0))
+			{
+				std::string getGroups = LCU::Request("GET", "https://127.0.0.1/lol-chat/v1/friend-groups");
+				Json::CharReaderBuilder builder;
+				const std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
+				JSONCPP_STRING err;
+				Json::Value root;
+				if (reader->parse(getGroups.c_str(), getGroups.c_str() + static_cast<int>(getGroups.length()), &root, &err))
+				{
+					if (root.isArray())
+					{
+						itemsInvite.clear();
+						for (auto& i : root)
+						{
+							std::pair temp = { i["name"].asString(), i["id"].asInt() };
+							itemsInvite.emplace_back(temp);
+						}
+						std::ranges::sort(itemsInvite, [](std::pair<std::string, int> a, std::pair<std::string, int> b) { return a.second < b.second; });
+					}
+				}
+
+				for (size_t n = 0; n < itemsInvite.size(); n++)
+				{
+					const bool is_selected = (itemIdxInvite == n);
+					if (ImGui::Selectable(itemsInvite[n].first.c_str(), is_selected))
+						itemIdxInvite = n;
+
+					if (is_selected)
+						ImGui::SetItemDefaultFocus();
+				}
+				ImGui::EndCombo();
 			}
 
 			ImGui::NextColumn();

@@ -291,15 +291,21 @@ public:
 		_dupenv_s(&pLocal, &localLen, "LOCALAPPDATA");
 		const auto localAppData = std::filesystem::path(pLocal);
 
+		_dupenv_s(&pLocal, &localLen, "PROGRAMDATA");
+		const auto programData = std::filesystem::path(pLocal);
+
 		for (const std::vector leagueFiles = {
 				 leaguePath / "Logs",
 				 leaguePath / "Config",
 				 leaguePath / "debug.log",
+				 leaguePath / "Game" / "Logs",
 				 riotClientPath / "UX" / "natives_blob.bin",
 				 riotClientPath / "UX" / "snapshot_blob.bin",
 				 riotClientPath / "UX" / "v8_context_snapshot.bin",
 				 riotClientPath / "UX" / "icudtl.dat",
-				 localAppData / "Riot Games"
+				 riotClientPath / "UX" / "GPUCache",
+				 localAppData / "Riot Games",
+				 programData / "Riot Games"
 			}; const auto & file : leagueFiles)
 		{
 			if (exists(file))
