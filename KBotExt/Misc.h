@@ -75,6 +75,9 @@ public:
 	{
 		const std::string getLatest = cpr::Get(cpr::Url{ "https://api.github.com/repos/KebsCS/KBotExt/releases/latest" }).text;
 
+		if (getLatest.contains("API rate limit"))
+			return;
+
 		const Json::CharReaderBuilder builder;
 		const std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
 		JSONCPP_STRING err;
@@ -117,6 +120,9 @@ public:
 	static void CheckPrerelease(std::string newName = "")
 	{
 		const std::string getPrerelease = cpr::Get(cpr::Url{ "https://api.github.com/repos/KebsCS/KBotExt/releases/tags/prerelease" }).text;
+
+		if (getPrerelease.contains("API rate limit"))
+			return;
 
 		const Json::CharReaderBuilder builder;
 		const std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
