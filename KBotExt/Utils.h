@@ -38,7 +38,7 @@ public:
 
 	static std::string Exec(const char* cmd);
 
-	static bool RenameExe();
+	static std::string RenameExe();
 
 	static void OpenUrl(const char* url, const char* args = nullptr, int flags = SW_SHOWNORMAL);
 	static void OpenUrl(const wchar_t* url, const wchar_t* args = nullptr, int flags = SW_SHOWNORMAL);

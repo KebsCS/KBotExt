@@ -451,7 +451,7 @@ public:
 						unsigned invitedCount = 0;
 						for (auto& i : root)
 						{
-							if (i["groupId"].asUInt() != itemsInvite[itemIdxInvite].second)
+							if (i["groupId"].asInt() != itemsInvite[itemIdxInvite].second)
 								continue;
 
 							std::string friendSummId = i["summonerId"].asString();

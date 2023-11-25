@@ -14,6 +14,7 @@ struct Settings
 	}
 
 	HWND hwnd;
+	std::string fileName = "";
 	const std::string settingsFile = "config.JSON";
 	std::string currentDebugger; // debugger path
 	std::vector<std::string> ignoredVersions;

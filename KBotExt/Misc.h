@@ -114,7 +114,7 @@ public:
 		}
 	}
 
-	static void CheckPrerelease()
+	static void CheckPrerelease(std::string newName = "")
 	{
 		const std::string getPrerelease = cpr::Get(cpr::Url{ "https://api.github.com/repos/KebsCS/KBotExt/releases/tags/prerelease" }).text;
 
@@ -136,7 +136,10 @@ public:
 				static HMODULE kernel32 = GetModuleHandleA("kernel32");
 				static auto pGetModuleFileNameA = (decltype(&GetModuleFileNameA))GetProcAddress(kernel32, "GetModuleFileNameA");
 				pGetModuleFileNameA(nullptr, szExeFileName, MAX_PATH);
-				const auto path = std::string(szExeFileName);
+				std::string path = std::string(szExeFileName);
+
+				if (newName != "")
+					path = path.substr(0, path.find_last_of('\\') + 1) + newName;
 
 				const std::filesystem::file_time_type lastWriteTime = std::filesystem::last_write_time(path);
 				const auto systemTime = std::chrono::clock_cast<std::chrono::system_clock>(lastWriteTime);

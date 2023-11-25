@@ -250,7 +250,7 @@ public:
 							int iDeleted = 0;
 							for (auto& i : root)
 							{
-								if (i["groupId"].asUInt() == items[item_current_idx].second)
+								if (i["groupId"].asInt() == items[item_current_idx].second)
 								{
 									std::string req = "https://127.0.0.1/lol-chat/v1/friends/" + i["pid"].asString();
 									LCU::Request("DELETE", req, "");

@@ -100,7 +100,7 @@ int WINAPI wWinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/, LPWSTR
 		};
 
 		if (S.autoRename)
-			Utils::RenameExe();
+			S.fileName = Utils::RenameExe();
 
 		RegisterClassExW(&wc);
 

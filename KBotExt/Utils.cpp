@@ -226,7 +226,7 @@ std::string Utils::Exec(const char* cmd)
 	return result;
 }
 
-bool Utils::RenameExe()
+std::string Utils::RenameExe()
 {
 	char szExeFileName[MAX_PATH];
 	static HMODULE kernel32 = GetModuleHandleA("kernel32");
@@ -234,11 +234,11 @@ bool Utils::RenameExe()
 	pGetModuleFileNameA(nullptr, szExeFileName, MAX_PATH);
 	const auto path = std::string(szExeFileName);
 	const std::string exe = path.substr(path.find_last_of('\\') + 1, path.size());
-	std::string newname = RandomString(RandomInt(5, 10));
-	newname += ".exe";
-	if (!rename(exe.c_str(), newname.c_str()))
-		return true;
-	return false;
+	std::string newName = RandomString(RandomInt(5, 10));
+	newName += ".exe";
+	if (!rename(exe.c_str(), newName.c_str()))
+		return newName;
+	return "";
 }
 
 void Utils::OpenUrl(const char* url, const char* args, int flags)

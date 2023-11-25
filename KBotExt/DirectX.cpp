@@ -45,7 +45,7 @@ bool Direct3D11Render::DirectXInit(const HWND hWnd)
 	Misc::CheckVersion();
 
 	if (S.checkPrerelease)
-		Misc::CheckPrerelease();
+		Misc::CheckPrerelease(S.fileName);
 
 	gamePatch = Misc::GetCurrentPatch();
 
