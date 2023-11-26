@@ -558,17 +558,25 @@ public:
 				if (!instalockChamps.empty())
 				{
 					std::vector<std::string> instalockChampsNames;
-					instalockChampsNames.reserve(instalockChamps.size());
+					instalockChampsNames.reserve(instalockChamps.size() + 1);
+					instalockChampsNames.emplace_back("Random");
 
-					std::string selectedChamp = ChampIdToName(S.gameTab.instalockId);
-					std::ranges::copy(selectedChamp, instalockComboData.input);
+					if (S.gameTab.instalockId == -1)
+					{
+						std::ranges::copy("Random", instalockComboData.input);
+					}
+					else
+					{
+						std::string selectedChamp = ChampIdToName(S.gameTab.instalockId);
+						std::ranges::copy(selectedChamp, instalockComboData.input);
+					}
 
 					for (size_t i = 0; i < instalockChamps.size(); i++)
 					{
 						instalockChampsNames.emplace_back(instalockChamps[i].second);
 						if (instalockComboData.input == instalockChamps[i].second)
 						{
-							instalockComboData.index = i;
+							instalockComboData.index = i + 1;
 						}
 					}
 					instalockComboData.items = instalockChampsNames;
@@ -582,11 +590,18 @@ public:
 			{
 				if (instalockComboData.index != -1)
 				{
-					for (const auto& [key, name, skins] : champSkins)
+					if (std::string(instalockComboData.input) == "Random")
 					{
-						if (instalockComboData.input == name)
+						S.gameTab.instalockId = -1;
+					}
+					else
+					{
+						for (const auto& [key, name, skins] : champSkins)
 						{
-							S.gameTab.instalockId = key;
+							if (instalockComboData.input == name)
+							{
+								S.gameTab.instalockId = key;
+							}
 						}
 					}
 				}
@@ -635,10 +650,18 @@ public:
 				std::vector<std::string> autobanChampsNames;
 				if (!champSkins.empty())
 				{
-					autobanChampsNames.reserve(champSkins.size());
+					autobanChampsNames.reserve(champSkins.size() + 1);
+					autobanChampsNames.emplace_back("None");
 
-					std::string selectedChamp = ChampIdToName(S.gameTab.autoBanId);
-					std::ranges::copy(selectedChamp, autobanComboData.input);
+					if (S.gameTab.autoBanId == -1)
+					{
+						std::ranges::copy("None", autobanComboData.input);
+					}
+					else
+					{
+						std::string selectedChamp = ChampIdToName(S.gameTab.autoBanId);
+						std::ranges::copy(selectedChamp, autobanComboData.input);
+					}
 
 					for (size_t i = 0; i < champSkins.size(); i++)
 					{
@@ -646,7 +669,7 @@ public:
 
 						if (autobanComboData.input == champSkins[i].name)
 						{
-							autobanComboData.index = i;
+							autobanComboData.index = i + 1;
 						}
 					}
 					autobanComboData.items = autobanChampsNames;
@@ -659,11 +682,18 @@ public:
 			{
 				if (autobanComboData.index != -1)
 				{
-					for (const auto& [key, name, skins] : champSkins)
+					if (std::string(autobanComboData.input) == "None")
 					{
-						if (autobanComboData.input == name)
+						S.gameTab.autoBanId = -1;
+					}
+					else
+					{
+						for (const auto& [key, name, skins] : champSkins)
 						{
-							S.gameTab.autoBanId = key;
+							if (autobanComboData.input == name)
+							{
+								S.gameTab.autoBanId = key;
+							}
 						}
 					}
 				}
@@ -1384,8 +1414,8 @@ public:
 								// search for own actions
 								if (action["actorCellId"].asInt() == cellId)
 								{
-									if (std::string actionType = action["type"].asString(); actionType == "pick" && S.gameTab.instalockId && S.gameTab
-										.instalockEnabled)
+									if (std::string actionType = action["type"].asString(); actionType == "pick"
+										&& S.gameTab.instalockId && S.gameTab.instalockEnabled)
 									{
 										// if haven't picked yet
 										if (action["completed"].asBool() == false)
@@ -1397,6 +1427,12 @@ public:
 												int currentPick = S.gameTab.instalockId;
 												if (useBackupId)
 													currentPick = useBackupId;
+
+												if (S.gameTab.instalockId == -1)
+												{
+													std::vector<std::pair<int, std::string>> instalockChamps = GetInstalockChamps();
+													currentPick = instalockChamps[Utils::RandomInt(0, instalockChamps.size() - 1)].first;
+												}
 
 												session.SetUrl(std::format("https://127.0.0.1:{}/lol-champ-select/v1/session/actions/{}",
 													LCU::league.port,
@@ -1425,7 +1461,8 @@ public:
 									}
 								}
 								// action that isn't our player, if dodge on ban enabled or backup pick
-								else if ((S.gameTab.dodgeOnBan || S.gameTab.backupId) && S.gameTab.instalockEnabled && S.gameTab.instalockId)
+								else if ((S.gameTab.dodgeOnBan || S.gameTab.backupId) && S.gameTab.instalockEnabled
+									&& S.gameTab.instalockId && (S.gameTab.instalockId != -1))
 								{
 									if (isPicked)
 										break;
@@ -1453,7 +1490,7 @@ public:
 									}
 									else if (action["type"].asString() == "pick" && action["completed"].asBool() == true)
 									{
-										if (S.gameTab.backupId && action["championId"].asInt() == S.gameTab.instalockId)
+										if (S.gameTab.backupId && (action["championId"].asInt() == S.gameTab.instalockId))
 										{
 											useBackupId = S.gameTab.backupId;
 										}
