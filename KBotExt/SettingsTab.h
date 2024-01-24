@@ -86,51 +86,54 @@ public:
 
 			if (ImGui::Checkbox("Register debugger IFEO", &S.debugger))
 			{
-				HKEY hkResult;
-				if (const LSTATUS regCreate = RegCreateKeyExA(HKEY_LOCAL_MACHINE,
-					R"(Software\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\LeagueClientUx.exe)",
-					0, nullptr, 0, KEY_SET_VALUE | KEY_QUERY_VALUE | KEY_CREATE_SUB_KEY, nullptr, &hkResult,
-					nullptr); regCreate == ERROR_SUCCESS)
+				if (MessageBoxA(nullptr, "Are you sure?", "Debugger IFEO", MB_OKCANCEL) == IDOK)
 				{
-					char* buffer[MAX_PATH];
-					DWORD bufferLen = sizeof(buffer);
-
-					char filePath[MAX_PATH + 1];
-					static HMODULE kernel32 = GetModuleHandleA("kernel32");
-					static auto pGetModuleFileNameA = (decltype(&GetModuleFileNameA))GetProcAddress(kernel32, "GetModuleFileNameA");
-					pGetModuleFileNameA(nullptr, filePath, MAX_PATH);
-					const auto len = static_cast<DWORD>(strlen(filePath) + 1); // bugprone-misplaced-widening-cast?
-
-					if (const LSTATUS regQuery = RegQueryValueExA(hkResult, "debugger", nullptr, nullptr, reinterpret_cast<LPBYTE>(buffer),
-						&bufferLen); regQuery == ERROR_SUCCESS || regQuery == ERROR_FILE_NOT_FOUND)
+					HKEY hkResult;
+					if (const LSTATUS regCreate = RegCreateKeyExA(HKEY_LOCAL_MACHINE,
+						R"(Software\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\LeagueClientUx.exe)",
+						0, nullptr, 0, KEY_SET_VALUE | KEY_QUERY_VALUE | KEY_CREATE_SUB_KEY, nullptr, &hkResult,
+						nullptr); regCreate == ERROR_SUCCESS)
 					{
-						if (S.debugger)
-						{
-							auto messageBoxStatus = IDYES;
-							if (S.autoRename || S.noAdmin)
-								messageBoxStatus = MessageBoxA(nullptr, "Having \"Auto-rename\" or \"Launch client without admin\" "
-									"enabled with \"debugger IFEO\" will prevent League client from starting\n\n"
-									"Do you wish to continue?", "Warning", MB_YESNO | MB_SETFOREGROUND);
+						char* buffer[MAX_PATH];
+						DWORD bufferLen = sizeof(buffer);
 
-							if (messageBoxStatus == IDYES)
+						char filePath[MAX_PATH + 1];
+						static HMODULE kernel32 = GetModuleHandleA("kernel32");
+						static auto pGetModuleFileNameA = (decltype(&GetModuleFileNameA))GetProcAddress(kernel32, "GetModuleFileNameA");
+						pGetModuleFileNameA(nullptr, filePath, MAX_PATH);
+						const auto len = static_cast<DWORD>(strlen(filePath) + 1); // bugprone-misplaced-widening-cast?
+
+						if (const LSTATUS regQuery = RegQueryValueExA(hkResult, "debugger", nullptr, nullptr, reinterpret_cast<LPBYTE>(buffer),
+							&bufferLen); regQuery == ERROR_SUCCESS || regQuery == ERROR_FILE_NOT_FOUND)
+						{
+							if (S.debugger)
 							{
-								if (RegSetValueExA(hkResult, "debugger", 0, REG_SZ, reinterpret_cast<const BYTE*>(filePath), len) == ERROR_SUCCESS)
+								auto messageBoxStatus = IDYES;
+								if (S.autoRename || S.noAdmin)
+									messageBoxStatus = MessageBoxA(nullptr, "Having \"Auto-rename\" or \"Launch client without admin\" "
+										"enabled with \"debugger IFEO\" will prevent League client from starting\n\n"
+										"Do you wish to continue?", "Warning", MB_YESNO | MB_SETFOREGROUND);
+
+								if (messageBoxStatus == IDYES)
 								{
-									S.currentDebugger = filePath;
+									if (RegSetValueExA(hkResult, "debugger", 0, REG_SZ, reinterpret_cast<const BYTE*>(filePath), len) == ERROR_SUCCESS)
+									{
+										S.currentDebugger = filePath;
+									}
+								}
+								else
+								{
+									S.debugger = false;
 								}
 							}
-							else
+							else if (regQuery == ERROR_SUCCESS)
 							{
-								S.debugger = false;
+								RegDeleteValueA(hkResult, "debugger");
+								S.currentDebugger = "Nothing";
 							}
 						}
-						else if (regQuery == ERROR_SUCCESS)
-						{
-							RegDeleteValueA(hkResult, "debugger");
-							S.currentDebugger = "Nothing";
-						}
+						RegCloseKey(hkResult);
 					}
-					RegCloseKey(hkResult);
 				}
 			}
 			ImGui::SameLine();

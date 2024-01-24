@@ -1616,7 +1616,7 @@ public:
 						}
 						else if (website == "Porofessor.gg")
 						{
-							url = L"https://porofessor.gg/pregame/" + region + L"/" + summNames;
+							url = L"https://porofessor.gg/pregame/" + region + L"/" + summNames + L"/soloqueue/season";
 						}
 						Utils::OpenUrl(url.c_str(), nullptr, SW_SHOW);
 						return Utils::WstringToString(url);
