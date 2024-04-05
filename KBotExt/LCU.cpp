@@ -78,7 +78,15 @@ bool LCU::SetRiotClientInfo(const ClientInfo& info)
 
 bool LCU::SetRiotClientInfo()
 {
-	return SetRiotClientInfo(Auth::GetClientInfo(Auth::GetProcessId(L"RiotClientUx.exe")));
+	const auto riotClients = Auth::GetAllProcessIds(L"Riot Client.exe");
+	for (const DWORD& clientPid : riotClients)
+	{
+		const auto info = Auth::GetClientInfo(clientPid);
+		if (info.port == 0)
+			continue;
+		return SetRiotClientInfo(info);
+	}
+	return false;
 }
 
 bool LCU::SetLeagueClientInfo(const ClientInfo& info)

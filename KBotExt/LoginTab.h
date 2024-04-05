@@ -15,7 +15,7 @@ class LoginTab
 	{
 		while (true)
 		{
-			if (FindWindowA("RCLIENT", "Riot Client") && LCU::riot.port != 0)
+			if (FindWindowA(NULL, "Riot Client") && LCU::riot.port != 0)
 			{
 				// waits to be sure that client is fully loaded
 				std::this_thread::sleep_for(std::chrono::milliseconds(2000));

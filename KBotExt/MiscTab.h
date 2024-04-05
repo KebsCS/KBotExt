@@ -481,57 +481,80 @@ public:
 
 			ImGui::Separator();
 
-			if (ImGui::Button("Tournament of Souls - unlock all"))
+			ImGui::Text("Change your Riot ID:");
+			static char bufGameName[50];
+			ImGui::SetNextItemWidth(static_cast<float>(S.Window.width / 4));
+			ImGui::InputText("##inputGameName", bufGameName, IM_ARRAYSIZE(bufGameName));
+
+			ImGui::SameLine();
+			ImGui::Text("#");
+			ImGui::SameLine();
+			static char bufTagLine[50];
+			ImGui::SetNextItemWidth(static_cast<float>(S.Window.width / 5));
+			ImGui::InputText("##inputTagLine", bufTagLine, IM_ARRAYSIZE(bufTagLine));
+
+			ImGui::SameLine();
+			if (ImGui::Button("Change##buttonRiotID"))
 			{
-				LCU::Request("POST", "/lol-marketing-preferences/v1/partition/sfm2023", R"({
-	"SmallConspiracyFan" : "True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True",
-	"SmallGwenPykeFan" : "True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True",
-	"SmallJhinFan" : "True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True",
-	"SmallSettFans" : "True,True,True,True,True,True,True,True,True,True,True,True,True,True,True",
-	"SmallShaco" : "True,True",
-	"hasNewAbility" : "False",
-	"hasNewFanLine" : "False",
-	"hasPlayedTutorial" : "True",
-	"hasSeenCelebration_Story" : "True",
-	"hasSeenLoadoutTutorial" : "True",
-	"hasSeenMapTutorial" : "True",
-	"loadout_active_e" : "2",
-	"loadout_active_q" : "1",
-	"loadout_active_r" : "2",
-	"loadout_active_w" : "2",
-	"numNodesUnlocked" : "20",
-	"progress" : "20"
-})");
-
-				Json::Value root;
-				Json::CharReaderBuilder builder;
-				const std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
-				JSONCPP_STRING err;
-				std::string getGrants = LCU::Request("GET", "/lol-rewards/v1/grants");
-
-				if (reader->parse(getGrants.c_str(), getGrants.c_str() + static_cast<int>(getGrants.length()), &root, &err))
+				std::string newRiotId = std::string(bufGameName) + "#" + std::string(bufTagLine);
+				if (MessageBoxA(nullptr, std::string("Your new Riot ID will be: " + newRiotId).c_str(), "Are you sure?", MB_OKCANCEL) == IDOK)
 				{
-					if (root.isArray())
-					{
-						for (auto grant : root)
-						{
-							for (Json::Value& reward : grant["rewardGroup"]["rewards"])
-							{
-								Json::Value body;
-								body["rewardGroupId"] = grant["info"]["rewardGroupId"].asString();
-								body["selections"] = {};
-								body["selections"].append(reward["id"].asString());
-
-								result += LCU::Request("POST", std::format("/lol-rewards/v1/grants/{}/select", grant["info"]["id"].asString()),
-									body.toStyledString());
-							}
-						}
-					}
+					result = LCU::Request("POST", "https://127.0.0.1/lol-summoner/v1/save-alias",
+						"{\"gameName\": \"" + std::string(bufGameName) + "\", \"tagLine\": \"" + std::string(bufTagLine) + "\"}");
 				}
 			}
 
-			ImGui::SameLine();
-			ImGui::HelpMarker("You need reputation for this to work");
+			//			if (ImGui::Button("Tournament of Souls - unlock all"))
+			//			{
+			//				LCU::Request("POST", "/lol-marketing-preferences/v1/partition/sfm2023", R"({
+			//	"SmallConspiracyFan" : "True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True",
+			//	"SmallGwenPykeFan" : "True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True",
+			//	"SmallJhinFan" : "True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True",
+			//	"SmallSettFans" : "True,True,True,True,True,True,True,True,True,True,True,True,True,True,True",
+			//	"SmallShaco" : "True,True",
+			//	"hasNewAbility" : "False",
+			//	"hasNewFanLine" : "False",
+			//	"hasPlayedTutorial" : "True",
+			//	"hasSeenCelebration_Story" : "True",
+			//	"hasSeenLoadoutTutorial" : "True",
+			//	"hasSeenMapTutorial" : "True",
+			//	"loadout_active_e" : "2",
+			//	"loadout_active_q" : "1",
+			//	"loadout_active_r" : "2",
+			//	"loadout_active_w" : "2",
+			//	"numNodesUnlocked" : "20",
+			//	"progress" : "20"
+			//})");
+			//
+			//				Json::Value root;
+			//				Json::CharReaderBuilder builder;
+			//				const std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
+			//				JSONCPP_STRING err;
+			//				std::string getGrants = LCU::Request("GET", "/lol-rewards/v1/grants");
+			//
+			//				if (reader->parse(getGrants.c_str(), getGrants.c_str() + static_cast<int>(getGrants.length()), &root, &err))
+			//				{
+			//					if (root.isArray())
+			//					{
+			//						for (auto grant : root)
+			//						{
+			//							for (Json::Value& reward : grant["rewardGroup"]["rewards"])
+			//							{
+			//								Json::Value body;
+			//								body["rewardGroupId"] = grant["info"]["rewardGroupId"].asString();
+			//								body["selections"] = {};
+			//								body["selections"].append(reward["id"].asString());
+			//
+			//								result += LCU::Request("POST", std::format("/lol-rewards/v1/grants/{}/select", grant["info"]["id"].asString()),
+			//									body.toStyledString());
+			//							}
+			//						}
+			//					}
+			//				}
+			//			}
+			//
+			//			ImGui::SameLine();
+			//			ImGui::HelpMarker("You need reputation for this to work");
 
 			static Json::StreamWriterBuilder wBuilder;
 			static std::string sResultJson;

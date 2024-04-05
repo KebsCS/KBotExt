@@ -181,7 +181,7 @@ int WINAPI wWinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/, LPWSTR
 				closedNow = true;
 				if (!LCU::leagueProcesses.empty())
 					LCU::leagueProcesses.clear();
-				if (FindWindowA("RCLIENT", "Riot Client"))
+				if (FindWindowA(NULL, "Riot Client"))
 				{
 					if (LCU::riot.port == 0)
 					{
