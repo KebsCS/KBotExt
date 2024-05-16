@@ -65,3 +65,7 @@
   3. Set the solution platform to x64 Release
   4. Build the project
   5. Feel free to make a pull request with your changes :-)
+
+
+## Discord
+Feel free to ask any questions regarding this project, or league client on my [discord server](https://discord.gg/qMmPBFpj2n), although I won't be teaching you how to code there if you're a complete beginner

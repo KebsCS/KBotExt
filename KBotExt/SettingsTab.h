@@ -235,6 +235,9 @@ public:
 				Misc::programVersion.c_str(), Misc::latestVersion.c_str());
 			ImGui::Text("GitHub repository:");
 			ImGui::TextURL("Click me!", "https://github.com/KebsCS/KBotExt", 1, 0);
+			ImGui::SameLine();
+			ImGui::Text("| Discord server:");
+			ImGui::TextURL("Click me!", "https://discord.gg/qMmPBFpj2n", 1, 0);
 
 			if (!result.empty())
 				ImGui::Separator();

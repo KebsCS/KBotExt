@@ -71,6 +71,25 @@ public:
 				LCU::Request("PUT", "https://127.0.0.1/lol-chat/v1/me", body);
 			}
 
+			ImGui::SameLine();
+			ImGui::Text("\t   ");
+			ImGui::SameLine();
+			if (ImGui::Button("Disconnect from chat"))
+			{
+				LCU::SetCurrentClientRiotInfo();
+				cpr::Post(cpr::Url{ std::format("https://127.0.0.1:{}/chat/v1/suspend", LCU::riot.port) },
+					cpr::Body{ "{\"config\":\"disable\"}" },
+					cpr::Header{ Utils::StringToHeader(LCU::riot.header) }, cpr::VerifySsl{ false });
+			}
+
+			ImGui::SameLine();
+			if (ImGui::Button("Reconnect to chat"))
+			{
+				LCU::SetCurrentClientRiotInfo();
+				cpr::Post(cpr::Url{ std::format("https://127.0.0.1:{}/chat/v1/resume", LCU::riot.port) },
+					cpr::Header{ Utils::StringToHeader(LCU::riot.header) }, cpr::VerifySsl{ false });
+			}
+
 			ImGui::Separator();
 
 			ImGui::Text("Rank:");

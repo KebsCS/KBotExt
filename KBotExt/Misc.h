@@ -20,7 +20,7 @@
 class Misc
 {
 public:
-	static inline std::string programVersion = "1.5.5";
+	static inline std::string programVersion = "1.5.6";
 	static inline std::string latestVersion;
 
 	static bool LaunchClient(const std::string& args)
@@ -201,10 +201,10 @@ public:
 			if (currentSkin["isBase"].asBool() == true)
 			{
 				champs[champName].name = champName;
-
-				std::string splashPath = currentSkin["splashPath"].asString();
-				size_t keyStart = splashPath.find("champion-splashes/") + strlen("champion-splashes/");
-				std::string champKey = splashPath.substr(keyStart, splashPath.find("/", keyStart) - keyStart);
+				std::string champKey = id;
+				if (champKey.size() >= 3 && champKey.substr(champKey.size() - 3) == "000") {
+					champKey.erase(champKey.size() - 3);
+				}
 
 				champs[champName].key = std::stoi(champKey);
 				skin.first = id;
@@ -246,8 +246,10 @@ public:
 				 L"RiotClientServices.exe",
 				 L"RiotClientUx.exe",
 				 L"RiotClientUxRender.exe",
+				 L"Riot Client.exe",
 
 				 L"LeagueCrashHandler.exe",
+				 L"LeagueCrashHandler64.exe",
 				 L"LeagueClient.exe",
 				 L"LeagueClientUx.exe",
 				 L"LeagueClientUxRender.exe"

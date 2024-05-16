@@ -504,6 +504,14 @@ public:
 				}
 			}
 
+			if (ImGui::Button("Get email"))
+			{
+				MessageBoxA(nullptr, "Login\nClick on 'My Tickets'\nCtrl+Shift+I\nCtrl+F and search for \"email\"", "Info", MB_OK | MB_SETFOREGROUND);
+
+				Utils::OpenUrl(L"https://auth.riotgames.com/authorize?redirect_uri=https://login.playersupport.riotgames.com/login_callback&client_id=player-support-zendesk&ui_locales=en-us%20en-us&response_type=code&scope=openid%20email"
+					, nullptr, SW_SHOW);
+			}
+
 			//			if (ImGui::Button("Tournament of Souls - unlock all"))
 			//			{
 			//				LCU::Request("POST", "/lol-marketing-preferences/v1/partition/sfm2023", R"({
