@@ -1,3 +1,5 @@
+# 21.05 KbotExt might be bannable, try not to use it right now
+
 ![Example](https://i.imgur.com/aLQOwy4.png)
 
 [More screenshots](https://imgur.com/a/Z5LRbV0)
