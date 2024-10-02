@@ -82,8 +82,8 @@ public:
 			if (ImGui::Button("ARURF"))
 				gameID = ARURF;
 
-			if (ImGui::Button("Nexus Blitz"))
-				gameID = NexusBlitz;
+			if (ImGui::Button("Ultimate Spellbook"))
+				gameID = UltimateSpellbook;
 
 			if (ImGui::Button("ARURF 1V1 (PBE)"))
 				gameID = 901;
@@ -501,19 +501,19 @@ public:
 
 			ImGui::NextColumn();
 
-			ImGui::Text("Nexus Blitz Force");
+			ImGui::Text("Ultimate Spellbook Force");
 
 			ImGui::SameLine();
 
 			if (ImGui::Button("Jungle"))
 			{
-				LCU::Request("PATCH", "/lol-champ-select/v1/session/my-selection", "{\"spell1Id\":4,\"spell2Id\":11}");
+				LCU::Request("PATCH", "/lol-champ-select/v1/session/my-selection", "{\"spell1Id\":4,\"spell2Id\":55}");
 			}
 
 			ImGui::SameLine();
 			if (ImGui::Button("Lane"))
 			{
-				LCU::Request("PATCH", "/lol-champ-select/v1/session/my-selection", "{\"spell1Id\":4,\"spell2Id\":7}");
+				LCU::Request("PATCH", "/lol-champ-select/v1/session/my-selection", "{\"spell1Id\":4,\"spell2Id\":54}");
 			}
 
 			ImGui::Columns(1);
