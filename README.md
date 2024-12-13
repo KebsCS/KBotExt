@@ -1,4 +1,4 @@
-# 21.05 KbotExt might be bannable, try not to use it right now
+# ⚠ KBotExt is bannable by Vanguard. [Read more](https://github.com/KebsCS/KBotExt/issues/252)
 
 ![Example](https://i.imgur.com/aLQOwy4.png)
 
